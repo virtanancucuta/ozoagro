@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OZOAGRO | Protección Ecológica para tus Cultivos</title>
+  <meta name="description" content="Bioinsecticida y biofungicida ecológico a base de ozono. Protege tus cultivos de exportación sin químicos.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#15803D',
+            'primary-light': '#22C55E',
+            accent: '#A16207',
+            'accent-light': '#CA8A04',
+            background: '#F0FDF4',
+            foreground: '#14532D',
+            muted: '#E8F0F1',
+            border: '#BBF7D0',
+          },
+          fontFamily: {
+            heading: ['Lora', 'serif'],
+            body: ['Raleway', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Raleway', sans-serif; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Lora', serif; }
+
+    /* Organic shapes */
+    .organic-blob {
+      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    }
+
+    /* Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .float { animation: float 3s ease-in-out infinite; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+
+    /* Scroll animations */
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Form styles */
+    input, select, textarea {
+      font-family: 'Raleway', sans-serif;
+    }
+
+    /* Custom checkbox */
+    .custom-checkbox {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #15803D;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .custom-checkbox:checked {
+      background-color: #15803D;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body class="bg-background text-foreground">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+          <span class="text-white font-heading font-bold text-lg">O</span>
+        </div>
+        <span class="font-heading font-bold text-xl text-primary">OZOAGRO</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6">
+        <a href="#producto" class="text-foreground/70 hover:text-primary transition-colors">Producto</a>
+        <a href="#cultivos" class="text-foreground/70 hover:text-primary transition-colors">Cultivos</a>
+        <a href="#precios" class="text-foreground/70 hover:text-primary transition-colors">Precios</a>
+        <a href="#testimonios" class="text-foreground/70 hover:text-primary transition-colors">Testimonios</a>
+      </nav>
+      <a href="#comprar" class="bg-primary text-white px-5 py-2 rounded-full font-semibold hover:bg-primary-light transition-colors">
+        Comprar
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-20 flex items-center relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute top-20 right-0 w-96 h-96 bg-primary-light/20 organic-blob blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 w-80 h-80 bg-accent/10 organic-blob blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-12 items-center">
+      <div class="fade-in-up">
+        <span class="inline-block bg-primary-light/20 text-primary px-4 py-1 rounded-full text-sm font-medium mb-4">
+          100% Ecologico
+        </span>
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground leading-tight mb-6">
+          Proteccion <span class="text-primary">total</span> para tus cultivos de exportacion
+        </h1>
+        <p class="text-lg text-foreground/70 mb-8 max-w-lg">
+          El unico bioinsecticida y biofungicida a base de ozono. Sin quimicos, sin residuos, sin dañar el medio ambiente.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a href="#comprar" class="bg-primary text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-primary-light transition-all hover:scale-105 shadow-lg shadow-primary/30">
+            Comprar ahora
+          </a>
+          <a href="#producto" class="border-2 border-primary text-primary px-8 py-4 rounded-full font-semibold text-lg hover:bg-primary hover:text-white transition-all">
+            Ver mas
+          </a>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="flex items-center gap-6 mt-10 pt-6 border-t border-border">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-primary">100%</div>
+            <div class="text-sm text-foreground/60">Organico</div>
+          </div>
+          <div class="w-px h-10 bg-border"></div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-primary">0</div>
+            <div class="text-sm text-foreground/60">Quimicos</div>
+          </div>
+          <div class="w-px h-10 bg-border"></div>
+          <div class="text-center">
+            <div class="flex items-center justify-center text-2xl">🐝</div>
+            <div class="text-sm text-foreground/60">Seguro</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative float">
+        <div class="absolute inset-0 bg-primary/20 organic-blob blur-2xl scale-110"></div>
+        <img
+          src="img/producto-hero.png"
+          alt="Botella de OZOAGRO"
+          class="relative w-full max-w-md mx-auto drop-shadow-2xl"
+          onerror="this.src='https://placehold.co/400x500/15803D/white?text=OZOAGRO';this.onerror=null;"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Problema/Solucion -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          El dilema del agricultor
+        </h2>
+        <p class="text-lg text-foreground/70">
+          Cada dia enfrentas la misma decision: usar quimicos toxicos que dañan tu salud y el planeta, o perder tu cosecha ante plagas y hongos.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Problema -->
+        <div class="bg-red-50 p-8 rounded-3xl border border-red-200 reveal">
+          <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-bold text-red-800 mb-3">Productos quimicos</h3>
+          <ul class="space-y-2 text-red-700">
+            <li class="flex items-start gap-2">
+              <span class="mt-1">•</span>
+              <span>Contaminan el suelo y el agua</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1">•</span>
+              <span>Dañan tu salud y la de tu familia</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1">•</span>
+              <span>Matan insectos beneficiosos como abejas</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1">•</span>
+              <span>Dejan residuos en tus productos</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Solucion -->
+        <div class="bg-background p-8 rounded-3xl border-2 border-primary reveal">
+          <div class="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-bold text-primary mb-3">OZOAGRO</h3>
+          <ul class="space-y-2 text-foreground/80">
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-primary">✓</span>
+              <span>100% ecologico, sin quimicos</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-primary">✓</span>
+              <span>Seguro para ti y tu familia</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-primary">✓</span>
+              <span>No daña abejas ni polinizadores</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-primary">✓</span>
+              <span>Cero residuos en tus cultivos</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Que es Ozoagro -->
+  <section id="producto" class="py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          ¿Que contiene OZOAGRO?
+        </h2>
+        <p class="text-lg text-foreground/70">
+          Una formula unica a base de ozono organico que protege tus cultivos de forma natural.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-3xl shadow-lg shadow-primary/5 text-center reveal">
+          <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-4xl">O₃</span>
+          </div>
+          <h3 class="text-xl font-heading font-bold mb-3">Ozono Organico</h3>
+          <p class="text-foreground/70">
+            El poder del ozono destruye patogenos, hongos y bacterias de forma natural.
+          </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg shadow-primary/5 text-center reveal">
+          <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-4xl">🌿</span>
+          </div>
+          <h3 class="text-xl font-heading font-bold mb-3">Extractos Vegetales</h3>
+          <p class="text-foreground/70">
+            Combinado con extractos naturales que potencian la proteccion de tus plantas.
+          </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg shadow-primary/5 text-center reveal">
+          <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-4xl">💧</span>
+          </div>
+          <h3 class="text-xl font-heading font-bold mb-3">Base Acuosa</h3>
+          <p class="text-foreground/70">
+            Formula hidrosoluble que se mezcla facilmente y se absorbe rapidamente.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cultivos -->
+  <section id="cultivos" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Protege todos tus cultivos
+        </h2>
+        <p class="text-lg text-foreground/70">
+          OZOAGRO es efectivo en mas de 20 tipos de cultivos de exportacion.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 reveal">
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">☕</div>
+          <div class="font-medium">Cafe</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍫</div>
+          <div class="font-medium">Cacao</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🥑</div>
+          <div class="font-medium">Aguacate</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍓</div>
+          <div class="font-medium">Fresa</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍊</div>
+          <div class="font-medium">Citricos</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🥔</div>
+          <div class="font-medium">Papa</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍅</div>
+          <div class="font-medium">Tomate</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🌾</div>
+          <div class="font-medium">Arroz</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🌴</div>
+          <div class="font-medium">Palma</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍌</div>
+          <div class="font-medium">Platano</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🌿</div>
+          <div class="font-medium">Cannabis</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">💐</div>
+          <div class="font-medium">Flores</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🫐</div>
+          <div class="font-medium">Mora</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🍉</div>
+          <div class="font-medium">Patilla</div>
+        </div>
+        <div class="bg-background p-4 rounded-2xl text-center hover:shadow-lg transition-shadow cursor-default">
+          <div class="text-3xl mb-2">🥬</div>
+          <div class="font-medium">Hortalizas</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparativa -->
+  <section class="py-20 bg-foreground text-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          ¿Por que OZOAGRO es diferente?
+        </h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full max-w-4xl mx-auto reveal">
+          <thead>
+            <tr>
+              <th class="text-left p-4"></th>
+              <th class="p-4 bg-primary rounded-t-2xl">
+                <div class="font-heading font-bold text-lg">OZOAGRO</div>
+              </th>
+              <th class="p-4 text-white/60">
+                <div class="font-heading font-bold text-lg">Quimicos</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="text-center">
+            <tr class="border-b border-white/10">
+              <td class="text-left p-4 font-medium">Daño al ambiente</td>
+              <td class="p-4 bg-primary/20">Ninguno</td>
+              <td class="p-4 text-white/60">Alto</td>
+            </tr>
+            <tr class="border-b border-white/10">
+              <td class="text-left p-4 font-medium">Residuos en cultivos</td>
+              <td class="p-4 bg-primary/20">0%</td>
+              <td class="p-4 text-white/60">Alto</td>
+            </tr>
+            <tr class="border-b border-white/10">
+              <td class="text-left p-4 font-medium">Seguro para abejas</td>
+              <td class="p-4 bg-primary/20">✓ Si</td>
+              <td class="p-4 text-white/60">✗ No</td>
+            </tr>
+            <tr class="border-b border-white/10">
+              <td class="text-left p-4 font-medium">Tiempo de carencia</td>
+              <td class="p-4 bg-primary/20">0 dias</td>
+              <td class="p-4 text-white/60">7-21 dias</td>
+            </tr>
+            <tr>
+              <td class="text-left p-4 font-medium">Apto para exportacion</td>
+              <td class="p-4 bg-primary/20 rounded-b-2xl">✓ Si</td>
+              <td class="p-4 text-white/60">Limitado</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como aplicar -->
+  <section class="py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Facil de aplicar
+        </h2>
+        <p class="text-lg text-foreground/70">
+          Solo 4 pasos para proteger tus cultivos.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-8 reveal">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+          <h3 class="font-heading font-bold mb-2">Mide</h3>
+          <p class="text-foreground/70 text-sm">5ml por cada litro de agua</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+          <h3 class="font-heading font-bold mb-2">Mezcla</h3>
+          <p class="text-foreground/70 text-sm">Agita bien hasta disolver</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+          <h3 class="font-heading font-bold mb-2">Aplica</h3>
+          <p class="text-foreground/70 text-sm">Rocía sobre hojas y tallos</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">4</div>
+          <h3 class="font-heading font-bold mb-2">Repite</h3>
+          <p class="text-foreground/70 text-sm">Cada 7-15 días según necesidad</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abejas -->
+  <section class="py-16 bg-amber-50">
+    <div class="max-w-4xl mx-auto px-4 reveal">
+      <div class="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+        <div class="text-8xl">🐝</div>
+        <div>
+          <h2 class="text-2xl md:text-3xl font-heading font-bold mb-3">
+            ¿OZOAGRO daña las abejas?
+          </h2>
+          <p class="text-lg text-foreground/70 mb-4">
+            <strong class="text-primary">No.</strong> A diferencia de los insecticidas químicos, OZOAGRO es 100% seguro para abejas, mariposas y otros polinizadores. Protege tus cultivos sin dañar a los insectos beneficiosos que tu finca necesita.
+          </p>
+          <span class="inline-block bg-primary/20 text-primary px-4 py-2 rounded-full font-medium">
+            Amigable con polinizadores
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Precios -->
+  <section id="precios" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Elige tu presentacion
+        </h2>
+        <p class="text-lg text-foreground/70">
+          Mientras mas compras, mas ahorras.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto reveal">
+        <!-- 1 Litro -->
+        <div class="bg-background p-8 rounded-3xl border-2 border-border hover:border-primary transition-colors">
+          <div class="text-center mb-6">
+            <div class="text-5xl mb-4">🧴</div>
+            <h3 class="text-2xl font-heading font-bold">1 Litro</h3>
+            <p class="text-foreground/60 text-sm">Ideal para probar</p>
+          </div>
+          <div class="text-center mb-6">
+            <div class="text-4xl font-bold text-primary">$130.000</div>
+          </div>
+          <a href="#comprar" class="block w-full bg-foreground/10 text-foreground py-3 rounded-full text-center font-semibold hover:bg-foreground hover:text-white transition-colors" onclick="selectPlan('1')">
+            Seleccionar
+          </a>
+        </div>
+
+        <!-- 2 Litros - Popular -->
+        <div class="bg-primary p-8 rounded-3xl text-white relative transform md:scale-105 shadow-xl shadow-primary/30">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white px-4 py-1 rounded-full text-sm font-bold">
+            MAS VENDIDO
+          </div>
+          <div class="text-center mb-6">
+            <div class="text-5xl mb-4">🧴🧴</div>
+            <h3 class="text-2xl font-heading font-bold">2 Litros</h3>
+            <p class="text-white/70 text-sm">El más popular</p>
+          </div>
+          <div class="text-center mb-6">
+            <div class="text-4xl font-bold">$220.000</div>
+            <div class="text-white/80 text-sm mt-1">
+              <span class="line-through">$260.000</span>
+              <span class="bg-white/20 px-2 py-0.5 rounded ml-2">Ahorras $40.000</span>
+            </div>
+          </div>
+          <a href="#comprar" class="block w-full bg-white text-primary py-3 rounded-full text-center font-semibold hover:bg-white/90 transition-colors" onclick="selectPlan('2')">
+            Seleccionar
+          </a>
+        </div>
+
+        <!-- 3 Litros -->
+        <div class="bg-background p-8 rounded-3xl border-2 border-primary">
+          <div class="absolute -top-3 right-4 bg-accent text-white px-3 py-1 rounded-full text-xs font-bold hidden md:block">
+            MEJOR VALOR
+          </div>
+          <div class="text-center mb-6">
+            <div class="text-5xl mb-4">🧴🧴🧴</div>
+            <h3 class="text-2xl font-heading font-bold">3 Litros</h3>
+            <p class="text-foreground/60 text-sm">Para fincas grandes</p>
+          </div>
+          <div class="text-center mb-6">
+            <div class="text-4xl font-bold text-primary">$300.000</div>
+            <div class="text-foreground/60 text-sm mt-1">
+              <span class="line-through">$390.000</span>
+              <span class="bg-primary/20 text-primary px-2 py-0.5 rounded ml-2">Ahorras $60.000</span>
+            </div>
+          </div>
+          <a href="#comprar" class="block w-full bg-primary text-white py-3 rounded-full text-center font-semibold hover:bg-primary-light transition-colors" onclick="selectPlan('3')">
+            Seleccionar
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonios -->
+  <section id="testimonios" class="py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Lo que dicen nuestros clientes
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 reveal">
+        <div class="bg-white p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-1 text-amber-400 mb-4">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p class="text-foreground/80 mb-6">
+            "Llevaba años usando quimicos en mi cafe y siempre me preocupaba la salud de mis trabajadores. Con OZOAGRO mis cultivos estan protegidos y puedo exportar sin problemas."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">JM</div>
+            <div>
+              <div class="font-semibold">Jose Martinez</div>
+              <div class="text-sm text-foreground/60">Caficultor, Huila</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-1 text-amber-400 mb-4">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p class="text-foreground/80 mb-6">
+            "Lo mejor es que puedo aplicarlo y cosechar el mismo dia. Mis aguacates salen perfectos para exportacion, sin residuos y con toda la certificacion."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">MC</div>
+            <div>
+              <div class="font-semibold">Maria Cardenas</div>
+              <div class="text-sm text-foreground/60">Aguacatera, Antioquia</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-1 text-amber-400 mb-4">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p class="text-foreground/80 mb-6">
+            "En mi cultivo de cannabis medicinal no puedo usar quimicos. OZOAGRO fue la solucion perfecta. Mis plantas estan sanas y paso todas las pruebas de laboratorio."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">AR</div>
+            <div>
+              <div class="font-semibold">Andres Restrepo</div>
+              <div class="text-sm text-foreground/60">Productor CBD, Valle</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-20 bg-white">
+    <div class="max-w-3xl mx-auto px-4">
+      <div class="text-center mb-16 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Preguntas frecuentes
+        </h2>
+      </div>
+
+      <div class="space-y-4 reveal">
+        <details class="bg-background rounded-2xl p-6 group">
+          <summary class="flex items-center justify-between cursor-pointer font-semibold">
+            ¿Por que cuesta mas que otros bioinsecticidas?
+            <span class="text-primary group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-4 text-foreground/70">
+            OZOAGRO usa ozono organico de alta pureza, un proceso mas costoso pero mucho mas efectivo. Un litro rinde para 200 litros de mezcla, lo que lo hace mas economico por aplicacion que productos quimicos.
+          </p>
+        </details>
+
+        <details class="bg-background rounded-2xl p-6 group">
+          <summary class="flex items-center justify-between cursor-pointer font-semibold">
+            ¿Cuanto tiempo dura el efecto?
+            <span class="text-primary group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-4 text-foreground/70">
+            El efecto protector dura entre 7 y 15 dias dependiendo de las condiciones climaticas. Se recomienda aplicar cada 7 dias en temporada de lluvias y cada 15 dias en temporada seca.
+          </p>
+        </details>
+
+        <details class="bg-background rounded-2xl p-6 group">
+          <summary class="flex items-center justify-between cursor-pointer font-semibold">
+            ¿Sirve para cultivos organicos certificados?
+            <span class="text-primary group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-4 text-foreground/70">
+            Si. OZOAGRO es 100% compatible con certificaciones organicas porque no contiene ningun quimico sintetico. Solo usa ozono y extractos vegetales naturales.
+          </p>
+        </details>
+
+        <details class="bg-background rounded-2xl p-6 group">
+          <summary class="flex items-center justify-between cursor-pointer font-semibold">
+            ¿Cuanto debo aplicar por hectarea?
+            <span class="text-primary group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-4 text-foreground/70">
+            La dosis recomendada es 5ml por litro de agua. Para una hectarea tipica necesitas entre 200-400 litros de mezcla, es decir, entre 1 y 2 litros de OZOAGRO por aplicacion.
+          </p>
+        </details>
+
+        <details class="bg-background rounded-2xl p-6 group">
+          <summary class="flex items-center justify-between cursor-pointer font-semibold">
+            ¿Como me llega el producto?
+            <span class="text-primary group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-4 text-foreground/70">
+            Enviamos a toda Colombia por transportadora. Pagas cuando te llegue el producto (contraentrega). El envio tarda entre 2 y 5 dias habiles dependiendo de tu ubicacion.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Final + Checkout -->
+  <section id="comprar" class="py-20 bg-primary">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center text-white mb-12 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">
+          Protege tus cultivos hoy
+        </h2>
+        <p class="text-white/80 text-lg">
+          Pago contraentrega. Solo pagas cuando te llegue el producto.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-3xl p-8 md:p-12 shadow-2xl reveal">
+        <form id="checkout-form" class="space-y-6">
+          <!-- Seleccion de plan -->
+          <div>
+            <label class="block font-semibold mb-3">Selecciona tu plan</label>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="relative cursor-pointer">
+                <input type="radio" name="plan" value="1" class="peer sr-only">
+                <div class="p-4 border-2 border-border rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                  <div class="font-bold">1 Litro</div>
+                  <div class="text-primary font-semibold">$130.000</div>
+                </div>
+              </label>
+              <label class="relative cursor-pointer">
+                <input type="radio" name="plan" value="2" class="peer sr-only" checked>
+                <div class="p-4 border-2 border-border rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                  <div class="font-bold">2 Litros</div>
+                  <div class="text-primary font-semibold">$220.000</div>
+                </div>
+              </label>
+              <label class="relative cursor-pointer">
+                <input type="radio" name="plan" value="3" class="peer sr-only">
+                <div class="p-4 border-2 border-border rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                  <div class="font-bold">3 Litros</div>
+                  <div class="text-primary font-semibold">$300.000</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Datos personales -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold mb-2">Nombre completo</label>
+              <input type="text" name="nombre" required class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Tu nombre">
+            </div>
+            <div>
+              <label class="block font-semibold mb-2">Telefono / WhatsApp</label>
+              <input type="tel" name="telefono" required pattern="3[0-9]{9}" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="3001234567">
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold mb-2">Departamento</label>
+              <select name="departamento" required class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors bg-white">
+                <option value="">Selecciona...</option>
+                <option>Amazonas</option>
+                <option>Antioquia</option>
+                <option>Arauca</option>
+                <option>Atlantico</option>
+                <option>Bolivar</option>
+                <option>Boyaca</option>
+                <option>Caldas</option>
+                <option>Caqueta</option>
+                <option>Casanare</option>
+                <option>Cauca</option>
+                <option>Cesar</option>
+                <option>Choco</option>
+                <option>Cordoba</option>
+                <option>Cundinamarca</option>
+                <option>Guainia</option>
+                <option>Guaviare</option>
+                <option>Huila</option>
+                <option>La Guajira</option>
+                <option>Magdalena</option>
+                <option>Meta</option>
+                <option>Nariño</option>
+                <option>Norte de Santander</option>
+                <option>Putumayo</option>
+                <option>Quindio</option>
+                <option>Risaralda</option>
+                <option>San Andres</option>
+                <option>Santander</option>
+                <option>Sucre</option>
+                <option>Tolima</option>
+                <option>Valle del Cauca</option>
+                <option>Vaupes</option>
+                <option>Vichada</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-2">Ciudad / Municipio</label>
+              <input type="text" name="ciudad" required class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Tu ciudad">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold mb-2">Direccion de entrega</label>
+            <input type="text" name="direccion" required minlength="10" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Direccion completa (vereda, finca, barrio)">
+          </div>
+
+          <div>
+            <label class="block font-semibold mb-2">Tipo de cultivo (opcional)</label>
+            <input type="text" name="cultivo" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Ej: Cafe, Aguacate, Cannabis...">
+          </div>
+
+          <!-- Resumen -->
+          <div class="bg-background p-6 rounded-2xl">
+            <div class="flex justify-between items-center mb-2">
+              <span>Producto</span>
+              <span id="resumen-plan" class="font-semibold">2 Litros</span>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <span>Envio</span>
+              <span class="text-foreground/60">Se confirma por WhatsApp</span>
+            </div>
+            <div class="border-t border-border pt-3 mt-3 flex justify-between items-center">
+              <span class="font-bold text-lg">Total</span>
+              <span id="resumen-total" class="font-bold text-2xl text-primary">$220.000</span>
+            </div>
+          </div>
+
+          <!-- Info envio -->
+          <p class="text-sm text-foreground/60 text-center">
+            El costo del envio se te confirmara por WhatsApp segun tu ubicacion. Pagas todo cuando te llegue el producto.
+          </p>
+
+          <!-- Submit -->
+          <button type="submit" class="w-full bg-primary text-white py-4 rounded-full font-bold text-lg hover:bg-primary-light transition-all hover:scale-[1.02] shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+            <span>CONFIRMAR PEDIDO</span>
+            <span class="text-sm opacity-80">Pagas cuando te llegue</span>
+          </button>
+        </form>
+
+        <!-- Success message (hidden by default) -->
+        <div id="success-message" class="hidden text-center py-8">
+          <div class="text-6xl mb-4">✓</div>
+          <h3 class="text-2xl font-heading font-bold text-primary mb-2">¡Pedido recibido!</h3>
+          <p class="text-foreground/70 mb-6">
+            Te contactaremos por WhatsApp para confirmar tu pedido y el costo del envio.
+          </p>
+          <a href="/" class="text-primary font-semibold hover:underline">Volver al inicio</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-foreground text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+            <span class="text-white font-heading font-bold text-lg">O</span>
+          </div>
+          <span class="font-heading font-bold text-xl">OZOAGRO</span>
+        </div>
+        <p class="text-white/60 text-sm text-center">
+          Proteccion ecologica para cultivos de exportacion. Hecho en Colombia.
+        </p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="text-white/60 hover:text-white transition-colors">Politica de privacidad</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp floating button -->
+  <a href="https://wa.me/573000000000?text=Hola,%20quiero%20informacion%20sobre%20OZOAGRO" target="_blank" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50">
+    <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const revealOnScroll = () => {
+      reveals.forEach(el => {
+        const top = el.getBoundingClientRect().top;
+        if (top < window.innerHeight - 100) {
+          el.classList.add('visible');
+        }
+      });
+    };
+    window.addEventListener('scroll', revealOnScroll);
+    revealOnScroll();
+
+    // Plan selection
+    const plans = {
+      '1': { name: '1 Litro', price: 130000 },
+      '2': { name: '2 Litros', price: 220000 },
+      '3': { name: '3 Litros', price: 300000 }
+    };
+
+    function selectPlan(id) {
+      document.querySelector(`input[name="plan"][value="${id}"]`).checked = true;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const selected = document.querySelector('input[name="plan"]:checked').value;
+      const plan = plans[selected];
+      document.getElementById('resumen-plan').textContent = plan.name;
+      document.getElementById('resumen-total').textContent = '$' + plan.price.toLocaleString('es-CO');
+    }
+
+    document.querySelectorAll('input[name="plan"]').forEach(input => {
+      input.addEventListener('change', updateSummary);
+    });
+
+    // Form submission (placeholder - will connect to Supabase later)
+    document.getElementById('checkout-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+
+      // For now, just show success message
+      console.log('Pedido:', data);
+
+      this.classList.add('hidden');
+      document.getElementById('success-message').classList.remove('hidden');
+
+      // TODO: Connect to Supabase + send email + Telegram notification
+    });
+  </script>
+</body>
+</html>
