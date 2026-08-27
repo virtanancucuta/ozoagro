@@ -13,6 +13,8 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- GSAP for animations -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -81,6 +83,41 @@
       background-color: #15803D;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
     }
+
+    /* Logo animation styles */
+    .logo-animated {
+      perspective: 1000px;
+    }
+    .logo-icon {
+      transition: transform 0.3s ease;
+    }
+    .logo-animated:hover .logo-icon {
+      transform: rotate(360deg) scale(1.1);
+    }
+    .logo-text span {
+      display: inline-block;
+    }
+
+    /* Hero product animation */
+    .hero-product {
+      animation: heroFloat 4s ease-in-out infinite;
+    }
+    @keyframes heroFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-15px) rotate(2deg); }
+      75% { transform: translateY(-15px) rotate(-2deg); }
+    }
+
+    /* Animated title */
+    .animated-title .char {
+      display: inline-block;
+      opacity: 0;
+    }
+
+    /* Glow effect */
+    .glow-text {
+      text-shadow: 0 0 20px rgba(21, 128, 61, 0.5), 0 0 40px rgba(21, 128, 61, 0.3);
+    }
   </style>
 </head>
 <body class="bg-background text-foreground">
@@ -88,11 +125,13 @@
   <!-- Header -->
   <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-border">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-2">
-        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+      <a href="#" class="flex items-center gap-2 logo-animated">
+        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center logo-icon">
           <span class="text-white font-heading font-bold text-lg">O</span>
         </div>
-        <span class="font-heading font-bold text-xl text-primary">OZOAGRO</span>
+        <span class="font-heading font-bold text-xl logo-text">
+          <span class="text-accent">OZO</span><span class="text-primary">AGRO</span>
+        </span>
       </a>
       <nav class="hidden md:flex items-center gap-6">
         <a href="#producto" class="text-foreground/70 hover:text-primary transition-colors">Producto</a>
@@ -118,8 +157,23 @@
           100% Ecologico
         </span>
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground leading-tight mb-6">
-          Proteccion <span class="text-primary">total</span> para tus cultivos de exportacion
+          Proteccion <span class="text-primary glow-text">total</span> para tus cultivos de exportacion
         </h1>
+
+        <!-- Animated OZOAGRO badge -->
+        <div class="mb-6 overflow-hidden">
+          <div id="brand-animated" class="inline-flex items-center gap-3 bg-white/80 backdrop-blur px-6 py-3 rounded-2xl shadow-lg border border-primary/20">
+            <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+              <span class="text-white font-heading font-bold text-xl">O₃</span>
+            </div>
+            <div class="text-left">
+              <div class="font-heading font-bold text-2xl">
+                <span class="text-accent brand-char">O</span><span class="text-accent brand-char">Z</span><span class="text-accent brand-char">O</span><span class="text-primary brand-char">A</span><span class="text-primary brand-char">G</span><span class="text-primary brand-char">R</span><span class="text-primary brand-char">O</span>
+              </div>
+              <div class="text-xs text-foreground/60 uppercase tracking-wider">Tecnologia Ambiental</div>
+            </div>
+          </div>
+        </div>
         <p class="text-lg text-foreground/70 mb-8 max-w-lg">
           El unico bioinsecticida y biofungicida a base de ozono. Sin quimicos, sin residuos, sin dañar el medio ambiente.
         </p>
@@ -151,12 +205,12 @@
         </div>
       </div>
 
-      <div class="relative float">
+      <div class="relative">
         <div class="absolute inset-0 bg-primary/20 organic-blob blur-2xl scale-110"></div>
         <img
-          src="img/producto_hero.webp"
-          alt="Botella de OZOAGRO - Bioinsecticida ecologico"
-          class="relative w-full max-w-md mx-auto drop-shadow-2xl rounded-3xl"
+          src="img/botella_hero.webp"
+          alt="Botella de OZOAGRO - Bioinsecticida ecologico 1 Litro"
+          class="relative w-full max-w-lg mx-auto drop-shadow-2xl hero-product"
         >
       </div>
     </div>
@@ -484,7 +538,7 @@
         <!-- 1 Litro -->
         <div class="bg-background p-8 rounded-3xl border-2 border-border hover:border-primary transition-colors">
           <div class="text-center mb-6">
-            <div class="text-5xl mb-4">🧴</div>
+            <img src="img/botella_small.webp" alt="1 Litro OZOAGRO" class="h-24 mx-auto mb-4 drop-shadow-lg">
             <h3 class="text-2xl font-heading font-bold">1 Litro</h3>
             <p class="text-foreground/60 text-sm">Ideal para probar</p>
           </div>
@@ -502,9 +556,12 @@
             MAS VENDIDO
           </div>
           <div class="text-center mb-6">
-            <div class="text-5xl mb-4">🧴🧴</div>
+            <div class="flex justify-center gap-1 mb-4">
+              <img src="img/botella_small.webp" alt="OZOAGRO" class="h-20 drop-shadow-lg">
+              <img src="img/botella_small.webp" alt="OZOAGRO" class="h-20 drop-shadow-lg">
+            </div>
             <h3 class="text-2xl font-heading font-bold">2 Litros</h3>
-            <p class="text-white/70 text-sm">El más popular</p>
+            <p class="text-white/70 text-sm">El mas popular</p>
           </div>
           <div class="text-center mb-6">
             <div class="text-4xl font-bold">$220.000</div>
@@ -519,12 +576,16 @@
         </div>
 
         <!-- 3 Litros -->
-        <div class="bg-background p-8 rounded-3xl border-2 border-primary">
-          <div class="absolute -top-3 right-4 bg-accent text-white px-3 py-1 rounded-full text-xs font-bold hidden md:block">
+        <div class="bg-background p-8 rounded-3xl border-2 border-primary relative">
+          <div class="absolute -top-3 right-4 bg-accent text-white px-3 py-1 rounded-full text-xs font-bold">
             MEJOR VALOR
           </div>
           <div class="text-center mb-6">
-            <div class="text-5xl mb-4">🧴🧴🧴</div>
+            <div class="flex justify-center gap-0.5 mb-4">
+              <img src="img/botella_small.webp" alt="OZOAGRO" class="h-16 drop-shadow-lg">
+              <img src="img/botella_small.webp" alt="OZOAGRO" class="h-16 drop-shadow-lg">
+              <img src="img/botella_small.webp" alt="OZOAGRO" class="h-16 drop-shadow-lg">
+            </div>
             <h3 class="text-2xl font-heading font-bold">3 Litros</h3>
             <p class="text-foreground/60 text-sm">Para fincas grandes</p>
           </div>
@@ -895,6 +956,68 @@
       document.getElementById('success-message').classList.remove('hidden');
 
       // TODO: Connect to Supabase + send email + Telegram notification
+    });
+
+    // GSAP Animations
+    document.addEventListener('DOMContentLoaded', () => {
+      // Animate brand characters
+      const brandChars = document.querySelectorAll('.brand-char');
+      gsap.fromTo(brandChars,
+        { opacity: 0, y: 30, rotationX: -90 },
+        {
+          opacity: 1,
+          y: 0,
+          rotationX: 0,
+          duration: 0.6,
+          stagger: 0.08,
+          ease: 'back.out(1.7)',
+          delay: 0.3
+        }
+      );
+
+      // Animate brand badge
+      gsap.fromTo('#brand-animated',
+        { opacity: 0, scale: 0.8, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 }
+      );
+
+      // Hero product entrance
+      gsap.fromTo('.hero-product',
+        { opacity: 0, scale: 0.8, y: 50 },
+        { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'elastic.out(1, 0.5)', delay: 0.5 }
+      );
+
+      // Logo icon pulse on load
+      gsap.fromTo('.logo-icon',
+        { scale: 0, rotation: -180 },
+        { scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(1.7)', delay: 0.1 }
+      );
+
+      // Logo text slide in
+      gsap.fromTo('.logo-text',
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out', delay: 0.3 }
+      );
+
+      // Continuous glow pulse on "total"
+      gsap.to('.glow-text', {
+        textShadow: '0 0 30px rgba(21, 128, 61, 0.8), 0 0 60px rgba(21, 128, 61, 0.5)',
+        duration: 1.5,
+        yoyo: true,
+        repeat: -1,
+        ease: 'sine.inOut'
+      });
+
+      // Hover effect on pricing cards
+      const pricingCards = document.querySelectorAll('#precios .rounded-3xl');
+      pricingCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, { y: -10, duration: 0.3, ease: 'power2.out' });
+        });
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { y: 0, duration: 0.3, ease: 'power2.out' });
+        });
+      });
     });
   </script>
 </body>
