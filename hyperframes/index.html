@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es" data-composition-variables='[
+  {"id":"tagline","type":"string","label":"Tagline","default":"Tecnología Ambiental"}
+]'>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OZOAGRO Animation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Raleway:wght@300;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    [data-composition-id="ozoagro-intro"] {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 50%, #F0FDF4 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Organic background shapes */
+    .bg-blob {
+      position: absolute;
+      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+      filter: blur(80px);
+      opacity: 0.4;
+    }
+    .bg-blob-1 {
+      width: 600px;
+      height: 600px;
+      background: #22C55E;
+      top: -200px;
+      right: -200px;
+    }
+    .bg-blob-2 {
+      width: 500px;
+      height: 500px;
+      background: #A16207;
+      bottom: -150px;
+      left: -150px;
+      opacity: 0.3;
+    }
+    .bg-blob-3 {
+      width: 400px;
+      height: 400px;
+      background: #15803D;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.2;
+    }
+
+    /* Leaves decoration */
+    .leaf {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+    }
+    .leaf-1 { top: 10%; left: 10%; }
+    .leaf-2 { top: 15%; right: 15%; }
+    .leaf-3 { bottom: 20%; left: 20%; }
+    .leaf-4 { bottom: 15%; right: 10%; }
+    .leaf-5 { top: 40%; left: 5%; }
+    .leaf-6 { top: 35%; right: 8%; }
+
+    /* Main content */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+
+    /* O3 Icon */
+    .icon-container {
+      width: 180px;
+      height: 180px;
+      background: #15803D;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 40px;
+      box-shadow: 0 20px 60px rgba(21, 128, 61, 0.4);
+      opacity: 0;
+      transform: scale(0);
+    }
+    .icon-text {
+      font-family: 'Raleway', sans-serif;
+      font-size: 80px;
+      font-weight: 600;
+      color: white;
+    }
+    .icon-text sub {
+      font-size: 50px;
+    }
+
+    /* Brand name */
+    .brand-name {
+      font-family: 'Lora', serif;
+      font-size: 140px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+    .brand-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    .char-ozo {
+      color: #A16207;
+    }
+    .char-agro {
+      color: #15803D;
+    }
+
+    /* Tagline */
+    .tagline {
+      font-family: 'Raleway', sans-serif;
+      font-size: 32px;
+      font-weight: 300;
+      color: #14532D;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      opacity: 0;
+    }
+
+    /* Glow effect */
+    .glow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: radial-gradient(circle at center, rgba(21, 128, 61, 0.3) 0%, transparent 60%);
+      opacity: 0;
+      z-index: 5;
+    }
+
+    /* Particle dots */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #22C55E;
+      border-radius: 50%;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div data-composition-id="ozoagro-intro" data-start="0" data-duration="6" data-width="1080" data-height="1080" data-track-index="0">
+
+    <!-- Background blobs -->
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+
+    <!-- Glow effect -->
+    <div class="glow"></div>
+
+    <!-- Leaves -->
+    <div class="leaf leaf-1">🌿</div>
+    <div class="leaf leaf-2">🍃</div>
+    <div class="leaf leaf-3">🌱</div>
+    <div class="leaf leaf-4">🍃</div>
+    <div class="leaf leaf-5">🌿</div>
+    <div class="leaf leaf-6">🌱</div>
+
+    <!-- Particles -->
+    <div class="particle" style="top: 20%; left: 30%;"></div>
+    <div class="particle" style="top: 30%; right: 25%;"></div>
+    <div class="particle" style="bottom: 25%; left: 35%;"></div>
+    <div class="particle" style="bottom: 30%; right: 30%;"></div>
+    <div class="particle" style="top: 50%; left: 15%;"></div>
+    <div class="particle" style="top: 45%; right: 20%;"></div>
+
+    <!-- Main content -->
+    <div class="content">
+      <!-- O3 Icon -->
+      <div class="icon-container">
+        <span class="icon-text">O<sub>3</sub></span>
+      </div>
+
+      <!-- Brand name: OZOAGRO -->
+      <div class="brand-name">
+        <span class="brand-char char-ozo">O</span>
+        <span class="brand-char char-ozo">Z</span>
+        <span class="brand-char char-ozo">O</span>
+        <span class="brand-char char-agro">A</span>
+        <span class="brand-char char-agro">G</span>
+        <span class="brand-char char-agro">R</span>
+        <span class="brand-char char-agro">O</span>
+      </div>
+
+      <!-- Tagline -->
+      <div class="tagline">Tecnología Ambiental</div>
+    </div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene timing
+    const INTRO_START = 0.2;
+    const ICON_DURATION = 0.8;
+    const CHARS_START = 0.6;
+    const CHARS_STAGGER = 0.1;
+    const TAGLINE_START = 1.8;
+    const LEAVES_START = 0.4;
+    const GLOW_START = 2.2;
+    const HOLD_END = 5.5;
+
+    // Background blobs subtle animation
+    tl.to('.bg-blob-1', {
+      x: 50, y: 30, scale: 1.1,
+      duration: 5, ease: 'sine.inOut'
+    }, 0);
+    tl.to('.bg-blob-2', {
+      x: -30, y: -20, scale: 1.05,
+      duration: 5, ease: 'sine.inOut'
+    }, 0);
+    tl.to('.bg-blob-3', {
+      scale: 1.2, opacity: 0.3,
+      duration: 5, ease: 'sine.inOut'
+    }, 0);
+
+    // Particles float in
+    tl.to('.particle', {
+      opacity: 0.6,
+      scale: 1.5,
+      duration: 0.8,
+      stagger: { each: 0.15, from: 'random' },
+      ease: 'power2.out'
+    }, INTRO_START);
+
+    // Particles continuous float
+    tl.to('.particle', {
+      y: '-=30',
+      duration: 2,
+      stagger: { each: 0.2, from: 'random' },
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: 2
+    }, INTRO_START + 0.5);
+
+    // Leaves float in with rotation
+    tl.to('.leaf', {
+      opacity: 0.7,
+      rotation: 15,
+      scale: 1,
+      duration: 1,
+      stagger: { each: 0.12, from: 'edges' },
+      ease: 'back.out(1.2)'
+    }, LEAVES_START);
+
+    // Leaves gentle sway
+    tl.to('.leaf', {
+      rotation: -10,
+      y: '-=20',
+      duration: 2.5,
+      stagger: { each: 0.15 },
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: 1
+    }, LEAVES_START + 1);
+
+    // Icon entrance - bounce in
+    tl.fromTo('.icon-container',
+      { opacity: 0, scale: 0, rotation: -180 },
+      {
+        opacity: 1, scale: 1, rotation: 0,
+        duration: ICON_DURATION,
+        ease: 'elastic.out(1, 0.5)'
+      },
+      INTRO_START
+    );
+
+    // Icon pulse
+    tl.to('.icon-container', {
+      scale: 1.05,
+      boxShadow: '0 25px 80px rgba(21, 128, 61, 0.6)',
+      duration: 0.4,
+      ease: 'power2.out'
+    }, INTRO_START + ICON_DURATION);
+    tl.to('.icon-container', {
+      scale: 1,
+      boxShadow: '0 20px 60px rgba(21, 128, 61, 0.4)',
+      duration: 0.3,
+      ease: 'power2.in'
+    }, INTRO_START + ICON_DURATION + 0.4);
+
+    // Characters entrance - staggered from center
+    tl.fromTo('.brand-char',
+      { opacity: 0, y: 100, rotationX: -90 },
+      {
+        opacity: 1, y: 0, rotationX: 0,
+        duration: 0.7,
+        stagger: { each: CHARS_STAGGER, from: 'center' },
+        ease: 'back.out(1.7)'
+      },
+      CHARS_START
+    );
+
+    // OZO characters get gold glow
+    tl.to('.char-ozo', {
+      textShadow: '0 0 30px rgba(161, 98, 7, 0.6), 0 0 60px rgba(161, 98, 7, 0.3)',
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'power2.out'
+    }, CHARS_START + 0.7);
+
+    // AGRO characters get green glow
+    tl.to('.char-agro', {
+      textShadow: '0 0 30px rgba(21, 128, 61, 0.6), 0 0 60px rgba(21, 128, 61, 0.3)',
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'power2.out'
+    }, CHARS_START + 0.9);
+
+    // Tagline fade in with slide
+    tl.fromTo('.tagline',
+      { opacity: 0, y: 30, letterSpacing: '15px' },
+      {
+        opacity: 1, y: 0, letterSpacing: '8px',
+        duration: 0.8,
+        ease: 'power3.out'
+      },
+      TAGLINE_START
+    );
+
+    // Central glow pulse
+    tl.to('.glow', {
+      opacity: 1,
+      duration: 0.8,
+      ease: 'power2.out'
+    }, GLOW_START);
+    tl.to('.glow', {
+      opacity: 0.5,
+      duration: 0.5,
+      ease: 'power2.in'
+    }, GLOW_START + 0.8);
+
+    // Final subtle breathing on brand
+    tl.to('.brand-name', {
+      scale: 1.02,
+      duration: 1,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: 1
+    }, GLOW_START + 0.5);
+
+    // Hold at end - everything visible
+    tl.to({}, { duration: 0.5 }, HOLD_END);
+
+    // Register timeline
+    window.__timelines['ozoagro-intro'] = tl;
+  </script>
+</body>
+</html>
