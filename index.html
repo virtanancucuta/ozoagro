@@ -220,14 +220,30 @@
         </h2>
       </div>
       <div class="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 reveal">
-        <video
-          src="video/videoplayback.mp4"
-          class="w-full aspect-video rounded-2xl"
-          autoplay
-          muted
-          controls
-          playsinline
-        ></video>
+        <div class="relative cursor-pointer group" onclick="playVideo(this)">
+          <video
+            id="promo-video"
+            src="video/videoplayback.mp4"
+            class="w-full aspect-video rounded-2xl"
+            playsinline
+          ></video>
+          <div id="play-overlay" class="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl group-hover:bg-black/40 transition-colors">
+            <div class="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <svg class="w-8 h-8 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <script>
+          function playVideo(container) {
+            const video = container.querySelector('video');
+            const overlay = container.querySelector('#play-overlay');
+            overlay.style.display = 'none';
+            video.play();
+            video.muted = false;
+          }
+        </script>
       </div>
     </div>
   </section>
