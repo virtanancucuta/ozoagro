@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OZOAGRO - Video Promocional</title>
+  <title>OZOAGRO - Protege tu Patrimonio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet">
@@ -11,10 +11,9 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    [data-composition-id="ozoagro-promo"] {
+    [data-composition-id="ozoagro-need"] {
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
       overflow: hidden;
       position: relative;
       font-family: 'Raleway', sans-serif;
@@ -29,128 +28,258 @@
       align-items: center;
       justify-content: center;
       opacity: 0;
-      padding: 80px;
+      padding: 60px;
+      text-align: center;
     }
 
-    /* Scene 1: Intro */
-    .scene-intro .icon-box {
-      width: 180px; height: 180px;
-      background: #15803D;
-      border-radius: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Scene 1: Impacto */
+    .scene-impact {
+      background: linear-gradient(135deg, #7F1D1D 0%, #991B1B 100%);
+    }
+    .scene-impact h2 {
+      font-family: 'Lora', serif;
+      font-size: 48px;
+      color: white;
+      margin-bottom: 30px;
+      line-height: 1.2;
+    }
+    .stat-big {
+      font-size: 120px;
+      font-weight: 700;
+      color: #FCA5A5;
+      margin-bottom: 10px;
+    }
+    .stat-label {
+      font-size: 28px;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .stat-sub {
+      font-size: 22px;
+      color: #FECACA;
+      max-width: 700px;
+    }
+
+    /* Scene 2: Perdidas */
+    .scene-loss {
+      background: linear-gradient(135deg, #1E1E1E 0%, #2D2D2D 100%);
+    }
+    .scene-loss h2 {
+      font-family: 'Lora', serif;
+      font-size: 52px;
+      color: white;
       margin-bottom: 40px;
     }
-    .scene-intro .icon-text {
-      font-family: 'Raleway', sans-serif;
-      font-size: 80px;
-      font-weight: 700;
-      color: white;
-    }
-    .scene-intro .icon-text sub { font-size: 50px; }
-    .scene-intro .brand {
-      font-family: 'Lora', serif;
-      font-size: 100px;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    .scene-intro .ozo { color: #A16207; }
-    .scene-intro .agro { color: #15803D; }
-    .scene-intro .tag {
-      font-size: 24px;
-      color: #14532D;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-    }
-
-    /* Scene 2: Benefits */
-    .scene-benefits { background: #15803D; }
-    .scene-benefits h2 {
-      font-family: 'Lora', serif;
-      font-size: 64px;
-      color: white;
-      margin-bottom: 50px;
-    }
-    .benefit-grid {
+    .loss-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 30px;
+      gap: 20px;
+      max-width: 800px;
     }
-    .benefit-item {
+    .loss-item {
+      background: rgba(255,255,255,0.1);
+      padding: 25px;
+      border-radius: 20px;
+      border-left: 4px solid #EF4444;
+    }
+    .loss-crop {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .loss-name {
+      font-size: 20px;
+      color: white;
+      font-weight: 600;
+    }
+    .loss-percent {
+      font-size: 28px;
+      color: #FCA5A5;
+      font-weight: 700;
+    }
+
+    /* Scene 3: Solucion */
+    .scene-solution {
+      background: linear-gradient(135deg, #15803D 0%, #166534 100%);
+    }
+    .scene-solution h2 {
+      font-family: 'Lora', serif;
+      font-size: 56px;
+      color: white;
+      margin-bottom: 40px;
+    }
+    .brand-box {
+      background: white;
+      padding: 40px 60px;
+      border-radius: 30px;
+      margin-bottom: 30px;
+    }
+    .brand-name {
+      font-family: 'Lora', serif;
+      font-size: 72px;
+      font-weight: 700;
+    }
+    .brand-ozo { color: #A16207; }
+    .brand-agro { color: #15803D; }
+    .brand-tag {
+      font-size: 20px;
+      color: #166534;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+    .solution-text {
+      font-size: 28px;
+      color: white;
+      max-width: 700px;
+    }
+
+    /* Scene 4: Certificados */
+    .scene-certs {
+      background: linear-gradient(135deg, #1E3A5F 0%, #1E40AF 100%);
+    }
+    .scene-certs h2 {
+      font-family: 'Lora', serif;
+      font-size: 48px;
+      color: white;
+      margin-bottom: 40px;
+    }
+    .cert-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 700px;
+    }
+    .cert-item {
       background: white;
       padding: 30px;
       border-radius: 20px;
       text-align: center;
     }
-    .benefit-icon { font-size: 50px; margin-bottom: 10px; }
-    .benefit-text { font-size: 24px; font-weight: 600; color: #14532D; }
+    .cert-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .cert-text {
+      font-size: 18px;
+      color: #1E3A5F;
+      font-weight: 600;
+    }
 
-    /* Scene 3: CTA */
-    .scene-cta { background: linear-gradient(135deg, #A16207 0%, #CA8A04 100%); }
+    /* Scene 5: CTA */
+    .scene-cta {
+      background: linear-gradient(135deg, #A16207 0%, #CA8A04 100%);
+    }
     .scene-cta h2 {
       font-family: 'Lora', serif;
-      font-size: 60px;
+      font-size: 52px;
       color: white;
-      margin-bottom: 40px;
-    }
-    .price-box {
-      background: white;
-      padding: 40px 80px;
-      border-radius: 30px;
-      text-align: center;
       margin-bottom: 30px;
+      line-height: 1.2;
     }
-    .price { font-size: 70px; font-weight: 700; color: #15803D; }
-    .price-label { font-size: 24px; color: #14532D; }
-    .cta-text { font-size: 32px; color: white; font-weight: 600; }
+    .cta-box {
+      background: white;
+      padding: 30px 60px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cta-price {
+      font-size: 60px;
+      font-weight: 700;
+      color: #15803D;
+    }
+    .cta-unit {
+      font-size: 24px;
+      color: #166534;
+    }
+    .cta-sub {
+      font-size: 26px;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <div data-composition-id="ozoagro-promo" data-start="0" data-duration="10" data-width="1080" data-height="1080" data-track-index="0">
+  <div data-composition-id="ozoagro-need" data-start="0" data-duration="15" data-width="1080" data-height="1080" data-track-index="0">
 
-    <!-- Scene 1: Intro (0-3.5s) -->
-    <div class="scene scene-intro" id="scene-intro">
-      <div class="icon-box">
-        <span class="icon-text">O<sub>3</sub></span>
-      </div>
-      <div class="brand">
-        <span class="ozo">OZO</span><span class="agro">AGRO</span>
-      </div>
-      <div class="tag">Tecnologia Ambiental</div>
+    <!-- Scene 1: Impacto (0-3.5s) -->
+    <div class="scene scene-impact" id="scene-impact">
+      <h2>En Colombia, las plagas destruyen</h2>
+      <div class="stat-big">30%</div>
+      <div class="stat-label">de los cultivos cada año</div>
+      <div class="stat-sub">Millones de pesos en perdidas que podrian evitarse con el producto correcto.</div>
     </div>
 
-    <!-- Scene 2: Benefits (3.5-7s) -->
-    <div class="scene scene-benefits" id="scene-benefits">
-      <h2>Proteccion Natural</h2>
-      <div class="benefit-grid">
-        <div class="benefit-item">
-          <div class="benefit-icon">🌿</div>
-          <div class="benefit-text">100% Ecologico</div>
+    <!-- Scene 2: Perdidas (3.5-7s) -->
+    <div class="scene scene-loss" id="scene-loss">
+      <h2>Cultivos afectados</h2>
+      <div class="loss-grid">
+        <div class="loss-item">
+          <div class="loss-crop">☕</div>
+          <div class="loss-name">Cafe</div>
+          <div class="loss-percent">-25% produccion</div>
         </div>
-        <div class="benefit-item">
-          <div class="benefit-icon">✅</div>
-          <div class="benefit-text">Sin Residuos</div>
+        <div class="loss-item">
+          <div class="loss-crop">🥑</div>
+          <div class="loss-name">Aguacate</div>
+          <div class="loss-percent">-35% calidad</div>
         </div>
-        <div class="benefit-item">
-          <div class="benefit-icon">🐝</div>
-          <div class="benefit-text">Seguro Abejas</div>
+        <div class="loss-item">
+          <div class="loss-crop">🍌</div>
+          <div class="loss-name">Banano</div>
+          <div class="loss-percent">-20% exportable</div>
         </div>
-        <div class="benefit-item">
-          <div class="benefit-icon">🌍</div>
-          <div class="benefit-text">Amigable</div>
+        <div class="loss-item">
+          <div class="loss-crop">💐</div>
+          <div class="loss-name">Flores</div>
+          <div class="loss-percent">-40% rechazos</div>
         </div>
       </div>
     </div>
 
-    <!-- Scene 3: CTA (7-10s) -->
+    <!-- Scene 3: Solucion (7-10s) -->
+    <div class="scene scene-solution" id="scene-solution">
+      <h2>La solucion existe</h2>
+      <div class="brand-box">
+        <div class="brand-name">
+          <span class="brand-ozo">OZO</span><span class="brand-agro">AGRO</span>
+        </div>
+        <div class="brand-tag">Tecnologia Ambiental</div>
+      </div>
+      <div class="solution-text">
+        Protege tu patrimonio sin quimicos, sin residuos, sin dañar el planeta.
+      </div>
+    </div>
+
+    <!-- Scene 4: Certificados (10-13s) -->
+    <div class="scene scene-certs" id="scene-certs">
+      <h2>Respaldado por la ciencia</h2>
+      <div class="cert-grid">
+        <div class="cert-item">
+          <div class="cert-icon">🔬</div>
+          <div class="cert-text">Laboratorio Certificado</div>
+        </div>
+        <div class="cert-item">
+          <div class="cert-icon">✅</div>
+          <div class="cert-text">Control de Calidad</div>
+        </div>
+        <div class="cert-item">
+          <div class="cert-icon">🌿</div>
+          <div class="cert-text">100% Ecologico</div>
+        </div>
+        <div class="cert-item">
+          <div class="cert-icon">📋</div>
+          <div class="cert-text">Apto Exportacion</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 5: CTA (13-15s) -->
     <div class="scene scene-cta" id="scene-cta">
-      <h2>Protege tu Cosecha</h2>
-      <div class="price-box">
-        <div class="price">$130.000</div>
-        <div class="price-label">1 Litro</div>
+      <h2>Protege tu cosecha hoy</h2>
+      <div class="cta-box">
+        <div class="cta-price">$130.000</div>
+        <div class="cta-unit">1 Litro = 200L de solucion</div>
       </div>
-      <div class="cta-text">Envio a toda Colombia</div>
+      <div class="cta-sub">Envio a toda Colombia</div>
     </div>
 
   </div>
@@ -159,26 +288,40 @@
     window.__timelines = window.__timelines || {};
     const tl = gsap.timeline({ paused: true });
 
-    // Scene 1: Intro (0-3.5s)
-    tl.to('#scene-intro', { opacity: 1, duration: 0.3 }, 0);
-    tl.from('.icon-box', { scale: 0, duration: 0.6, ease: 'back.out(1.5)' }, 0.2);
-    tl.from('.brand', { y: 40, opacity: 0, duration: 0.5 }, 0.6);
-    tl.from('.tag', { y: 20, opacity: 0, duration: 0.4 }, 1);
-    tl.to('#scene-intro', { opacity: 0, duration: 0.3 }, 3.2);
+    // Scene 1: Impact (0-3.5s)
+    tl.to('#scene-impact', { opacity: 1, duration: 0.3 }, 0);
+    tl.from('.scene-impact h2', { y: -30, opacity: 0, duration: 0.4 }, 0.2);
+    tl.from('.stat-big', { scale: 0, duration: 0.5, ease: 'back.out(1.5)' }, 0.5);
+    tl.from('.stat-label', { y: 20, opacity: 0, duration: 0.3 }, 0.9);
+    tl.from('.stat-sub', { y: 20, opacity: 0, duration: 0.3 }, 1.1);
+    tl.to('#scene-impact', { opacity: 0, duration: 0.3 }, 3.2);
 
-    // Scene 2: Benefits (3.5-7s)
-    tl.to('#scene-benefits', { opacity: 1, duration: 0.3 }, 3.5);
-    tl.from('.scene-benefits h2', { y: -30, opacity: 0, duration: 0.4 }, 3.7);
-    tl.from('.benefit-item', { scale: 0, duration: 0.3, stagger: 0.15, ease: 'back.out(1.2)' }, 4);
-    tl.to('#scene-benefits', { opacity: 0, duration: 0.3 }, 6.7);
+    // Scene 2: Loss (3.5-7s)
+    tl.to('#scene-loss', { opacity: 1, duration: 0.3 }, 3.5);
+    tl.from('.scene-loss h2', { y: -30, opacity: 0, duration: 0.4 }, 3.7);
+    tl.from('.loss-item', { x: -50, opacity: 0, duration: 0.3, stagger: 0.15, ease: 'power2.out' }, 4);
+    tl.to('#scene-loss', { opacity: 0, duration: 0.3 }, 6.7);
 
-    // Scene 3: CTA (7-10s)
-    tl.to('#scene-cta', { opacity: 1, duration: 0.3 }, 7);
-    tl.from('.scene-cta h2', { y: -30, opacity: 0, duration: 0.4 }, 7.2);
-    tl.from('.price-box', { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out(1.2)' }, 7.5);
-    tl.from('.cta-text', { y: 20, opacity: 0, duration: 0.3 }, 8);
+    // Scene 3: Solution (7-10s)
+    tl.to('#scene-solution', { opacity: 1, duration: 0.3 }, 7);
+    tl.from('.scene-solution h2', { y: -30, opacity: 0, duration: 0.4 }, 7.2);
+    tl.from('.brand-box', { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out(1.2)' }, 7.5);
+    tl.from('.solution-text', { y: 20, opacity: 0, duration: 0.3 }, 8);
+    tl.to('#scene-solution', { opacity: 0, duration: 0.3 }, 9.7);
 
-    window.__timelines['ozoagro-promo'] = tl;
+    // Scene 4: Certs (10-13s)
+    tl.to('#scene-certs', { opacity: 1, duration: 0.3 }, 10);
+    tl.from('.scene-certs h2', { y: -30, opacity: 0, duration: 0.4 }, 10.2);
+    tl.from('.cert-item', { scale: 0, duration: 0.3, stagger: 0.12, ease: 'back.out(1.2)' }, 10.5);
+    tl.to('#scene-certs', { opacity: 0, duration: 0.3 }, 12.7);
+
+    // Scene 5: CTA (13-15s)
+    tl.to('#scene-cta', { opacity: 1, duration: 0.3 }, 13);
+    tl.from('.scene-cta h2', { y: -30, opacity: 0, duration: 0.4 }, 13.2);
+    tl.from('.cta-box', { scale: 0.5, opacity: 0, duration: 0.4, ease: 'back.out(1.2)' }, 13.5);
+    tl.from('.cta-sub', { y: 20, opacity: 0, duration: 0.3 }, 13.9);
+
+    window.__timelines['ozoagro-need'] = tl;
   </script>
 </body>
 </html>
