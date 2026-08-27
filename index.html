@@ -1032,6 +1032,12 @@
 
     // GSAP Animations
     document.addEventListener('DOMContentLoaded', () => {
+      // Force scroll to top on page load
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+
       // Animate brand characters
       const brandChars = document.querySelectorAll('.brand-char');
       gsap.fromTo(brandChars,
