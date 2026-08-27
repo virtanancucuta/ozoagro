@@ -826,7 +826,7 @@
                 </div>
               </label>
               <label class="relative cursor-pointer">
-                <input type="radio" name="plan" value="2" class="peer sr-only" checked>
+                <input type="radio" name="plan" value="2" class="peer sr-only" id="plan-default">
                 <div class="p-4 border-2 border-border rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                   <div class="font-bold">2 Litros</div>
                   <div class="text-primary font-semibold">$220.000</div>
@@ -1037,6 +1037,12 @@
         history.scrollRestoration = 'manual';
       }
       window.scrollTo(0, 0);
+
+      // Set default plan after scroll (avoids mobile auto-scroll to checked input)
+      setTimeout(() => {
+        document.getElementById('plan-default').checked = true;
+        updateSummary();
+      }, 100);
 
       // Animate brand characters
       const brandChars = document.querySelectorAll('.brand-char');
