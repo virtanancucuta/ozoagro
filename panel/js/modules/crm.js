@@ -100,7 +100,7 @@ window.loadCrmData = async function() {
         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
       `;
 
-      const { data: porContactar } = await supabase
+      const { data: porContactar } = await supabaseClient
         .from('pedidos')
         .select('*, cliente:clientes(*)')
         .eq('estado', 'por_confirmar')
@@ -136,7 +136,7 @@ window.loadCrmData = async function() {
         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ultima Compra</th>
       `;
 
-      const { data: atendidos } = await supabase
+      const { data: atendidos } = await supabaseClient
         .from('clientes')
         .select('*')
         .eq('estado_crm', 'atendido')
@@ -167,7 +167,7 @@ window.loadCrmData = async function() {
         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
       `;
 
-      const { data: carritos } = await supabase
+      const { data: carritos } = await supabaseClient
         .from('checkouts_abandonados')
         .select('*, producto:productos(nombre)')
         .eq('contactado', false)

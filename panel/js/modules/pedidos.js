@@ -158,7 +158,7 @@ async function renderPedidos(container) {
 }
 
 async function loadPedidos() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('pedidos')
     .select('*, cliente:clientes(*), items:pedido_items(*, producto:productos(*))')
     .eq('estado', pedidosTab)
@@ -300,7 +300,7 @@ async function buscarCliente(e) {
     return;
   }
 
-  const { data } = await supabase
+  const { data } = await supabaseClient
     .from('clientes')
     .select('*')
     .or(`telefono.ilike.%${query}%,cedula.ilike.%${query}%,nombre.ilike.%${query}%`)

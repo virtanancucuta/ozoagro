@@ -1,0 +1,37 @@
+- generic [ref=e15]:
+  - complementary [ref=e16]:
+    - generic [ref=e17]:
+      - heading "OZOAGRO" [level=1] [ref=e18]
+      - paragraph [ref=e19]: Panel CEO - Andres Gomez
+    - navigation [ref=e20]:
+      - link "Pedidos" [ref=e21] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e22]
+        - text: Pedidos
+      - link "Ventas" [ref=e24] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e25]
+        - text: Ventas
+      - link "Inventario" [ref=e27] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e28]
+        - text: Inventario
+      - link "Gastos" [ref=e30] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e31]
+        - text: Gastos
+      - link "CRM" [ref=e33] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e34]
+        - text: CRM
+      - link "Balance" [ref=e36] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e37]
+        - text: Balance
+      - link "Configuracion" [ref=e39] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e40]
+        - text: Configuracion
+    - button "Cerrar Sesion" [ref=e44] [cursor=pointer]
+  - main [ref=e45]:
+    - generic [ref=e47]: "Error cargando modulo: supabase.from is not a function"
