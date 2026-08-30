@@ -72,7 +72,7 @@ window.loadBalanceData = async function() {
   const range = getDateRange(preset);
 
   // Get balance via RPC
-  const { data: balance } = await supabase.rpc('balance_resumen', {
+  const { data: balance } = await supabaseClient.rpc('balance_resumen', {
     p_fecha_ini: range.start,
     p_fecha_fin: range.end,
     p_canal: canal || null
@@ -114,7 +114,7 @@ window.loadBalanceData = async function() {
     };
   }
 
-  const { data: prevBalance } = await supabase.rpc('balance_resumen', {
+  const { data: prevBalance } = await supabaseClient.rpc('balance_resumen', {
     p_fecha_ini: prevRange.start,
     p_fecha_fin: prevRange.end,
     p_canal: canal || null
@@ -159,7 +159,7 @@ window.loadBalanceData = async function() {
   let canalHtml = '';
 
   for (const c of canales) {
-    const { data: canalData } = await supabase.rpc('balance_resumen', {
+    const { data: canalData } = await supabaseClient.rpc('balance_resumen', {
       p_fecha_ini: range.start,
       p_fecha_fin: range.end,
       p_canal: c
@@ -180,7 +180,7 @@ window.loadBalanceData = async function() {
   ventasCanalContainer.innerHTML = canalHtml || '<p class="text-gray-500">Sin ventas</p>';
 
   // Ultimos gastos
-  const { data: gastos } = await supabase.from('gastos').select('*').order('fecha', { ascending: false }).limit(5);
+  const { data: gastos } = await supabaseClient.from('gastos').select('*').order('fecha', { ascending: false }).limit(5);
   const gastosContainer = document.getElementById('ultimos-gastos');
 
   if (gastos && gastos.length > 0) {

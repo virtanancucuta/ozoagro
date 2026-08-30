@@ -1,0 +1,10 @@
+[    1017ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/:63
+[    2038ms] Identifier 'supabase' has already been declared
+[    2083ms] [LOG] DOM Ready - Inicializando panel... @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:6
+[    2083ms] [LOG] Supabase OK - Verificando sesion... @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:16
+[    2083ms] [ERROR] Error checkAuth: TypeError: Cannot read properties of undefined (reading 'getSession')
+    at checkAuth (https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:27:55)
+    at HTMLDocument.<anonymous> (https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:20:3) @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:35
+[    2085ms] [LOG] Login form listener OK @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/js/app.js:55
+[    2090ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/panel/:0
+[    2228ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://ozoagro-ozoagro.pgnm3b.easypanel.host/favicon.ico:0

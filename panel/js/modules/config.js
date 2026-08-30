@@ -91,7 +91,7 @@ async function renderConfig(container) {
 
 async function loadConfigData() {
   // Load config
-  const { data: config } = await supabase.from('config_negocio').select('*').limit(1).single();
+  const { data: config } = await supabaseClient.from('config_negocio').select('*').limit(1).single();
   if (config) {
     document.getElementById('cfg-nombre').value = config.nombre || '';
     document.getElementById('cfg-ciudad').value = config.ciudad || '';
@@ -103,7 +103,7 @@ async function loadConfigData() {
   }
 
   // Show user email
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (user) {
     document.getElementById('info-email').textContent = user.email;
   }
@@ -124,13 +124,13 @@ async function handleSaveConfig(e) {
   };
 
   // Get existing config id
-  const { data: existing } = await supabase.from('config_negocio').select('id').limit(1).single();
+  const { data: existing } = await supabaseClient.from('config_negocio').select('id').limit(1).single();
 
   let error;
   if (existing) {
-    ({ error } = await supabase.from('config_negocio').update(data).eq('id', existing.id));
+    ({ error } = await supabaseClient.from('config_negocio').update(data).eq('id', existing.id));
   } else {
-    ({ error } = await supabase.from('config_negocio').insert(data));
+    ({ error } = await supabaseClient.from('config_negocio').insert(data));
   }
 
   if (error) {
@@ -157,7 +157,7 @@ async function handleChangePassword(e) {
     return;
   }
 
-  const { error } = await supabase.auth.updateUser({ password: newPass });
+  const { error } = await supabaseClient.auth.updateUser({ password: newPass });
 
   if (error) {
     showToast('Error: ' + error.message, 'error');

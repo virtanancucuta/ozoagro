@@ -100,7 +100,7 @@ window.loadGastosData = async function() {
   const filtro = document.getElementById('gastos-mes').value;
   const today = new Date();
 
-  let query = supabase.from('gastos').select('*').order('fecha', { ascending: false });
+  let query = supabaseClient.from('gastos').select('*').order('fecha', { ascending: false });
 
   if (filtro === 'current') {
     const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
@@ -146,7 +146,7 @@ window.showAgregarGasto = function() {
 };
 
 window.editarGasto = async function(id) {
-  const { data: gasto } = await supabase.from('gastos').select('*').eq('id', id).single();
+  const { data: gasto } = await supabaseClient.from('gastos').select('*').eq('id', id).single();
   if (!gasto) return;
 
   document.getElementById('gasto-id').value = id;
@@ -174,9 +174,9 @@ async function handleGuardarGasto(e) {
 
   let error;
   if (id) {
-    ({ error } = await supabase.from('gastos').update(data).eq('id', id));
+    ({ error } = await supabaseClient.from('gastos').update(data).eq('id', id));
   } else {
-    ({ error } = await supabase.from('gastos').insert(data));
+    ({ error } = await supabaseClient.from('gastos').insert(data));
   }
 
   if (error) {
@@ -192,7 +192,7 @@ async function handleGuardarGasto(e) {
 window.eliminarGasto = async function(id) {
   if (!confirm('Eliminar este gasto?')) return;
 
-  const { error } = await supabase.from('gastos').delete().eq('id', id);
+  const { error } = await supabaseClient.from('gastos').delete().eq('id', id);
   if (error) {
     showToast('Error: ' + error.message, 'error');
     return;

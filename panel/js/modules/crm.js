@@ -68,7 +68,7 @@ async function renderCRM(container) {
 }
 
 async function loadCrmKpis() {
-  const { data } = await supabase.rpc('crm_visitas');
+  const { data } = await supabaseClient.rpc('crm_visitas');
   if (data && data[0]) {
     document.getElementById('kpi-visitas-hoy').textContent = data[0].visitas_hoy || 0;
     document.getElementById('kpi-pauta-hoy').textContent = data[0].visitas_pauta_hoy || 0;
@@ -205,7 +205,7 @@ window.loadCrmData = async function() {
       const tipo = document.getElementById('crm-tipo').value || null;
       const orden = document.getElementById('crm-orden').value;
 
-      const { data: clientes } = await supabase.rpc('crm_clientes', { p_tipo: tipo, p_orden: orden });
+      const { data: clientes } = await supabaseClient.rpc('crm_clientes', { p_tipo: tipo, p_orden: orden });
 
       if (!clientes || clientes.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin clientes</td></tr>';
@@ -229,7 +229,7 @@ window.loadCrmData = async function() {
 
 window.marcarAtendido = async function(clienteId) {
   if (!clienteId) return;
-  const { error } = await supabase.from('clientes').update({ estado_crm: 'atendido' }).eq('id', clienteId);
+  const { error } = await supabaseClient.from('clientes').update({ estado_crm: 'atendido' }).eq('id', clienteId);
   if (error) {
     showToast('Error: ' + error.message, 'error');
     return;
@@ -239,7 +239,7 @@ window.marcarAtendido = async function(clienteId) {
 };
 
 window.exportClientesCSV = async function() {
-  const { data } = await supabase.from('clientes').select('*').order('nombre');
+  const { data } = await supabaseClient.from('clientes').select('*').order('nombre');
   if (!data) return;
 
   let csv = 'Nombre,Tipo,Cedula,Telefono,Email,Ciudad,Cultivo,Origen,Total Litros,Total Valor\n';

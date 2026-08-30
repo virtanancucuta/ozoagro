@@ -7,7 +7,7 @@ let clientesCache = [];
 async function renderPedidos(container) {
   // Load productos cache
   if (productosCache.length === 0) {
-    const { data } = await supabase.from('productos').select('*').eq('activo', true);
+    const { data } = await supabaseClient.from('productos').select('*').eq('activo', true);
     productosCache = data || [];
   }
 
@@ -332,7 +332,7 @@ async function handleCrearPedido(e) {
 
   // Create new client if needed
   if (!clienteId && document.getElementById('nc-nombre').value) {
-    const { data: newCliente, error } = await supabase.from('clientes').insert({
+    const { data: newCliente, error } = await supabaseClient.from('clientes').insert({
       nombre: document.getElementById('nc-nombre').value,
       cedula: document.getElementById('nc-cedula').value || null,
       telefono: document.getElementById('nc-telefono').value,
@@ -355,7 +355,7 @@ async function handleCrearPedido(e) {
   }
 
   // Create pedido
-  const { data: pedido, error: pedidoError } = await supabase.from('pedidos').insert({
+  const { data: pedido, error: pedidoError } = await supabaseClient.from('pedidos').insert({
     cliente_id: clienteId,
     canal: 'tradicional',
     estado: 'por_confirmar',
@@ -385,7 +385,7 @@ async function handleCrearPedido(e) {
   });
 
   if (items.length > 0) {
-    const { error: itemsError } = await supabase.from('pedido_items').insert(items);
+    const { error: itemsError } = await supabaseClient.from('pedido_items').insert(items);
     if (itemsError) {
       showToast('Error creando items: ' + itemsError.message, 'error');
       return;
@@ -479,7 +479,7 @@ async function handleAccionPedido(e) {
       break;
   }
 
-  const { error } = await supabase.from('pedidos').update(updateData).eq('id', id);
+  const { error } = await supabaseClient.from('pedidos').update(updateData).eq('id', id);
   if (error) {
     showToast('Error: ' + error.message, 'error');
     return;

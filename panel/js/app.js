@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM Ready - Inicializando panel...');
 
   // Verificar que Supabase esté cargado
-  if (typeof supabase === 'undefined') {
+  if (typeof supabaseClient === 'undefined') {
     console.error('ERROR: Supabase no cargado');
     document.getElementById('login-error').textContent = 'Error: No se pudo cargar el sistema. Recarga la pagina.';
     document.getElementById('login-error').classList.remove('hidden');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Auth
 async function checkAuth() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
       currentUser = session.user;
       showApp();
@@ -93,7 +93,7 @@ async function handleLogin(e) {
 
   try {
     console.log('Llamando signInWithPassword...');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
       console.error('Error login:', error.message);
@@ -118,7 +118,7 @@ async function handleLogin(e) {
 }
 
 async function handleLogout() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   currentUser = null;
   showLogin();
 }

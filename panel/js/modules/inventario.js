@@ -109,7 +109,7 @@ async function renderInventario(container) {
 
 async function loadInventarioData() {
   // Load productos
-  const { data: productos } = await supabase.from('productos').select('*').eq('activo', true).order('litros');
+  const { data: productos } = await supabaseClient.from('productos').select('*').eq('activo', true).order('litros');
 
   const cardsContainer = document.getElementById('productos-cards');
   cardsContainer.parentElement.innerHTML = productos?.map(p => `
@@ -139,7 +139,7 @@ async function loadInventarioData() {
   `).join('') || '<div class="col-span-3 text-center text-gray-500">Sin productos</div>';
 
   // Load cobertura
-  const { data: cobertura } = await supabase.rpc('cobertura_stock');
+  const { data: cobertura } = await supabaseClient.rpc('cobertura_stock');
   const cobContainer = document.getElementById('cobertura-inventario');
   if (cobertura && cobertura[0]) {
     const c = cobertura[0];
@@ -164,7 +164,7 @@ async function loadInventarioData() {
   }
 
   // Load movimientos
-  const { data: movimientos } = await supabase.from('inventario').select('*').order('fecha', { ascending: false }).limit(20);
+  const { data: movimientos } = await supabaseClient.from('inventario').select('*').order('fecha', { ascending: false }).limit(20);
 
   const tbody = document.getElementById('inventario-tbody');
   if (!movimientos || movimientos.length === 0) {
@@ -190,7 +190,7 @@ window.showAgregarInventario = function() {
 async function handleAgregarInventario(e) {
   e.preventDefault();
 
-  const { error } = await supabase.from('inventario').insert({
+  const { error } = await supabaseClient.from('inventario').insert({
     unidades: parseInt(document.getElementById('inv-unidades').value),
     costo_unitario: parseFloat(document.getElementById('inv-costo').value),
     tipo: document.getElementById('inv-tipo').value,
@@ -208,7 +208,7 @@ async function handleAgregarInventario(e) {
 }
 
 window.editarProducto = async function(id) {
-  const { data: producto } = await supabase.from('productos').select('*').eq('id', id).single();
+  const { data: producto } = await supabaseClient.from('productos').select('*').eq('id', id).single();
   if (!producto) return;
 
   document.getElementById('edit-prod-id').value = id;
@@ -225,10 +225,10 @@ async function handleEditarProducto(e) {
   const nuevoCosto = parseFloat(document.getElementById('edit-prod-costo').value);
 
   // Get current costo for history
-  const { data: producto } = await supabase.from('productos').select('costo_unitario').eq('id', id).single();
+  const { data: producto } = await supabaseClient.from('productos').select('costo_unitario').eq('id', id).single();
 
   // Update producto
-  const { error } = await supabase.from('productos').update({
+  const { error } = await supabaseClient.from('productos').update({
     precio_venta: nuevoPrecio,
     costo_unitario: nuevoCosto,
     updated_at: new Date().toISOString()
@@ -241,7 +241,7 @@ async function handleEditarProducto(e) {
 
   // Log costo change if different
   if (producto && producto.costo_unitario !== nuevoCosto) {
-    await supabase.from('productos_costo_historial').insert({
+    await supabaseClient.from('productos_costo_historial').insert({
       producto_id: id,
       costo_anterior: producto.costo_unitario,
       costo_nuevo: nuevoCosto,

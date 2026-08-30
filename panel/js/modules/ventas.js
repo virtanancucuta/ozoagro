@@ -106,7 +106,7 @@ window.loadVentasData = async function() {
   const range = getDateRange(preset);
 
   // Get resumen via RPC
-  const { data: resumen } = await supabase.rpc('ventas_resumen', {
+  const { data: resumen } = await supabaseClient.rpc('ventas_resumen', {
     p_fecha_ini: range.start,
     p_fecha_fin: range.end,
     p_canal: canal || null
@@ -123,7 +123,7 @@ window.loadVentasData = async function() {
   }
 
   // Get cobertura
-  const { data: cobertura } = await supabase.rpc('cobertura_stock');
+  const { data: cobertura } = await supabaseClient.rpc('cobertura_stock');
   if (cobertura && cobertura[0]) {
     const c = cobertura[0];
     document.getElementById('cob-unidades').textContent = c.unidades_disponibles || 0;
