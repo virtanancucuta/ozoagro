@@ -1,0 +1,6 @@
+.git
+*.md
+landing/hyperframes
+supabase/
+n8n/
+.dockerignore
