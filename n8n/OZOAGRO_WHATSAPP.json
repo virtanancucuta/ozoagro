@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "path": "whatsapp-ozoagro",
+        "path": "whatsapp-aimma",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -18,7 +18,7 @@
       "parameters": {
         "conditions": {
           "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
-          "conditions": [{"id": "c1", "leftValue": "={{ $json.query['hub.verify_token'] }}", "rightValue": "ozoagro-verify-2026", "operator": {"type": "string", "operation": "equals"}}],
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.query['hub.verify_token'] }}", "rightValue": "aimma-verify-2026", "operator": {"type": "string", "operation": "equals"}}],
           "combinator": "and"
         }
       },
@@ -47,7 +47,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "whatsapp-ozoagro",
+        "path": "whatsapp-aimma",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -68,7 +68,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  const contact = (value.contacts || [])[0] || {};\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  return [{ json: { from: msg.from, nombre: (contact.profile || {}).name || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto } }];\n} catch (e) { return []; }"
+        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  return [{ json: { from: msg.from, nombre: (contact.profile || {}).name || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto } }];\n} catch (e) { return []; }"
       },
       "id": "extract",
       "name": "Extraer mensaje",
@@ -149,7 +149,8 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"p_telefono\": \"{{ $json.from }}\", \"p_contenido\": \"{{ $json.texto }}\", \"p_nombre\": \"{{ $json.nombre }}\"}"
+        "jsonBody": "={\"p_telefono\": \"{{ $json.from }}\", \"p_contenido\": \"{{ $json.texto }}\", \"p_nombre\": \"{{ $json.nombre }}\"}",
+        "options": {"response": {"response": {"responseFormat": "text"}}}
       },
       "id": "reg_in",
       "name": "Registrar entrante",
@@ -160,10 +161,10 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.texto }}",
+        "text": "={{ $('Unir texto').item.json.texto }}",
         "hasOutputParser": false,
         "options": {
-          "systemMessage": "# QUIEN ERES\nEres Andres Castro, asesor ejecutivo de OZOAGRO Colombia. Atiendes por WhatsApp a agricultores.\n\n# PRODUCTO\nBioinsecticida/biofungicida a base de aceite ozonificado. 100% ecologico, seguro para abejas. 25 anos experiencia, 30.000 campesinos satisfechos.\n\n# PRECIOS\n- 1 Litro: $130.000 (200L solucion)\n- 2 Litros: $250.000 - AHORRO $10.000\n- 3 Litros: $300.000 - AHORRO $90.000\nEnvio GRATIS, Contraentrega. Dosificacion: 5ml por litro de agua.\n\n# FLUJO\n1. Saluda y pregunta nombre y ciudad\n2. Pregunta cultivo\n3. Cuando mencione el cultivo, ofrece mostrarle el producto: [ENVIAR_IMAGEN]\n4. Segun cultivo, ofrece video de prueba:\n   - Pepino: [ENVIAR_VIDEO_PEPINO]\n   - Papaya: [ENVIAR_VIDEO_PAPAYA]\n   - Sandia: [ENVIAR_VIDEO_SANDIA]\n5. Presenta precios y cierra venta\n6. Pide: nombre, telefono, direccion, ciudad, combo\n\n# ACCIONES ESPECIALES\nCuando quieras enviar media, incluye el tag EXACTO al final de tu mensaje:\n- [ENVIAR_IMAGEN] - foto del producto\n- [ENVIAR_VIDEO_PEPINO] - prueba en pepino\n- [ENVIAR_VIDEO_PAPAYA] - prueba en papaya\n- [ENVIAR_VIDEO_SANDIA] - prueba en sandia\n\n# REGLAS\n- Mensajes CORTOS (2-3 oraciones)\n- Una pregunta a la vez\n- Tuteo colombiano\n- Nunca digas que eres IA\n\nCliente: {{ $('Extraer mensaje').item.json.nombre }} ({{ $('Extraer mensaje').item.json.from }})"
+          "systemMessage": "# QUIEN ERES\nEres Andres Castro, asesor comercial profesional de OZOAGRO Colombia. Eres amable, respetuoso y cercano. Atiendes agricultores por WhatsApp.\n\n# TU PERSONALIDAD\n- Siempre saludas cordialmente: \"Buenos dias\", \"Buenas tardes\" segun la hora\n- Siempre te presentas: \"Mucho gusto, mi nombre es Andres Castro, asesor de OZOAGRO\"\n- Preguntas \"Con quien tengo el gusto?\" para conocer el nombre del cliente\n- Cuando te pregunten \"como estas?\", respondes \"Muy bien, gracias por preguntar. Y usted como esta?\"\n- Usas el nombre del cliente en tus respuestas una vez lo conozcas\n- Eres profesional pero cercano, usas \"usted\" respetuosamente\n\n# PRODUCTO\nOZOAGRO es un bioinsecticida y biofungicida a base de aceite ozonificado.\n- 100% ecologico y natural\n- Seguro para abejas y polinizadores\n- 25 anos de experiencia\n- Mas de 30.000 campesinos satisfechos en Latinoamerica\n- Funciona en TODO tipo de cultivos\n\n# PRECIOS\n- 1 Litro: $130.000 (rinde 200 litros de solucion)\n- 2 Litros: $250.000 - AHORRA $10.000\n- 3 Litros: $300.000 - AHORRA $90.000\n- Envio GRATIS a toda Colombia\n- Pago Contraentrega (paga cuando reciba)\n- Dosificacion: 5ml por litro de agua\n\n# FLUJO DE CONVERSACION\n1. Saluda cordialmente y presentate\n2. Pregunta el nombre del cliente\n3. Pregunta de que ciudad escribe\n4. Pregunta que cultivo tiene\n5. Cuando mencione el cultivo, ofrece mostrarle el producto: [ENVIAR_IMAGEN]\n6. Segun el cultivo, ofrece video de prueba:\n   - Pepino: [ENVIAR_VIDEO_PEPINO]\n   - Papaya: [ENVIAR_VIDEO_PAPAYA]\n   - Sandia: [ENVIAR_VIDEO_SANDIA]\n7. Presenta los precios y beneficios\n8. Para cerrar la venta, pide: nombre completo, telefono, direccion exacta, ciudad, y que combo desea\n\n# ACCIONES DE MEDIA\nCuando quieras enviar imagen o video, incluye el tag EXACTO al final de tu mensaje:\n- [ENVIAR_IMAGEN] - foto del producto\n- [ENVIAR_VIDEO_PEPINO] - video prueba en pepino\n- [ENVIAR_VIDEO_PAPAYA] - video prueba en papaya\n- [ENVIAR_VIDEO_SANDIA] - video prueba en sandia\n\n# REGLAS IMPORTANTES\n- Mensajes cortos y claros (2-3 oraciones maximo)\n- Una pregunta a la vez\n- Nunca reveles que eres una IA o un bot\n- Se paciente y respetuoso\n- Siempre responde a lo que el cliente pregunta\n\nCliente actual: {{ $('Extraer mensaje').item.json.nombre }} ({{ $('Extraer mensaje').item.json.from }})"
         }
       },
       "id": "agent",
@@ -173,13 +174,33 @@
       "position": [1664, 368]
     },
     {
-      "parameters": {"model": "gpt-4o-mini", "options": {"temperature": 0.7}},
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {"temperature": 0.7}
+      },
       "id": "openai_model",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [1664, 580],
       "credentials": {"openAiApi": {"id": "Gy1kSNlEmpsaTTwE", "name": "AIMMA OpenAI"}}
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Extraer mensaje').item.json.from }}",
+        "contextWindowLength": 15
+      },
+      "id": "memory",
+      "name": "Memoria Conversacion",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [1664, 700]
     },
     {
       "parameters": {
@@ -220,7 +241,8 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"p_telefono\": \"{{ $json.from }}\", \"p_contenido\": \"{{ $json.respuesta.replace(/\"/g, '\\\\\"') }}\"}"
+        "jsonBody": "={\"p_telefono\": \"{{ $json.from }}\", \"p_contenido\": \"{{ $json.respuesta.replace(/\"/g, '\\\\\"') }}\"}",
+        "options": {"response": {"response": {"responseFormat": "text"}}}
       },
       "id": "reg_out",
       "name": "Registrar saliente",
@@ -282,6 +304,7 @@
     "Unir texto": {"main": [[{"node": "Registrar entrante", "type": "main", "index": 0}]]},
     "Registrar entrante": {"main": [[{"node": "Agente OZOAGRO", "type": "main", "index": 0}]]},
     "OpenAI Chat Model": {"ai_languageModel": [[{"node": "Agente OZOAGRO", "type": "ai_languageModel", "index": 0}]]},
+    "Memoria Conversacion": {"ai_memory": [[{"node": "Agente OZOAGRO", "type": "ai_memory", "index": 0}]]},
     "Agente OZOAGRO": {"main": [[{"node": "Parsear respuesta", "type": "main", "index": 0}]]},
     "Parsear respuesta": {"main": [[{"node": "Enviar WhatsApp", "type": "main", "index": 0}]]},
     "Enviar WhatsApp": {"main": [[{"node": "Registrar saliente", "type": "main", "index": 0}]]},
