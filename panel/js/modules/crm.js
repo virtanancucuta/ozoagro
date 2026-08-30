@@ -1,7 +1,7 @@
 // OZOAGRO Panel - Modulo CRM
 let crmTab = 'por_contactar';
 
-async function renderCRM(container) {
+async function renderCrm(container) {
   container.innerHTML = `
     <div class="space-y-6">
       <div class="flex justify-between items-center">
