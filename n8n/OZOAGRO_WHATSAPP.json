@@ -163,7 +163,7 @@
         "text": "={{ $json.texto }}",
         "hasOutputParser": false,
         "options": {
-          "systemMessage": "# QUIEN ERES\nEres Andres Castro, asesor ejecutivo de OZOAGRO Colombia. Atiendes por WhatsApp a agricultores interesados en el bioinsecticida OZOAGRO.\n\n# PRODUCTO\n- Bioinsecticida/biofungicida a base de aceite ozonificado\n- 100% ecologico, sin residuos toxicos\n- Seguro para abejas y polinizadores\n- 25 anos experiencia, 30.000 campesinos satisfechos\n\n# PRECIOS\n- Combo 1 Litro: $130.000 (200L solucion)\n- Combo 2 Litros: $250.000 (400L solucion) - AHORRO $10.000\n- Combo 3 Litros: $300.000 (600L solucion) - AHORRO $90.000\n- Envio GRATIS, Contraentrega\n\n# DOSIFICACION\n5ml de OZOAGRO por litro de agua. 1L = 200L solucion.\n\n# FLUJO DE VENTA\n1. Saluda y pregunta nombre y ciudad\n2. Pregunta que cultivo maneja\n3. Explica problemas del cultivo que OZOAGRO resuelve\n4. Presenta productos y precios\n5. Cierra pidiendo: nombre, telefono, direccion, ciudad, combo\n6. Confirma datos y registra el pedido\n\n# REGLAS\n- Mensajes CORTOS (2-3 oraciones)\n- Una pregunta a la vez\n- Tuteo respetuoso colombiano\n- Nunca digas que eres IA\n- Video: https://virtanancucuta.github.io/ozoagro/\n\nCliente actual: {{ $('Extraer mensaje').item.json.nombre }} ({{ $('Extraer mensaje').item.json.from }})"
+          "systemMessage": "# QUIEN ERES\nEres Andres Castro, asesor ejecutivo de OZOAGRO Colombia. Atiendes por WhatsApp a agricultores.\n\n# PRODUCTO\nBioinsecticida/biofungicida a base de aceite ozonificado. 100% ecologico, seguro para abejas. 25 anos experiencia, 30.000 campesinos satisfechos.\n\n# PRECIOS\n- 1 Litro: $130.000 (200L solucion)\n- 2 Litros: $250.000 - AHORRO $10.000\n- 3 Litros: $300.000 - AHORRO $90.000\nEnvio GRATIS, Contraentrega. Dosificacion: 5ml por litro de agua.\n\n# FLUJO\n1. Saluda y pregunta nombre y ciudad\n2. Pregunta cultivo\n3. Cuando mencione el cultivo, ofrece mostrarle el producto: [ENVIAR_IMAGEN]\n4. Segun cultivo, ofrece video de prueba:\n   - Pepino: [ENVIAR_VIDEO_PEPINO]\n   - Papaya: [ENVIAR_VIDEO_PAPAYA]\n   - Sandia: [ENVIAR_VIDEO_SANDIA]\n5. Presenta precios y cierra venta\n6. Pide: nombre, telefono, direccion, ciudad, combo\n\n# ACCIONES ESPECIALES\nCuando quieras enviar media, incluye el tag EXACTO al final de tu mensaje:\n- [ENVIAR_IMAGEN] - foto del producto\n- [ENVIAR_VIDEO_PEPINO] - prueba en pepino\n- [ENVIAR_VIDEO_PAPAYA] - prueba en papaya\n- [ENVIAR_VIDEO_SANDIA] - prueba en sandia\n\n# REGLAS\n- Mensajes CORTOS (2-3 oraciones)\n- Una pregunta a la vez\n- Tuteo colombiano\n- Nunca digas que eres IA\n\nCliente: {{ $('Extraer mensaje').item.json.nombre }} ({{ $('Extraer mensaje').item.json.from }})"
         }
       },
       "id": "agent",
@@ -183,7 +183,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const respuesta = $input.first().json.output || $input.first().json.text || '';\nconst from = $('Extraer mensaje').item.json.from;\nreturn [{ json: { from, respuesta } }];"
+        "jsCode": "const raw = $input.first().json.output || $input.first().json.text || '';\nconst from = $('Extraer mensaje').item.json.from;\n\n// Detectar tags de media\nlet media = null;\nconst mediaMap = {\n  '[ENVIAR_IMAGEN]': 'imagen',\n  '[ENVIAR_VIDEO_PEPINO]': 'video_pepino',\n  '[ENVIAR_VIDEO_PAPAYA]': 'video_papaya',\n  '[ENVIAR_VIDEO_SANDIA]': 'video_sandia'\n};\nfor (const [tag, tipo] of Object.entries(mediaMap)) {\n  if (raw.includes(tag)) { media = tipo; break; }\n}\n\n// Limpiar tags del mensaje\nlet respuesta = raw;\nfor (const tag of Object.keys(mediaMap)) {\n  respuesta = respuesta.replace(tag, '').trim();\n}\n\nreturn [{ json: { from, respuesta, media } }];"
       },
       "id": "parse_resp",
       "name": "Parsear respuesta",
@@ -227,6 +227,47 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [2288, 368]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [{"id": "c-media", "leftValue": "={{ $('Parsear respuesta').item.json.media }}", "rightValue": "", "operator": {"type": "string", "operation": "notEmpty"}}],
+          "combinator": "and"
+        }
+      },
+      "id": "if_media",
+      "name": "Hay media?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2496, 368]
+    },
+    {
+      "parameters": {
+        "jsCode": "const media = $('Parsear respuesta').item.json.media;\nconst from = $('Parsear respuesta').item.json.from;\nconst baseUrl = 'https://ozoagro-ozoagro.pgnm3b.easypanel.host/media/';\nconst mediaUrls = {\n  'imagen': { type: 'image', url: baseUrl + 'producto.jpg' },\n  'video_pepino': { type: 'video', url: baseUrl + 'video_pepino.mp4' },\n  'video_papaya': { type: 'video', url: baseUrl + 'video_papaya.mp4' },\n  'video_sandia': { type: 'video', url: baseUrl + 'video_sandia.mp4' }\n};\nconst m = mediaUrls[media] || null;\nif (!m) return [];\nreturn [{ json: { from, mediaType: m.type, mediaUrl: m.url } }];"
+      },
+      "id": "prep_media",
+      "name": "Preparar media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2704, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v25.0/1151148548077223/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.from, type: $json.mediaType, [$json.mediaType]: { link: $json.mediaUrl } }) }}"
+      },
+      "id": "send_media",
+      "name": "Enviar media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2912, 260],
+      "credentials": {"httpHeaderAuth": {"id": "HxFbYAP7T9Wi7vGc", "name": "AIMMA Meta WhatsApp Token"}}
     }
   ],
   "connections": {
@@ -243,7 +284,10 @@
     "OpenAI Chat Model": {"ai_languageModel": [[{"node": "Agente OZOAGRO", "type": "ai_languageModel", "index": 0}]]},
     "Agente OZOAGRO": {"main": [[{"node": "Parsear respuesta", "type": "main", "index": 0}]]},
     "Parsear respuesta": {"main": [[{"node": "Enviar WhatsApp", "type": "main", "index": 0}]]},
-    "Enviar WhatsApp": {"main": [[{"node": "Registrar saliente", "type": "main", "index": 0}]]}
+    "Enviar WhatsApp": {"main": [[{"node": "Registrar saliente", "type": "main", "index": 0}]]},
+    "Registrar saliente": {"main": [[{"node": "Hay media?", "type": "main", "index": 0}]]},
+    "Hay media?": {"main": [[{"node": "Preparar media", "type": "main", "index": 0}], []]},
+    "Preparar media": {"main": [[{"node": "Enviar media", "type": "main", "index": 0}]]}
   },
   "settings": {"executionOrder": "v1"}
 }
