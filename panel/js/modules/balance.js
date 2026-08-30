@@ -1,15 +1,23 @@
 // OZOAGRO Panel - Modulo Balance
 async function renderBalance(container) {
+  const today = new Date().toISOString().split('T')[0];
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
   container.innerHTML = `
     <div class="space-y-6">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-wrap justify-between items-center gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Balance</h1>
-        <div class="flex gap-2">
-          <select id="balance-preset" class="px-3 py-2 border rounded-lg" onchange="loadBalanceData()">
+        <div class="flex flex-wrap gap-2 items-center">
+          <select id="balance-preset" class="px-3 py-2 border rounded-lg" onchange="handleBalancePreset()">
+            <option value="today">Hoy</option>
+            <option value="7days">Ultimos 7 dias</option>
             <option value="month" selected>Este mes</option>
             <option value="lastmonth">Mes anterior</option>
-            <option value="7days">Ultimos 7 dias</option>
+            <option value="custom">Personalizado</option>
           </select>
+          <input type="date" id="balance-fecha-ini" class="px-3 py-2 border rounded-lg" value="${startOfMonth}" onchange="loadBalanceData()">
+          <span class="text-gray-500">a</span>
+          <input type="date" id="balance-fecha-fin" class="px-3 py-2 border rounded-lg" value="${today}" onchange="loadBalanceData()">
           <select id="balance-canal" class="px-3 py-2 border rounded-lg" onchange="loadBalanceData()">
             <option value="">Todos los canales</option>
             <option value="web">Web</option>
@@ -66,15 +74,27 @@ async function renderBalance(container) {
   await loadBalanceData();
 }
 
-window.loadBalanceData = async function() {
+window.handleBalancePreset = function() {
   const preset = document.getElementById('balance-preset').value;
-  const canal = document.getElementById('balance-canal').value;
   const range = getDateRange(preset);
+
+  if (preset !== 'custom') {
+    document.getElementById('balance-fecha-ini').value = range.start;
+    document.getElementById('balance-fecha-fin').value = range.end;
+  }
+
+  loadBalanceData();
+};
+
+window.loadBalanceData = async function() {
+  const fechaIni = document.getElementById('balance-fecha-ini').value;
+  const fechaFin = document.getElementById('balance-fecha-fin').value;
+  const canal = document.getElementById('balance-canal').value;
 
   // Get balance via RPC
   const { data: balance } = await supabaseClient.rpc('balance_resumen', {
-    p_fecha_ini: range.start,
-    p_fecha_fin: range.end,
+    p_fecha_ini: fechaIni,
+    p_fecha_fin: fechaFin,
     p_canal: canal || null
   });
 
@@ -89,30 +109,25 @@ window.loadBalanceData = async function() {
     const utilidadEl = document.getElementById('bal-utilidad');
     utilidadEl.textContent = formatMoney(utilidad);
     utilidadEl.className = `text-3xl font-bold ${utilidad >= 0 ? 'text-green-600' : 'text-red-600'}`;
+  } else {
+    document.getElementById('bal-litros').textContent = '0';
+    document.getElementById('bal-venta').textContent = formatMoney(0);
+    document.getElementById('bal-rentabilidad').textContent = formatMoney(0);
+    document.getElementById('bal-gastos').textContent = formatMoney(0);
+    document.getElementById('bal-utilidad').textContent = formatMoney(0);
   }
 
-  // Get previous period for comparison
-  let prevRange;
-  if (preset === 'month') {
-    prevRange = getDateRange('lastmonth');
-  } else if (preset === 'lastmonth') {
-    const today = new Date();
-    const twoMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    const twoMonthsAgoEnd = new Date(today.getFullYear(), today.getMonth() - 1, 0);
-    prevRange = {
-      start: twoMonthsAgo.toISOString().split('T')[0],
-      end: twoMonthsAgoEnd.toISOString().split('T')[0]
-    };
-  } else {
-    const week = new Date();
-    week.setDate(week.getDate() - 14);
-    const weekEnd = new Date();
-    weekEnd.setDate(weekEnd.getDate() - 8);
-    prevRange = {
-      start: week.toISOString().split('T')[0],
-      end: weekEnd.toISOString().split('T')[0]
-    };
-  }
+  // Get previous period for comparison (same duration before start date)
+  const startDate = new Date(fechaIni);
+  const endDate = new Date(fechaFin);
+  const duration = endDate - startDate;
+  const prevEnd = new Date(startDate.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - duration);
+
+  const prevRange = {
+    start: prevStart.toISOString().split('T')[0],
+    end: prevEnd.toISOString().split('T')[0]
+  };
 
   const { data: prevBalance } = await supabaseClient.rpc('balance_resumen', {
     p_fecha_ini: prevRange.start,
@@ -160,8 +175,8 @@ window.loadBalanceData = async function() {
 
   for (const c of canales) {
     const { data: canalData } = await supabaseClient.rpc('balance_resumen', {
-      p_fecha_ini: range.start,
-      p_fecha_fin: range.end,
+      p_fecha_ini: fechaIni,
+      p_fecha_fin: fechaFin,
       p_canal: c
     });
     if (canalData && canalData[0]) {

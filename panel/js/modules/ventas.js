@@ -133,7 +133,7 @@ window.loadVentasData = async function() {
   }
 
   // Get pedidos detail
-  let query = supabase
+  let query = supabaseClient
     .from('pedidos')
     .select('*, cliente:clientes(nombre), items:pedido_items(litros, cantidad)')
     .in('estado', ['despachado', 'cerrado'])
