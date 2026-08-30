@@ -6,7 +6,10 @@ async function renderCrm(container) {
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">CRM - Clientes</h1>
-        <button onclick="exportClientesCSV()" class="text-primary hover:underline text-sm">Exportar CSV</button>
+        <button onclick="exportClientesExcel()" class="bg-primary text-white px-3 py-1 rounded-lg hover:bg-green-700 text-sm flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Exportar Excel
+        </button>
       </div>
 
       <!-- KPIs -->
@@ -196,6 +199,7 @@ window.loadCrmData = async function() {
         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefono</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ciudad</th>
         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cultivo</th>
         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total (L)</th>
         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total ($)</th>
@@ -208,7 +212,7 @@ window.loadCrmData = async function() {
       const { data: clientes } = await supabaseClient.rpc('crm_clientes', { p_tipo: tipo, p_orden: orden });
 
       if (!clientes || clientes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin clientes</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Sin clientes</td></tr>';
         return;
       }
 
@@ -217,6 +221,7 @@ window.loadCrmData = async function() {
           <td class="px-4 py-3 font-medium">${c.nombre}</td>
           <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full ${c.tipo === 'distribuidor' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${c.tipo}</span></td>
           <td class="px-4 py-3">${c.telefono || '-'}</td>
+          <td class="px-4 py-3">${c.ciudad || '-'}</td>
           <td class="px-4 py-3">${c.cultivo || '-'}</td>
           <td class="px-4 py-3 text-right">${c.total_litros || 0}</td>
           <td class="px-4 py-3 text-right font-medium">${formatMoney(c.total_valor)}</td>
@@ -238,19 +243,53 @@ window.marcarAtendido = async function(clienteId) {
   await loadCrmData();
 };
 
-window.exportClientesCSV = async function() {
+window.exportClientesExcel = async function() {
   const { data } = await supabaseClient.from('clientes').select('*').order('nombre');
-  if (!data) return;
+  if (!data || data.length === 0) {
+    showToast('No hay clientes para exportar', 'error');
+    return;
+  }
 
-  let csv = 'Nombre,Tipo,Cedula,Telefono,Email,Ciudad,Cultivo,Origen,Total Litros,Total Valor\n';
-  data.forEach(c => {
-    csv += `"${c.nombre}","${c.tipo}","${c.cedula || ''}","${c.telefono || ''}","${c.email || ''}","${c.ciudad || ''}","${c.cultivo || ''}","${c.origen}",${c.total_comprado_litros || 0},${c.total_comprado_valor || 0}\n`;
-  });
+  // Preparar datos para Excel
+  const rows = data.map(c => ({
+    'Nombre': c.nombre || '',
+    'Tipo': c.tipo || '',
+    'Cedula': c.cedula || '',
+    'Telefono': c.telefono || '',
+    'Email': c.email || '',
+    'Ciudad': c.ciudad || '',
+    'Departamento': c.departamento || '',
+    'Cultivo': c.cultivo || '',
+    'Origen': c.origen || '',
+    'Total Litros': c.total_comprado_litros || 0,
+    'Total Valor': c.total_comprado_valor || 0,
+    'Dias sin comprar': c.dias_sin_comprar || '',
+    'Estado CRM': c.estado_crm || ''
+  }));
 
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'clientes_ozoagro.csv';
-  a.click();
+  // Usar SheetJS
+  if (typeof XLSX === 'undefined') {
+    showToast('Cargando libreria Excel...', 'info');
+    const script = document.createElement('script');
+    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    script.onload = () => generateExcel(rows);
+    document.head.appendChild(script);
+  } else {
+    generateExcel(rows);
+  }
 };
+
+function generateExcel(rows) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+
+  // Ajustar anchos de columna
+  const colWidths = Object.keys(rows[0] || {}).map(k => ({ wch: Math.max(k.length, 15) }));
+  ws['!cols'] = colWidths;
+
+  // Generar archivo
+  const fecha = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `clientes_ozoagro_${fecha}.xlsx`);
+  showToast('Excel descargado');
+}

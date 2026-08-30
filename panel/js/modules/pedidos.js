@@ -1,5 +1,6 @@
 // OZOAGRO Panel - Modulo Pedidos
 let pedidosTab = 'por_confirmar';
+let pedidosCanalFiltro = ''; // '', 'agente', 'web' para sub-filtrar en Por confirmar
 let pedidosData = [];
 let productosCache = [];
 let clientesCache = [];
@@ -28,6 +29,13 @@ async function renderPedidos(container) {
         <button onclick="setPedidosTab('despachado')" class="tab-btn ${pedidosTab === 'despachado' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Despachados</button>
         <button onclick="setPedidosTab('cerrado')" class="tab-btn ${pedidosTab === 'cerrado' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Cerrados</button>
         <button onclick="setPedidosTab('cancelado')" class="tab-btn ${pedidosTab === 'cancelado' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Cancelados</button>
+      </div>
+
+      <!-- Sub-filtro por canal (solo en Por confirmar) -->
+      <div id="subfiltro-canal" class="${pedidosTab === 'por_confirmar' ? 'flex gap-2' : 'hidden'}">
+        <button onclick="setPedidosCanalFiltro('')" class="subfiltro-btn ${pedidosCanalFiltro === '' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-todos">Todos</button>
+        <button onclick="setPedidosCanalFiltro('agente')" class="subfiltro-btn ${pedidosCanalFiltro === 'agente' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-agente">Agente IA</button>
+        <button onclick="setPedidosCanalFiltro('web')" class="subfiltro-btn ${pedidosCanalFiltro === 'web' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-web">Landing/Web</button>
       </div>
 
       <!-- Table -->
@@ -158,12 +166,19 @@ async function renderPedidos(container) {
 }
 
 async function loadPedidos() {
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from('pedidos')
     .select('*, cliente:clientes(*), items:pedido_items(*, producto:productos(*))')
     .eq('estado', pedidosTab)
     .eq('es_test', false)
     .order('created_at', { ascending: false });
+
+  // Aplicar filtro de canal en Por confirmar
+  if (pedidosTab === 'por_confirmar' && pedidosCanalFiltro) {
+    query = query.eq('canal', pedidosCanalFiltro);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error(error);
@@ -172,6 +187,34 @@ async function loadPedidos() {
 
   pedidosData = data || [];
   renderPedidosTable();
+
+  // Actualizar contadores en sub-filtros
+  if (pedidosTab === 'por_confirmar') {
+    updateSubfiltroContadores();
+  }
+}
+
+async function updateSubfiltroContadores() {
+  // Contar pedidos por canal
+  const { data: counts } = await supabaseClient
+    .from('pedidos')
+    .select('canal')
+    .eq('estado', 'por_confirmar')
+    .eq('es_test', false);
+
+  if (!counts) return;
+
+  const total = counts.length;
+  const agente = counts.filter(p => p.canal === 'agente').length;
+  const web = counts.filter(p => p.canal === 'web').length;
+
+  const btnTodos = document.getElementById('subfiltro-todos');
+  const btnAgente = document.getElementById('subfiltro-agente');
+  const btnWeb = document.getElementById('subfiltro-web');
+
+  if (btnTodos) btnTodos.textContent = `Todos (${total})`;
+  if (btnAgente) btnAgente.textContent = `Agente IA (${agente})`;
+  if (btnWeb) btnWeb.textContent = `Landing/Web (${web})`;
 }
 
 function renderPedidosTable() {
@@ -224,8 +267,35 @@ function getAccionesButtons(pedido) {
 
 window.setPedidosTab = async function(tab) {
   pedidosTab = tab;
+  pedidosCanalFiltro = ''; // Reset filtro canal al cambiar tab
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector(`[onclick="setPedidosTab('${tab}')"]`).classList.add('active');
+
+  // Mostrar/ocultar sub-filtro
+  const subfiltro = document.getElementById('subfiltro-canal');
+  if (subfiltro) {
+    subfiltro.classList.toggle('hidden', tab !== 'por_confirmar');
+    subfiltro.classList.toggle('flex', tab === 'por_confirmar');
+  }
+
+  await loadPedidos();
+};
+
+window.setPedidosCanalFiltro = async function(canal) {
+  pedidosCanalFiltro = canal;
+
+  // Actualizar estilos de botones
+  document.querySelectorAll('.subfiltro-btn').forEach(btn => {
+    const isActive = btn.id === `subfiltro-${canal || 'todos'}`;
+    if (btn.id === 'subfiltro-todos') {
+      btn.className = `subfiltro-btn ${isActive ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'} px-3 py-1 rounded-full text-sm transition`;
+    } else if (btn.id === 'subfiltro-agente') {
+      btn.className = `subfiltro-btn ${isActive ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'} px-3 py-1 rounded-full text-sm transition`;
+    } else if (btn.id === 'subfiltro-web') {
+      btn.className = `subfiltro-btn ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} px-3 py-1 rounded-full text-sm transition`;
+    }
+  });
+
   await loadPedidos();
 };
 
