@@ -1083,9 +1083,15 @@
             <input type="text" name="direccion" required minlength="10" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Dirección completa (vereda, finca, barrio)">
           </div>
 
-          <div>
-            <label class="block font-semibold mb-2">Tipo de cultivo (opcional)</label>
-            <input type="text" name="cultivo" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Ej: Café, Aguacate, Cannabis...">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold mb-2">Tipo de cultivo (opcional)</label>
+              <input type="text" name="cultivo" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Ej: Café, Aguacate, Cannabis...">
+            </div>
+            <div>
+              <label class="block font-semibold mb-2">Correo (opcional)</label>
+              <input type="email" name="email" autocomplete="email" class="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-primary focus:outline-none transition-colors" placeholder="Para enviarte la confirmación y la guía">
+            </div>
           </div>
 
           <!-- Resumen -->
@@ -1272,7 +1278,7 @@
           p_telefono: (data.telefono || '').replace(/\D/g, ''),
           p_producto_id: prods[0].id,
           p_cantidad: 1,
-          p_email: data.email || null,
+          p_email: (data.email || '').trim().toLowerCase() || null,
           p_direccion: (data.direccion || '').trim(),
           p_ciudad: (data.ciudad || '').trim(),
           p_departamento: data.departamento || null,

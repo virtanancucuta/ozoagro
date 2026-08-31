@@ -1,0 +1,11 @@
+-- 2026-08-31 — Correos transaccionales (Resend). APLICADO via MCP apply_migration "correos_pedidos_infra".
+-- Componentes:
+--   extensions.pg_net · tabla app_secretos (RLS sin políticas: solo service_role; guarda RESEND_API_KEY y CORREOS_SECRET)
+--   tabla correos_enviados (log; SELECT para authenticated) · config_negocio.correos_activos, email_remitente, email_ceo
+--   disparar_correo_pedido(uuid,text) → net.http_post a la Edge Function ozoagro-correos (header x-correos-secret)
+--   trigger trg_pedidos_correos: AFTER INSERT → 'nuevo_pedido'; AFTER UPDATE estado→despachado con guía → 'despachado'. Ignora es_test.
+--   Desactivar temporalmente en una sesión: SELECT set_config('app.skip_correos','1',true);
+-- Edge Function: supabase/functions/ozoagro-correos/index.ts (verify_jwt=false; auth por secreto compartido).
+-- Remitente: hasta verificar el dominio en Resend, config_negocio.email_remitente = 'OZOAGRO <onboarding@resend.dev>'
+--   (Resend solo entrega al correo del dueño de la cuenta). Con dominio verificado: 'OZOAGRO <pedidos@ozoagro.co>'.
+-- Definiciones vivas: pg_get_functiondef('disparar_correo_pedido'::regproc), pg_get_triggerdef.
