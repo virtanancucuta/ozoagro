@@ -15,6 +15,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- GSAP for animations -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -972,13 +974,56 @@
   </footer>
 
   <!-- WhatsApp floating button -->
-  <a href="https://wa.me/573000000000?text=Hola,%20quiero%20informacion%20sobre%20OZOAGRO" target="_blank" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50">
+  <a href="https://wa.me/573133623071?text=Hola,%20quiero%20informacion%20sobre%20OZOAGRO" target="_blank" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50">
     <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
     </svg>
   </a>
 
   <script>
+    // Supabase config
+    const SUPABASE_URL = 'https://vlcxeajnucdkwamcivgy.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNjIzMjMsImV4cCI6MjEwMzYzODMyM30.OOvxOhMm5-g3ULCJEvLcBq9UBvv-VlTBEY8KQNdJD2s';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // Registrar visita al cargar
+    async function registrarVisita() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        await supabase.rpc('registrar_visita', {
+          p_pagina: '/',
+          p_referrer: document.referrer || null,
+          p_utm_source: params.get('utm_source'),
+          p_utm_medium: params.get('utm_medium'),
+          p_utm_campaign: params.get('utm_campaign'),
+          p_fbclid: params.get('fbclid')
+        });
+      } catch (e) { console.log('Visita no registrada:', e); }
+    }
+    registrarVisita();
+
+    // Carrito abandonado - timeout tracker
+    let carritoData = {};
+    let carritoTimeout = null;
+    function trackCarritoField(field, value) {
+      carritoData[field] = value;
+      if (carritoTimeout) clearTimeout(carritoTimeout);
+      // Si tiene nombre y telefono, iniciar timeout de 60s
+      if (carritoData.nombre && carritoData.telefono) {
+        carritoTimeout = setTimeout(async () => {
+          try {
+            await supabase.rpc('registrar_carrito_abandonado', {
+              p_nombre: carritoData.nombre,
+              p_telefono: carritoData.telefono,
+              p_ciudad: carritoData.ciudad || null,
+              p_producto_id: null
+            });
+            console.log('Carrito abandonado registrado');
+          } catch (e) { console.log('Error carrito:', e); }
+        }, 60000);
+      }
+    }
+
     // Scroll reveal
     const reveals = document.querySelectorAll('.reveal');
     const revealOnScroll = () => {
@@ -1015,20 +1060,47 @@
       input.addEventListener('change', updateSummary);
     });
 
-    // Form submission (placeholder - will connect to Supabase later)
-    document.getElementById('checkout-form').addEventListener('submit', function(e) {
+    // Form field tracking for carrito abandonado
+    ['nombre', 'telefono', 'ciudad'].forEach(field => {
+      const el = document.getElementById(field);
+      if (el) el.addEventListener('blur', () => trackCarritoField(field, el.value));
+    });
+
+    // Form submission - conectado a Supabase
+    document.getElementById('checkout-form').addEventListener('submit', async function(e) {
       e.preventDefault();
+      if (carritoTimeout) clearTimeout(carritoTimeout);
 
       const formData = new FormData(this);
       const data = Object.fromEntries(formData);
+      const btn = this.querySelector('button[type="submit"]');
+      const btnText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
 
-      // For now, just show success message
-      console.log('Pedido:', data);
+      try {
+        const { data: result, error } = await supabase.rpc('crear_pedido_web', {
+          p_nombre: data.nombre,
+          p_telefono: data.telefono,
+          p_email: data.email || null,
+          p_ciudad: data.ciudad,
+          p_direccion: data.direccion,
+          p_combo_litros: parseInt(data.plan),
+          p_cantidad: 1,
+          p_notas: null
+        });
 
-      this.classList.add('hidden');
-      document.getElementById('success-message').classList.remove('hidden');
+        if (error) throw error;
 
-      // TODO: Connect to Supabase + send email + Telegram notification
+        this.classList.add('hidden');
+        document.getElementById('success-message').classList.remove('hidden');
+        console.log('Pedido creado:', result);
+      } catch (err) {
+        console.error('Error creando pedido:', err);
+        alert('Hubo un error. Por favor intenta de nuevo o escribenos al WhatsApp.');
+        btn.disabled = false;
+        btn.textContent = btnText;
+      }
     });
 
     // GSAP Animations
