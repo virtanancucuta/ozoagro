@@ -27,6 +27,18 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// Link de WhatsApp: acepta '3001234567' o '573001234567' (los del agente ya traen el 57)
+function waLink(tel, text) {
+  let d = String(tel || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.length === 10 && d.startsWith('3')) d = '57' + d;
+  return 'https://wa.me/' + d + (text ? '?text=' + encodeURIComponent(text) : '');
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function getDateRange(preset) {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);

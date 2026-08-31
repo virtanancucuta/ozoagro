@@ -112,7 +112,7 @@ async function loadInventarioData() {
   const { data: productos } = await supabaseClient.from('productos').select('*').eq('activo', true).order('litros');
 
   const cardsContainer = document.getElementById('productos-cards');
-  cardsContainer.parentElement.innerHTML = productos?.map(p => `
+  cardsContainer.innerHTML = (productos || []).map(p => `
     <div class="bg-white rounded-xl p-6 shadow">
       <div class="flex justify-between items-start mb-4">
         <div>

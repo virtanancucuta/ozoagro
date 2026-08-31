@@ -211,9 +211,8 @@ window.loadVentasData = async function() {
     .select('*, cliente:clientes(nombre), items:pedido_items(litros, cantidad)')
     .in('estado', ['despachado', 'cerrado'])
     .eq('es_test', false)
-    .gte('created_at', range.start)
-    .lte('created_at', range.end + 'T23:59:59')
-    .order('created_at', { ascending: false });
+    .or(`and(fecha_despachado.gte.${range.start},fecha_despachado.lte.${range.end}T23:59:59),and(fecha_despachado.is.null,created_at.gte.${range.start},created_at.lte.${range.end}T23:59:59)`)
+    .order('fecha_despachado', { ascending: false, nullsFirst: false });
 
   if (canal) query = query.eq('canal', canal);
 

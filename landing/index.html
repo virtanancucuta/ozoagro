@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2716%27 fill=%27%2315803D%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27%3EO%3C/text%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OZOAGRO | Protección Ecológica para tus Cultivos</title>
   <meta name="description" content="Bioinsecticida y biofungicida ecológico a base de ozono. Protege tus cultivos sin químicos. 100% garantizado.">
@@ -668,7 +669,7 @@
             <div class="text-4xl font-bold text-primary">$300.000</div>
             <div class="text-foreground/60 text-sm mt-1">
               <span class="line-through">$390.000</span>
-              <span class="bg-primary/20 text-primary px-2 py-0.5 rounded ml-2">Ahorras $60.000</span>
+              <span class="bg-primary/20 text-primary px-2 py-0.5 rounded ml-2">Ahorras $90.000</span>
             </div>
           </div>
           <a href="#comprar" class="block w-full bg-primary text-white py-3 rounded-full text-center font-semibold hover:bg-primary-light transition-colors" onclick="selectPlan('3')">
@@ -713,7 +714,7 @@
             "Lo mejor es que puedo aplicarlo y cosechar el mismo dia. Mis aguacates salen perfectos para exportacion, sin residuos y con toda la certificacion."
           </p>
           <div class="flex items-center gap-3">
-            <img src="img/testimonio2.webp" alt="Maria Cardenas" class="w-14 h-14 rounded-full object-cover border-2 border-primary/20">
+            <img src="img/testimonio2.webp" alt="Jesus Grimalgo" class="w-14 h-14 rounded-full object-cover border-2 border-primary/20">
             <div>
               <div class="font-semibold">Jesus Grimalgo</div>
               <div class="text-sm text-foreground/60">Aguacatero, Antioquia</div>
@@ -865,18 +866,19 @@
                 <option>Amazonas</option>
                 <option>Antioquia</option>
                 <option>Arauca</option>
-                <option>Atlantico</option>
-                <option>Bolivar</option>
-                <option>Boyaca</option>
+                <option>Atlántico</option>
+                <option>Bogotá D.C.</option>
+                <option>Bolívar</option>
+                <option>Boyacá</option>
                 <option>Caldas</option>
-                <option>Caqueta</option>
+                <option>Caquetá</option>
                 <option>Casanare</option>
                 <option>Cauca</option>
                 <option>Cesar</option>
-                <option>Choco</option>
-                <option>Cordoba</option>
+                <option>Chocó</option>
+                <option>Córdoba</option>
                 <option>Cundinamarca</option>
-                <option>Guainia</option>
+                <option>Guainía</option>
                 <option>Guaviare</option>
                 <option>Huila</option>
                 <option>La Guajira</option>
@@ -885,14 +887,14 @@
                 <option>Nariño</option>
                 <option>Norte de Santander</option>
                 <option>Putumayo</option>
-                <option>Quindio</option>
+                <option>Quindío</option>
                 <option>Risaralda</option>
-                <option>San Andres</option>
+                <option>San Andrés y Providencia</option>
                 <option>Santander</option>
                 <option>Sucre</option>
                 <option>Tolima</option>
                 <option>Valle del Cauca</option>
-                <option>Vaupes</option>
+                <option>Vaupés</option>
                 <option>Vichada</option>
               </select>
             </div>
@@ -1062,8 +1064,8 @@
 
     // Form field tracking for carrito abandonado
     ['nombre', 'telefono', 'ciudad'].forEach(field => {
-      const el = document.getElementById(field);
-      if (el) el.addEventListener('blur', () => trackCarritoField(field, el.value));
+      const el = document.querySelector(`#checkout-form [name="${field}"]`);
+      if (el) el.addEventListener('blur', () => trackCarritoField(field, el.value.trim()));
     });
 
     // Form submission - conectado a Supabase
@@ -1079,18 +1081,29 @@
       btn.textContent = 'Enviando...';
 
       try {
+        // Producto real por litros (la RPC recibe p_producto_id, no litros)
+        const litros = parseInt(data.plan) || 2;
+        const { data: prods, error: prodErr } = await supabaseClient
+          .from('productos').select('id, litros').eq('activo', true).eq('litros', litros).limit(1);
+        if (prodErr || !prods || !prods.length) throw (prodErr || new Error('Producto no disponible'));
+        const params = new URLSearchParams(window.location.search);
+
         const { data: result, error } = await supabaseClient.rpc('crear_pedido_web', {
-          p_nombre: data.nombre,
-          p_telefono: data.telefono,
-          p_email: data.email || null,
-          p_ciudad: data.ciudad,
-          p_direccion: data.direccion,
-          p_combo_litros: parseInt(data.plan),
+          p_nombre: (data.nombre || '').trim(),
+          p_telefono: (data.telefono || '').replace(/\D/g, ''),
+          p_producto_id: prods[0].id,
           p_cantidad: 1,
-          p_notas: null
+          p_email: data.email || null,
+          p_direccion: (data.direccion || '').trim(),
+          p_ciudad: (data.ciudad || '').trim(),
+          p_departamento: data.departamento || null,
+          p_utm_source: params.get('utm_source'),
+          p_fbclid: params.get('fbclid'),
+          p_cultivo: (data.cultivo || '').trim() || null
         });
 
         if (error) throw error;
+        if (result && result.error) throw new Error(result.error);
 
         this.classList.add('hidden');
         document.getElementById('success-message').classList.remove('hidden');

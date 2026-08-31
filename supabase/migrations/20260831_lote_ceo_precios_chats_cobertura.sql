@@ -1,0 +1,13 @@
+-- 2026-08-31 — Lote previo a revisión con el CEO. TODO APLICADO en Supabase vlcxeajnucdkwamcivgy (via MCP apply_migration):
+--   precio_unico_litros_y_pedido_web_v2, hardening_rpc_panel_sin_anon, crear_pedido_web_v3_cultivo,
+--   chats_ia_resumen_rpc, cobertura_stock_v2_resta_ventas.
+-- Este archivo es la copia versionada (ver `supabase migration list` / tabla supabase_migrations.schema_migrations).
+--
+-- 1) Regla de precios ÚNICA: envase de 1 L. 1 L=$130.000, 2 L=$220.000, 3 L=$300.000, 4+ L = N x config_negocio.precio_litro_extra ($100.000)
+--    precio_total_litros(int) → usada por crear_pedido_web y crear_pedido_agente (antes 2 x 1L en la landing = $260.000).
+-- 2) crear_pedido_web v3: p_producto_id + p_cantidad + p_departamento + p_cultivo; actualiza cliente existente; anon puede ejecutarla.
+-- 3) Grants: ventas_resumen/balance_resumen/crm_visitas/crm_clientes/cobertura_stock solo authenticated+service_role;
+--    RPCs del agente (actualizar_lead, crear_pedido_agente, registrar_mensaje_*, mensajes_pendientes) solo service_role.
+-- 4) chats_ia_resumen() + chats_ia_marcar(uuid,bool,text): módulo Chats IA del panel (con/sin conversión por teléfono).
+-- 5) cobertura_stock v2: stock = entradas - litros despachados/cerrados; venta diaria = últimos 30 días.
+-- Definiciones vivas: SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname IN (...).
