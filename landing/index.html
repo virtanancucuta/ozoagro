@@ -121,6 +121,10 @@
       html { scroll-behavior: auto; }
     }
 
+    /* Escena animada */
+    .ozo-step.is-active { border-color: #15803D; background: #F0FDF4; box-shadow: 0 6px 20px rgba(21,128,61,.10); }
+    .ozo-leaf { transform-box: fill-box; transform-origin: 50% 100%; }
+
     /* Glow effect */
     .glow-text {
       text-shadow: 0 0 20px rgba(21, 128, 61, 0.5), 0 0 40px rgba(21, 128, 61, 0.3);
@@ -141,6 +145,7 @@
         </span>
       </a>
       <nav class="hidden md:flex items-center gap-6">
+        <a href="#escena" class="text-foreground/70 hover:text-primary transition-colors">Cómo actúa</a>
         <a href="#producto" class="text-foreground/70 hover:text-primary transition-colors">Producto</a>
         <a href="#cultivos" class="text-foreground/70 hover:text-primary transition-colors">Cultivos</a>
         <a href="#precios" class="text-foreground/70 hover:text-primary transition-colors">Precios</a>
@@ -339,6 +344,107 @@
             </li>
           </ul>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Así trabaja OZOAGRO (escena animada) -->
+  <section id="escena" class="py-20 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-10 reveal">
+        <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">Así trabaja OZOAGRO en tu cultivo</h2>
+        <p class="text-lg text-foreground/80">Plagas y hongos atacan, OZOAGRO actúa y la planta se recupera con más fuerza. Míralo en 12 segundos.</p>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-8 items-center">
+        <div class="lg:col-span-3 relative rounded-3xl bg-background border border-border p-3 md:p-6 reveal">
+          <svg id="ozo-scene" viewBox="0 0 800 400" class="w-full h-auto" role="img" aria-labelledby="ozo-scene-title" style="max-height:440px">
+            <title id="ozo-scene-title">Animación: plagas y hongos atacan una planta, OZOAGRO se aplica y la planta se recupera</title>
+            <defs>
+              <radialGradient id="ozo-sun" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#FDE68A" stop-opacity="0"/></radialGradient>
+              <linearGradient id="ozo-soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A16207"/><stop offset="100%" stop-color="#78350F"/></linearGradient>
+              <radialGradient id="ozo-mist" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#86EFAC" stop-opacity=".55"/><stop offset="100%" stop-color="#86EFAC" stop-opacity="0"/></radialGradient>
+            </defs>
+            <!-- cielo / sol -->
+            <rect x="0" y="0" width="800" height="400" fill="#F0FDF4"/>
+            <circle id="ozo-sun-glow" cx="690" cy="80" r="90" fill="url(#ozo-sun)" opacity=".6"/>
+            <circle cx="690" cy="80" r="34" fill="#FCD34D"/>
+            <!-- suelo -->
+            <path d="M0,300 C150,285 300,315 450,300 C600,285 700,310 800,298 L800,400 L0,400 Z" fill="url(#ozo-soil)"/>
+            <ellipse cx="400" cy="300" rx="120" ry="10" fill="#14532D" opacity=".15"/>
+            <!-- raíces -->
+            <g id="ozo-roots" stroke="#D97706" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".55">
+              <path d="M400,300 C390,330 360,340 340,360"/><path d="M400,300 C405,335 430,345 450,362"/><path d="M400,300 C398,340 385,355 380,372"/>
+            </g>
+            <!-- tallo + hojas -->
+            <g id="ozo-plant">
+              <path id="ozo-stem" d="M400,300 C398,250 402,200 400,120" stroke="#15803D" stroke-width="8" fill="none" stroke-linecap="round"/>
+              <g class="ozo-leaf" data-i="0" transform="translate(400 250) rotate(-55) scale(1.0)"><path d="M0,0 C-22,-14 -30,-44 0,-70 C30,-44 22,-14 0,0 Z" fill="#4ADE80" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/><path d="M0,-4 L0,-62" stroke="#15803D" stroke-width="1.5" opacity=".6"/></g><g class="ozo-leaf" data-i="1" transform="translate(400 250) rotate(55) scale(1.0)"><path d="M0,0 C-22,-14 -30,-44 0,-70 C30,-44 22,-14 0,0 Z" fill="#4ADE80" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/><path d="M0,-4 L0,-62" stroke="#15803D" stroke-width="1.5" opacity=".6"/></g><g class="ozo-leaf" data-i="2" transform="translate(400 200) rotate(-35) scale(0.95)"><path d="M0,0 C-22,-14 -30,-44 0,-70 C30,-44 22,-14 0,0 Z" fill="#4ADE80" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/><path d="M0,-4 L0,-62" stroke="#15803D" stroke-width="1.5" opacity=".6"/></g><g class="ozo-leaf" data-i="3" transform="translate(400 200) rotate(35) scale(0.95)"><path d="M0,0 C-22,-14 -30,-44 0,-70 C30,-44 22,-14 0,0 Z" fill="#4ADE80" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/><path d="M0,-4 L0,-62" stroke="#15803D" stroke-width="1.5" opacity=".6"/></g><g class="ozo-leaf" data-i="4" transform="translate(400 150) rotate(0) scale(0.9)"><path d="M0,0 C-22,-14 -30,-44 0,-70 C30,-44 22,-14 0,0 Z" fill="#4ADE80" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/><path d="M0,-4 L0,-62" stroke="#15803D" stroke-width="1.5" opacity=".6"/></g>
+              <g id="ozo-fruit" opacity="0"><circle cx="400" cy="112" r="14" fill="#DC2626"/><circle cx="395" cy="106" r="4" fill="#FCA5A5" opacity=".8"/></g>
+            </g>
+            <!-- manchas de hongo -->
+            <circle class="ozo-spot" data-i="0" cx="372" cy="205" r="0" fill="#92400E" opacity=".75"/><circle class="ozo-spot" data-i="1" cx="430" cy="170" r="0" fill="#92400E" opacity=".75"/><circle class="ozo-spot" data-i="2" cx="388" cy="148" r="0" fill="#92400E" opacity=".75"/><circle class="ozo-spot" data-i="3" cx="428" cy="215" r="0" fill="#92400E" opacity=".75"/><circle class="ozo-spot" data-i="4" cx="362" cy="240" r="0" fill="#92400E" opacity=".75"/>
+            <!-- plagas -->
+            <g class="ozo-pest" data-i="0" transform="translate(300 130)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g><g class="ozo-pest" data-i="1" transform="translate(500 120)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g><g class="ozo-pest" data-i="2" transform="translate(330 210)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g><g class="ozo-pest" data-i="3" transform="translate(480 205)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g><g class="ozo-pest" data-i="4" transform="translate(410 95)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g><g class="ozo-pest" data-i="5" transform="translate(345 255)" opacity="0">
+      <ellipse rx="9" ry="6" fill="#7C2D12"/><circle cx="8" cy="-1" r="4" fill="#7C2D12"/>
+      <path d="M-6,-5 l-5,-5 M0,-6 l-2,-7 M6,-5 l5,-5 M-6,5 l-5,5 M0,6 l-2,7 M6,5 l5,5" stroke="#7C2D12" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+            <!-- envase + niebla de ozono -->
+            <g id="ozo-bottle" transform="translate(150 150)" opacity="0">
+              <rect x="-22" y="-10" width="44" height="90" rx="10" fill="#FFFFFF" stroke="#15803D" stroke-width="3"/>
+              <rect x="-12" y="-30" width="24" height="22" rx="4" fill="#15803D"/>
+              <rect x="-16" y="18" width="32" height="42" rx="4" fill="#15803D"/>
+              <text x="0" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="Raleway, sans-serif">OZO</text>
+              <path id="ozo-nozzle" d="M22,0 L48,-10 L48,4 Z" fill="#A16207"/>
+            </g>
+            <circle id="ozo-mist" cx="400" cy="190" r="10" fill="url(#ozo-mist)" opacity="0"/>
+            <circle class="ozo-drop" data-i="0" cx="230" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="1" cx="242" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="2" cx="254" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="3" cx="266" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="4" cx="278" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="5" cx="290" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="6" cx="302" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="7" cx="314" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="8" cx="326" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="9" cx="338" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="10" cx="350" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="11" cx="362" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="12" cx="374" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="13" cx="386" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="14" cx="398" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="15" cx="410" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="16" cx="422" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="17" cx="434" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="18" cx="446" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="19" cx="458" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="20" cx="470" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="21" cx="482" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="22" cx="494" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="23" cx="506" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="24" cx="518" cy="70" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="25" cx="530" cy="78" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="26" cx="542" cy="86" r="3.5" fill="#22C55E" opacity="0"/><circle class="ozo-drop" data-i="27" cx="554" cy="70" r="3.5" fill="#22C55E" opacity="0"/>
+            <!-- destellos de recuperación -->
+            <g id="ozo-sparks" opacity="0" fill="#FCD34D">
+              <path d="M300,110 l4,10 l10,4 l-10,4 l-4,10 l-4,-10 l-10,-4 l10,-4 z"/>
+              <path d="M500,100 l3,8 l8,3 l-8,3 l-3,8 l-3,-8 l-8,-3 l8,-3 z"/>
+              <path d="M470,230 l3,8 l8,3 l-8,3 l-3,8 l-3,-8 l-8,-3 l8,-3 z"/>
+            </g>
+            <!-- rótulo de fase -->
+            <g id="ozo-label" transform="translate(400 40)">
+              <rect x="-170" y="-20" width="340" height="40" rx="20" fill="#FFFFFF" stroke="#BBF7D0"/>
+              <text id="ozo-label-text" x="0" y="6" text-anchor="middle" font-size="17" font-weight="700" fill="#14532D" font-family="Raleway, sans-serif">Plagas y hongos atacan tu cultivo</text>
+            </g>
+          </svg>
+        </div>
+
+        <ol id="ozo-steps" class="lg:col-span-2 space-y-3 reveal">
+          <li data-step="0" class="ozo-step flex gap-4 p-4 rounded-2xl border border-border bg-white transition-colors">
+            <span class="w-9 h-9 shrink-0 rounded-full bg-red-100 text-red-700 font-bold flex items-center justify-center">1</span>
+            <div><h3 class="font-heading font-bold">Plagas y hongos atacan</h3><p class="text-sm text-foreground/75">Mosca blanca, trips, pulgones y hongos manchan las hojas y frenan la planta.</p></div>
+          </li>
+          <li data-step="1" class="ozo-step flex gap-4 p-4 rounded-2xl border border-border bg-white transition-colors">
+            <span class="w-9 h-9 shrink-0 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center">2</span>
+            <div><h3 class="font-heading font-bold">OZOAGRO actúa</h3><p class="text-sm text-foreground/75">5 ml por litro de agua. El ozono y los extractos vegetales eliminan hongos, bacterias y virus y repelen los insectos.</p></div>
+          </li>
+          <li data-step="2" class="ozo-step flex gap-4 p-4 rounded-2xl border border-border bg-white transition-colors">
+            <span class="w-9 h-9 shrink-0 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center">3</span>
+            <div><h3 class="font-heading font-bold">La planta se recupera con más fuerza</h3><p class="text-sm text-foreground/75">Más fotosíntesis, raíces oxigenadas y fruta sin residuos: puedes cosechar el mismo día.</p></div>
+          </li>
+          <li class="pt-2">
+            <a href="#comprar" class="inline-flex items-center justify-center w-full bg-primary text-white py-3 rounded-full font-semibold hover:bg-primary-light transition-colors">Quiero protegerlo así</a>
+          </li>
+        </ol>
       </div>
     </div>
   </section>
@@ -1250,6 +1356,86 @@
         repeat: -1,
         ease: 'sine.inOut'
       });
+
+      // ===== Escena "Así trabaja OZOAGRO" =====
+      (function ozoScene() {
+        const svg = document.getElementById('ozo-scene');
+        if (!svg || typeof gsap === 'undefined') return;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const $ = sel => svg.querySelectorAll(sel);
+        const leaves = $('.ozo-leaf path:first-child');
+        const pests = $('.ozo-pest');
+        const spots = $('.ozo-spot');
+        const drops = $('.ozo-drop');
+        const label = document.getElementById('ozo-label-text');
+        const steps = document.querySelectorAll('#ozo-steps .ozo-step');
+        const setStep = i => { steps.forEach(s => s.classList.toggle('is-active', Number(s.dataset.step) === i)); };
+        const setLabel = t => { label.textContent = t; };
+
+        if (reduced) {
+          // Estado final estático: planta sana
+          gsap.set(leaves, { fill: '#16A34A' });
+          gsap.set('#ozo-fruit', { opacity: 1 });
+          setLabel('Cultivo sano, sin residuos');
+          setStep(2);
+          return;
+        }
+
+        const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.2, paused: true, defaults: { ease: 'power2.out' } });
+
+        // FASE 1: ataque
+        tl.add(() => { setLabel('Plagas y hongos atacan tu cultivo'); setStep(0); })
+          .to(pests, { opacity: 1, duration: 0.5, stagger: 0.12 }, 0)
+          .to(pests, { x: () => gsap.utils.random(-14, 14), y: () => gsap.utils.random(-10, 10), duration: 0.9, repeat: 3, yoyo: true, ease: 'sine.inOut', stagger: 0.05 }, 0.3)
+          .to(spots, { attr: { r: 9 }, duration: 0.8, stagger: 0.15, ease: 'power1.out' }, 0.6)
+          .to(leaves, { fill: '#A3A340', duration: 1.4, ease: 'sine.inOut' }, 0.8)
+          .to('.ozo-leaf', { rotation: '+=6', duration: 1.4, ease: 'sine.inOut' }, 0.8)
+          .to('#ozo-sun-glow', { opacity: 0.25, duration: 1.2 }, 0.8);
+
+        // FASE 2: OZOAGRO actúa
+        tl.add(() => { setLabel('OZOAGRO actúa: ozono + extractos vegetales'); setStep(1); }, 3.6)
+          .to('#ozo-bottle', { opacity: 1, x: 40, duration: 0.6, ease: 'back.out(1.6)' }, 3.6)
+          .to('#ozo-nozzle', { scaleX: 1.25, transformOrigin: '0 0', duration: 0.15, repeat: 5, yoyo: true }, 4.2)
+          .to(drops, { opacity: 1, x: () => gsap.utils.random(160, 360), y: () => gsap.utils.random(40, 200), duration: 1.1, stagger: 0.03, ease: 'power1.out' }, 4.2)
+          .to(drops, { opacity: 0, duration: 0.4, stagger: 0.02 }, 5.0)
+          .to('#ozo-mist', { opacity: 1, attr: { r: 230 }, duration: 1.4, ease: 'power1.out' }, 4.4)
+          .to(pests, { opacity: 0, y: '-=60', x: '+=40', rotation: 40, duration: 0.7, stagger: 0.08, ease: 'power2.in' }, 4.8)
+          .to(spots, { attr: { r: 0 }, duration: 0.7, stagger: 0.08 }, 5.0)
+          .to('#ozo-mist', { opacity: 0, duration: 0.9 }, 5.9)
+          .to('#ozo-bottle', { opacity: 0, x: -20, duration: 0.5 }, 6.2);
+
+        // FASE 3: recuperación
+        tl.add(() => { setLabel('Cultivo sano, más fotosíntesis, sin residuos'); setStep(2); }, 6.6)
+          .to(leaves, { fill: '#16A34A', duration: 1.2, ease: 'sine.inOut' }, 6.6)
+          .to('.ozo-leaf', { rotation: '-=6', scale: '+=0.12', duration: 1.2, ease: 'back.out(1.4)' }, 6.6)
+          .to('#ozo-roots', { opacity: 1, stroke: '#F59E0B', duration: 1.0 }, 6.8)
+          .to('#ozo-sun-glow', { opacity: 0.9, duration: 1.0 }, 6.8)
+          .to('#ozo-fruit', { opacity: 1, scale: 1.1, transformOrigin: '50% 50%', duration: 0.8, ease: 'back.out(2)' }, 7.4)
+          .to('#ozo-sparks', { opacity: 1, duration: 0.4 }, 7.6)
+          .to('#ozo-sparks', { opacity: 0, duration: 0.8 }, 9.2)
+          // reset silencioso para el siguiente ciclo
+          .set('.ozo-leaf', { scale: '-=0.12' }, 10.6)
+          .set(leaves, { fill: '#4ADE80' }, 10.6)
+          .set('#ozo-fruit', { opacity: 0, scale: 1 }, 10.6)
+          .set('#ozo-roots', { opacity: 0.55, stroke: '#D97706' }, 10.6)
+          .set(pests, { x: 0, y: 0, rotation: 0 }, 10.6)
+          .set(drops, { x: 0, y: 0 }, 10.6)
+          .set('#ozo-mist', { attr: { r: 10 } }, 10.6)
+          .set('#ozo-bottle', { x: 0 }, 10.6);
+
+        // Solo corre cuando está en pantalla (ahorra batería y CPU)
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) tl.play(); else tl.pause(); });
+        }, { threshold: 0.3 });
+        io.observe(svg);
+
+        // Clic en un paso: salta a esa fase
+        steps.forEach(s => s.addEventListener('click', () => {
+          const t = [0, 3.6, 6.6][Number(s.dataset.step)];
+          tl.play(t);
+        }));
+        steps.forEach(s => { s.style.cursor = 'pointer'; });
+      })();
 
       // Hover effect on pricing cards
       const pricingCards = document.querySelectorAll('#precios .rounded-3xl');

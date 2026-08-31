@@ -1,5 +1,8 @@
 // OZOAGRO Panel - Modulo Pedidos
 // Fallback por si el navegador tiene cacheado un config.js viejo (sin waLink)
+if (typeof window.escapeHtml !== 'function') {
+  window.escapeHtml = function(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); };
+}
 if (typeof window.waLink !== 'function') {
   window.waLink = function(tel, text) {
     let d = String(tel || '').replace(/\D/g, '');
@@ -25,10 +28,16 @@ async function renderPedidos(container) {
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Pedidos</h1>
+        <div class="flex items-center gap-2">
+        <button id="btn-export-cancelados" onclick="exportCanceladosExcel()" class="${pedidosTab === 'cancelado' ? '' : 'hidden'} bg-white border border-primary text-primary px-3 py-2 rounded-lg hover:bg-green-50 text-sm flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Excel remarketing
+        </button>
         <button onclick="showCrearPedido()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           Crear Pedido
         </button>
+        </div>
       </div>
 
       <!-- Tabs -->
@@ -51,16 +60,7 @@ async function renderPedidos(container) {
       <div class="bg-white rounded-xl shadow overflow-hidden">
         <table class="w-full">
           <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Codigo</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ciudad</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Canal</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rentabilidad</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
-            </tr>
+            <tr id="pedidos-thead"></tr>
           </thead>
           <tbody id="pedidos-tbody" class="divide-y">
             <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Cargando...</td></tr>
@@ -228,6 +228,16 @@ async function updateSubfiltroContadores() {
 
 function renderPedidosTable() {
   const tbody = document.getElementById('pedidos-tbody');
+  const conMotivo = pedidosTab === 'cancelado' || pedidosTab === 'devuelto';
+  const th = (t, al) => `<th class="px-4 py-3 text-${al || 'left'} text-xs font-medium text-gray-500 uppercase">${t}</th>`;
+  const thead = document.getElementById('pedidos-thead');
+  if (thead) {
+    thead.innerHTML = th('Codigo') + th('Fecha') + th('Cliente') + th('Ciudad') + th('Canal') + th('Valor', 'right') +
+      (conMotivo ? th('Motivo') : th('Rentabilidad', 'right')) + th('Acciones', 'center');
+  }
+  const btnExp = document.getElementById('btn-export-cancelados');
+  if (btnExp) btnExp.classList.toggle('hidden', pedidosTab !== 'cancelado');
+
   if (pedidosData.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">No hay pedidos</td></tr>';
     return;
@@ -246,7 +256,9 @@ function renderPedidosTable() {
         <span class="px-2 py-1 text-xs rounded-full ${p.canal === 'web' ? 'bg-blue-100 text-blue-700' : p.canal === 'agente' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${p.canal}</span>
       </td>
       <td class="px-4 py-3 text-right font-medium">${formatMoney(p.subtotal)}</td>
-      <td class="px-4 py-3 text-right ${p.rentabilidad_negativa ? 'text-red-600' : 'text-green-600'}">${formatMoney(p.rentabilidad)}</td>
+      ${conMotivo
+        ? `<td class="px-4 py-3 text-sm text-gray-700 max-w-xs"><div class="truncate" title="${escapeHtml(p.motivo || '')}">${escapeHtml(p.motivo || '-')}</div><div class="text-xs text-gray-400">${formatDate(p.fecha_cancelado || p.updated_at)}</div></td>`
+        : `<td class="px-4 py-3 text-right ${p.rentabilidad_negativa ? 'text-red-600' : 'text-green-600'}">${formatMoney(p.rentabilidad)}</td>`}
       <td class="px-4 py-3">
         <div class="flex justify-center gap-1">
           ${getAccionesButtons(p)}
@@ -504,6 +516,7 @@ window.accionPedido = function(id, tipo) {
     case 'cancelar':
       document.getElementById('accion-titulo').textContent = 'Cancelar Pedido';
       document.getElementById('accion-motivo-container').classList.remove('hidden');
+      document.getElementById('accion-motivo').setAttribute('placeholder', 'Ej: No contestó / Ya compró en otro lado / Muy caro / Cambió de opinión');
       document.getElementById('accion-submit-btn').className = 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
       break;
     case 'devolver':
@@ -545,19 +558,18 @@ async function handleAccionPedido(e) {
     case 'cerrar':
       updateData = { estado: 'cerrado', fecha_cerrado: new Date().toISOString() };
       break;
-    case 'cancelar':
-      updateData = {
-        estado: 'cancelado',
-        fecha_cancelado: new Date().toISOString(),
-        notas: document.getElementById('accion-motivo').value || null
-      };
+    case 'cancelar': {
+      const motivo = document.getElementById('accion-motivo').value.trim();
+      if (!motivo) { showToast('Escribe el motivo de la cancelación', 'error'); return; }
+      updateData = { estado: 'cancelado', fecha_cancelado: new Date().toISOString(), motivo };
       break;
-    case 'devolver':
-      updateData = {
-        estado: 'devuelto',
-        notas: document.getElementById('accion-motivo').value || null
-      };
+    }
+    case 'devolver': {
+      const motivo = document.getElementById('accion-motivo').value.trim();
+      if (!motivo) { showToast('Escribe el motivo de la devolución', 'error'); return; }
+      updateData = { estado: 'devuelto', motivo };
       break;
+    }
   }
 
   const { error } = await supabaseClient.from('pedidos').update(updateData).eq('id', id);
@@ -570,6 +582,46 @@ async function handleAccionPedido(e) {
   closeModal('modal-accion-pedido');
   await loadPedidos();
 }
+
+window.exportCanceladosExcel = async function() {
+  const { data, error } = await supabaseClient
+    .from('pedidos')
+    .select('codigo_publico, created_at, fecha_cancelado, canal, subtotal, ciudad_envio, motivo, notas, cliente:clientes(nombre, telefono, ciudad, departamento, cultivo)')
+    .eq('estado', 'cancelado').eq('es_test', false)
+    .order('fecha_cancelado', { ascending: false });
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  if (!data || data.length === 0) { showToast('No hay pedidos cancelados para exportar', 'error'); return; }
+  const rows = data.map(p => ({
+    'Pedido': p.codigo_publico,
+    'Fecha pedido': formatDate(p.created_at),
+    'Fecha cancelación': formatDate(p.fecha_cancelado),
+    'Cliente': p.cliente?.nombre || '',
+    'Teléfono': p.cliente?.telefono || '',
+    'WhatsApp': p.cliente?.telefono ? waLink(p.cliente.telefono) : '',
+    'Ciudad': p.ciudad_envio || p.cliente?.ciudad || '',
+    'Departamento': p.cliente?.departamento || '',
+    'Cultivo': p.cliente?.cultivo || '',
+    'Canal': p.canal,
+    'Valor': Number(p.subtotal || 0),
+    'Motivo': p.motivo || ''
+  }));
+  const generar = () => {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Cancelados');
+    ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length, 16) }));
+    XLSX.writeFile(wb, `pedidos_cancelados_remarketing_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Excel descargado (' + rows.length + ' pedidos)');
+  };
+  if (typeof XLSX === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    script.onload = generar;
+    document.head.appendChild(script);
+  } else {
+    generar();
+  }
+};
 
 function debounce(func, wait) {
   let timeout;

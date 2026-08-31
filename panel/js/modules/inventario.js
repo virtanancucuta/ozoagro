@@ -11,9 +11,7 @@ async function renderInventario(container) {
       </div>
 
       <!-- Productos -->
-      <div class="grid md:grid-cols-3 gap-4">
-        <div id="productos-cards"></div>
-      </div>
+      <div id="productos-cards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
 
       <!-- Cobertura Card -->
       <div class="bg-white rounded-xl p-6 shadow">
@@ -113,28 +111,16 @@ async function loadInventarioData() {
 
   const cardsContainer = document.getElementById('productos-cards');
   cardsContainer.innerHTML = (productos || []).map(p => `
-    <div class="bg-white rounded-xl p-6 shadow">
-      <div class="flex justify-between items-start mb-4">
-        <div>
-          <h3 class="font-bold text-lg">${p.nombre}</h3>
-          <p class="text-sm text-gray-500">${p.litros} litro(s)</p>
-        </div>
-        <button onclick="editarProducto('${p.id}')" class="text-primary hover:underline text-sm">Editar</button>
+    <div class="bg-white rounded-xl px-4 py-3 shadow flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="font-bold truncate">${p.nombre}</div>
+        <div class="text-xs text-gray-500">${p.litros} L · margen <span class="text-green-600 font-medium">${Math.round((1 - p.costo_unitario / p.precio_venta) * 100)}%</span></div>
       </div>
-      <div class="space-y-2">
-        <div class="flex justify-between">
-          <span class="text-gray-600">Precio venta:</span>
-          <span class="font-medium">${formatMoney(p.precio_venta)}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-gray-600">Costo:</span>
-          <span class="font-medium">${formatMoney(p.costo_unitario)}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-gray-600">Margen:</span>
-          <span class="font-medium text-green-600">${Math.round((1 - p.costo_unitario / p.precio_venta) * 100)}%</span>
-        </div>
+      <div class="text-right shrink-0">
+        <div class="font-semibold">${formatMoney(p.precio_venta)}</div>
+        <div class="text-xs text-gray-500">costo ${formatMoney(p.costo_unitario)}</div>
       </div>
+      <button onclick="editarProducto('${p.id}')" class="text-primary hover:underline text-sm shrink-0">Editar</button>
     </div>
   `).join('') || '<div class="col-span-3 text-center text-gray-500">Sin productos</div>';
 

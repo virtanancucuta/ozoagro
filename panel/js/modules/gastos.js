@@ -16,11 +16,18 @@ async function renderGastos(container) {
 
       <!-- Filtros -->
       <div class="flex gap-4 items-center">
-        <select id="gastos-mes" class="px-3 py-2 border rounded-lg" onchange="loadGastosData()">
+        <select id="gastos-mes" class="px-3 py-2 border rounded-lg" onchange="toggleGastosRango(); loadGastosData()">
           <option value="current">Este mes</option>
           <option value="last">Mes anterior</option>
+          <option value="custom">Personalizado</option>
           <option value="all">Todo</option>
         </select>
+        <div id="gastos-rango" class="hidden flex items-center gap-2 text-sm">
+          <label class="text-gray-600">Desde</label>
+          <input type="date" id="gastos-desde" class="px-2 py-2 border rounded-lg" value="${monthStart}" onchange="loadGastosData()">
+          <label class="text-gray-600">Hasta</label>
+          <input type="date" id="gastos-hasta" class="px-2 py-2 border rounded-lg" value="${monthEnd}" onchange="loadGastosData()">
+        </div>
         <div id="gastos-total" class="ml-auto bg-white px-4 py-2 rounded-lg shadow">
           Total: <span class="font-bold text-red-600">$0</span>
         </div>
@@ -96,6 +103,13 @@ async function renderGastos(container) {
   document.getElementById('form-agregar-gasto').addEventListener('submit', handleGuardarGasto);
 }
 
+window.toggleGastosRango = function() {
+  const custom = document.getElementById('gastos-mes').value === 'custom';
+  const rango = document.getElementById('gastos-rango');
+  rango.classList.toggle('hidden', !custom);
+  rango.classList.toggle('flex', custom);
+};
+
 window.loadGastosData = async function() {
   const filtro = document.getElementById('gastos-mes').value;
   const today = new Date();
@@ -109,6 +123,12 @@ window.loadGastosData = async function() {
     const start = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0];
     const end = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
     query = query.gte('fecha', start).lte('fecha', end);
+  } else if (filtro === 'custom') {
+    const desde = document.getElementById('gastos-desde').value;
+    const hasta = document.getElementById('gastos-hasta').value;
+    if (!desde || !hasta) return;
+    if (desde > hasta) { showToast('La fecha inicial no puede ser mayor que la final', 'error'); return; }
+    query = query.gte('fecha', desde).lte('fecha', hasta);
   }
 
   const { data: gastos } = await query;
