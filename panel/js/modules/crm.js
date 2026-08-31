@@ -13,14 +13,10 @@ async function renderCrm(container) {
       </div>
 
       <!-- KPIs -->
-      <div id="crm-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div id="crm-kpis" class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="text-sm text-gray-500">Visitas Hoy</div>
           <div id="kpi-visitas-hoy" class="text-2xl font-bold text-primary">-</div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow">
-          <div class="text-sm text-gray-500">De Pauta Hoy</div>
-          <div id="kpi-pauta-hoy" class="text-2xl font-bold text-blue-600">-</div>
         </div>
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="text-sm text-gray-500">Visitas 7 Dias</div>
@@ -74,7 +70,6 @@ async function loadCrmKpis() {
   const { data } = await supabaseClient.rpc('crm_visitas');
   if (data && data[0]) {
     document.getElementById('kpi-visitas-hoy').textContent = data[0].visitas_hoy || 0;
-    document.getElementById('kpi-pauta-hoy').textContent = data[0].visitas_pauta_hoy || 0;
     document.getElementById('kpi-visitas-7').textContent = data[0].visitas_7_dias || 0;
     document.getElementById('kpi-carritos').textContent = data[0].carritos_7_dias || 0;
   }

@@ -1,5 +1,5 @@
 {
-  "name": "OZOAGRO WhatsApp - Agente Andres v3",
+  "name": "OZOAGRO WhatsApp - Agente Andres v4",
   "nodes": [
     {
       "parameters": {
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  return [{ json: { from: msg.from, nombre: (contact.profile || {}).name || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto } }];\n} catch (e) { return []; }"
+        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  return [{ json: { from: msg.from, nombre: (contact.profile || {}).name || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto } }];\n} catch (e) { return []; }"
       },
       "id": "extract",
       "name": "Extraer mensaje",
@@ -257,14 +257,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
             }
@@ -279,7 +271,9 @@
               "responseFormat": "text"
             }
           }
-        }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "id": "reg_in",
       "name": "Registrar entrante",
@@ -288,14 +282,23 @@
       "position": [
         1456,
         368
-      ]
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500
     },
     {
       "parameters": {
         "promptType": "define",
         "text": "={{ ($('Unir texto').item.json.fue_audio ? '(nota de voz transcrita) ' : '') + ($json.texto || $('Unir texto').item.json.texto) }}",
         "options": {
-          "systemMessage": "# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\" si el contexto lo da).\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda según la hora de Colombia y preséntate: \"¡Buenas tardes! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números solo cuando ya hay interés, o si los pide.\n8. Cierra con alternativa: \"¿Le despacho el de 2 litros o aprovecha el de 3 que le rinde más barato?\"\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies)\n- 1 Litro: $130.000 — rinde 200 litros de mezcla.\n- 2 Litros: $220.000 (ahorra $40.000) — el más vendido. Rinde 400 litros.\n- 3 Litros: $300.000 (ahorra $60.000) — el de mejor valor. Rinde 600 litros.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n- Rendimiento en plata: con el de 1 litro, cada bomba de 20 L le sale a unos $13.000; con el de 3 litros, a unos $10.000.\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- Más de 3 litros: cada litro le sale a $100.000 (4 L = $400.000, 5 L = $500.000, 6 L = $600.000...). No hay tope; entre más lleve, mejor precio por litro.\n- Pago CONTRAENTREGA: no paga nada hasta tener el producto en la mano. Envío a toda Colombia por transportadora, tarda de 2 a 5 días hábiles. El costo del envío se le confirma según su ubicación.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba (~$13.000) y al rendimiento (1 L = 200 L de mezcla), y a lo que hoy gasta en químicos más los días de carencia perdidos.\n- Desconfianza / \"¿sí funciona?\" → contraentrega: \"usted no arriesga un peso: paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos UNO POR UNO (no todo en un solo mensaje): nombre completo, teléfono, departamento, ciudad o municipio, dirección de entrega y qué combo desea. Después repite el resumen completo y pregunta: \"¿Me confirma que todo está correcto?\". Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido del combo de X litros. Uno de nuestros asesores lo llama antes del despacho para confirmarle todo y el costo del envío. Recuerde: paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":2,\"cantidad\":1}]\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- Cuando el cliente te diga su nombre, ciudad, departamento o cultivo, agrégalo con su tag: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos, márgenes, cantidad de pedidos ni datos de otros clientes. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando)."
+          "systemMessage": "# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\" si el contexto lo da).\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje del cliente trae varias líneas, son varios mensajes que mandó seguidos: léelos todos y responde a todo en UN solo mensaje, sin saludar otra vez.\n- Nunca vuelvas a pedir un dato que ya esté en el historial (nombre, ciudad, cultivo): úsalo con naturalidad.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda según la hora de Colombia y preséntate: \"¡Buenas tardes! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números solo cuando ya hay interés, o si los pide.\n8. Cierra con alternativa: \"¿Le despacho el de 2 litros o aprovecha el de 3 que le rinde más barato?\"\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies)\n- 1 Litro: $130.000 — rinde 200 litros de mezcla.\n- 2 Litros: $220.000 (ahorra $40.000) — el más vendido. Rinde 400 litros.\n- 3 Litros: $300.000 (ahorra $60.000) — el de mejor valor. Rinde 600 litros.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n- Rendimiento en plata: con el de 1 litro, cada bomba de 20 L le sale a unos $13.000; con el de 3 litros, a unos $10.000.\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- Más de 3 litros: cada litro le sale a $100.000 (4 L = $400.000, 5 L = $500.000, 6 L = $600.000...). No hay tope; entre más lleve, mejor precio por litro.\n- Pago CONTRAENTREGA: no paga nada hasta tener el producto en la mano. Envío a toda Colombia por transportadora, tarda de 2 a 5 días hábiles. El costo del envío se le confirma según su ubicación.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba (~$13.000) y al rendimiento (1 L = 200 L de mezcla), y a lo que hoy gasta en químicos más los días de carencia perdidos.\n- Desconfianza / \"¿sí funciona?\" → contraentrega: \"usted no arriesga un peso: paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos UNO POR UNO (no todo en un solo mensaje): nombre completo, teléfono, departamento, ciudad o municipio, dirección de entrega y qué combo desea. Después repite el resumen completo y pregunta: \"¿Me confirma que todo está correcto?\". Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido del combo de X litros. Uno de nuestros asesores lo llama antes del despacho para confirmarle todo y el costo del envío. Recuerde: paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":2,\"cantidad\":1}]\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- Cuando el cliente te diga su nombre, ciudad, departamento o cultivo, agrégalo con su tag: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos, márgenes, cantidad de pedidos ni datos de otros clientes. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando).\n- Número de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.from }} (si no da otro teléfono, ese es el del pedido; no se lo pidas)."
         }
       },
       "id": "agent",
@@ -305,18 +308,22 @@
       "position": [
         1664,
         368
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "gpt-4o-mini",
+          "value": "gpt-4.1-mini",
           "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
+          "cachedResultName": "gpt-4.1-mini"
         },
         "options": {
-          "temperature": 0.7
+          "temperature": 0.6
         }
       },
       "id": "openai_model",
@@ -337,7 +344,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}",
+        "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}_v4_20260831",
         "contextWindowLength": 30
       },
       "id": "memory",
@@ -351,13 +358,13 @@
       "credentials": {
         "postgres": {
           "id": "DVcaWvXX4O25Lqiw",
-          "name": "OZOAGRO Postgres Supabase"
+          "name": "OZOAGRO Postgres Supabase (no-verify)"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const raw = $input.first().json.output || $input.first().json.text || '';\nconst from = $('Extraer mensaje').item.json.from;\n\nconst mediaMap = {\n  '[ENVIAR_IMAGEN]': 'imagen',\n  '[ENVIAR_VIDEO_PEPINO]': 'video_pepino',\n  '[ENVIAR_VIDEO_PAPAYA]': 'video_papaya',\n  '[ENVIAR_VIDEO_SANDIA]': 'video_sandia'\n};\nlet media = null;\nfor (const [tag, tipo] of Object.entries(mediaMap)) {\n  if (raw.includes(tag)) { media = tipo; break; }\n}\n\n// Datos del lead\nconst datos = {};\nconst datoRe = /\\[DATO_(NOMBRE|CIUDAD|DEPTO|CULTIVO):([^\\]]*)\\]/g;\nlet m;\nwhile ((m = datoRe.exec(raw)) !== null) { datos[m[1].toLowerCase()] = m[2].trim(); }\n\n// Pedido cerrado por el agente\nlet pedido = null;\nconst pIni = raw.indexOf('[CREAR_PEDIDO:');\nif (pIni !== -1) {\n  const pFin = raw.indexOf(']', pIni);\n  if (pFin !== -1) {\n    try { pedido = JSON.parse(raw.substring(pIni + 14, pFin)); }\n    catch (e) { pedido = { parse_error: true, raw: raw.substring(pIni + 14, pFin) }; }\n  }\n}\n\n// Limpiar TODOS los tags del texto que ve el cliente\nlet respuesta = raw\n  .replace(/\\[ENVIAR_[A-Z_]+\\]/g, '')\n  .replace(/\\[DATO_[A-Z]+:[^\\]]*\\]/g, '')\n  .replace(/\\[CREAR_PEDIDO:[^\\]]*\\]/g, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{ json: { from, respuesta, media, datos, tiene_datos: Object.keys(datos).length > 0, pedido, tiene_pedido: !!pedido } }];"
+        "jsCode": "const inp = $input.first().json || {};\nlet raw = inp.output || inp.text || '';\nif (typeof raw !== 'string') raw = String(raw || '');\nlet fallback = false;\nif (!raw.trim()) {\n  raw = 'Disculpe, se me fue la señal un momento. ¿Me repite por favor lo último que me escribió?';\n  fallback = true;\n}\nconst from = $('Extraer mensaje').item.json.from;\n\nconst mediaMap = {\n  '[ENVIAR_IMAGEN]': 'imagen',\n  '[ENVIAR_VIDEO_PEPINO]': 'video_pepino',\n  '[ENVIAR_VIDEO_PAPAYA]': 'video_papaya',\n  '[ENVIAR_VIDEO_SANDIA]': 'video_sandia'\n};\nlet media = null;\nfor (const [tag, tipo] of Object.entries(mediaMap)) {\n  if (raw.includes(tag)) { media = tipo; break; }\n}\n\n// Datos del lead\nconst datos = {};\nconst datoRe = /\\[DATO_(NOMBRE|CIUDAD|DEPTO|CULTIVO):([^\\]]*)\\]/g;\nlet m;\nwhile ((m = datoRe.exec(raw)) !== null) { datos[m[1].toLowerCase()] = m[2].trim(); }\n\n// Pedido cerrado por el agente\nlet pedido = null;\nconst pIni = raw.indexOf('[CREAR_PEDIDO:');\nif (pIni !== -1) {\n  const pFin = raw.indexOf(']', pIni);\n  if (pFin !== -1) {\n    try { pedido = JSON.parse(raw.substring(pIni + 14, pFin)); }\n    catch (e) { pedido = { parse_error: true, raw: raw.substring(pIni + 14, pFin) }; }\n  }\n}\n\n// Limpiar TODOS los tags del texto que ve el cliente\nlet respuesta = raw\n  .replace(/\\[ENVIAR_[A-Z_]+\\]/g, '')\n  .replace(/\\[DATO_[A-Z]+:[^\\]]*\\]/g, '')\n  .replace(/\\[CREAR_PEDIDO:[^\\]]*\\]/g, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{ json: { from, respuesta, media, datos, tiene_datos: Object.keys(datos).length > 0, pedido, tiene_pedido: !!pedido, fallback } }];"
       },
       "id": "parse_resp",
       "name": "Parsear respuesta",
@@ -392,7 +399,10 @@
           "id": "HxFbYAP7T9Wi7vGc",
           "name": "AIMMA Meta WhatsApp Token"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -401,14 +411,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -424,7 +426,9 @@
               "responseFormat": "text"
             }
           }
-        }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "id": "reg_out",
       "name": "Registrar saliente",
@@ -433,7 +437,16 @@
       "position": [
         2288,
         368
-      ]
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500
     },
     {
       "parameters": {
@@ -580,14 +593,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
             }
@@ -602,7 +607,9 @@
               "responseFormat": "text"
             }
           }
-        }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -612,7 +619,13 @@
       ],
       "id": "a06cb465-92fa-4117-9d37-0765394e9ca0",
       "name": "Guardar datos lead",
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      }
     },
     {
       "parameters": {
@@ -621,14 +634,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -644,7 +649,9 @@
               "responseFormat": "text"
             }
           }
-        }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -654,7 +661,13 @@
       ],
       "id": "b980c8c0-f2a1-42c7-bc12-fad66b6e6ae8",
       "name": "Crear pedido agente",
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      }
     },
     {
       "parameters": {
@@ -677,14 +690,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
             }
@@ -692,8 +697,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Unir texto').item.json.from, p_contenido: $('Unir texto').item.json.texto }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Unir texto').item.json.from, p_contenido: $('Unir texto').item.json.texto, p_msg_id: (String($('Registrar entrante').item.json.data || '').replace(/\"/g, '').trim() || null) }) }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -702,7 +709,16 @@
         420
       ],
       "id": "a5494e48-2836-4fbb-adab-a6a497753ff5",
-      "name": "Mensajes pendientes"
+      "name": "Mensajes pendientes",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500
     },
     {
       "parameters": {
@@ -738,7 +754,6 @@
       "name": "Es el ultimo?"
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook GET Verify": {
       "main": [
@@ -1027,16 +1042,9 @@
       ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
-  },
-  "versionId": "773dd7b7-5bb5-4a6d-8a11-0380dab7dc73",
-  "meta": {
-    "instanceId": "514593db8474417f14093453912befede493e609e4ec56308679722ef8580cfe"
-  },
-  "id": "4KA11Mhc7Qs4HzDt",
-  "tags": []
+  }
 }
