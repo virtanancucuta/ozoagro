@@ -1,5 +1,21 @@
 // OZOAGRO Panel - Modulo Chats IA (conversaciones del agente Andres por WhatsApp)
 // Fuente: RPC chats_ia_resumen() (wa_conversaciones + wa_mensajes + pedidos por telefono)
+// Fallbacks por si el navegador tiene cacheado un config.js viejo (sin estos helpers)
+if (typeof window.escapeHtml !== 'function') {
+  window.escapeHtml = function(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); };
+}
+if (typeof window.waLink !== 'function') {
+  window.waLink = function(tel, text) {
+    let d = String(tel || '').replace(/\D/g, '');
+    if (!d) return '';
+    if (d.length === 10 && d.startsWith('3')) d = '57' + d;
+    return 'https://wa.me/' + d + (text ? '?text=' + encodeURIComponent(text) : '');
+  };
+}
+if (typeof window.closeModal !== 'function') {
+  window.closeModal = function(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
+}
+
 let chatsTab = 'sin_conversion';
 let chatsData = [];
 let chatsBusqueda = '';

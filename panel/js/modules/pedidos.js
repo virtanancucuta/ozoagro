@@ -1,4 +1,13 @@
 // OZOAGRO Panel - Modulo Pedidos
+// Fallback por si el navegador tiene cacheado un config.js viejo (sin waLink)
+if (typeof window.waLink !== 'function') {
+  window.waLink = function(tel, text) {
+    let d = String(tel || '').replace(/\D/g, '');
+    if (!d) return '';
+    if (d.length === 10 && d.startsWith('3')) d = '57' + d;
+    return 'https://wa.me/' + d + (text ? '?text=' + encodeURIComponent(text) : '');
+  };
+}
 let pedidosTab = 'por_confirmar';
 let pedidosCanalFiltro = ''; // '', 'agente', 'web' para sub-filtrar en Por confirmar
 let pedidosData = [];
