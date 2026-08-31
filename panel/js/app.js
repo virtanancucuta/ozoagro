@@ -69,7 +69,7 @@ function setupEventListeners() {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const module = link.dataset.module;
-      if (module) {
+      if (module && module !== currentModule) {
         document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
         link.classList.add('active');
         loadModule(module);
@@ -124,8 +124,13 @@ async function handleLogout() {
 }
 
 // Module loader
+// loadSeq evita la carrera al cambiar rapido de modulo: el render anterior sigue esperando sus datos
+// y al terminar escribe en elementos que ya no existen (TypeError "Cannot set properties of null").
+// Ese error de un modulo VIEJO no debe pisar el modulo que el usuario esta viendo.
+let loadSeq = 0;
 async function loadModule(name) {
   currentModule = name;
+  const myLoad = ++loadSeq;
   const container = document.getElementById('module-container');
   container.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
 
@@ -137,7 +142,11 @@ async function loadModule(name) {
       container.innerHTML = '<div class="bg-white rounded-xl p-6 shadow"><h2 class="text-xl font-bold">Modulo ' + name + '</h2><p class="text-gray-600 mt-2">Cargando...</p></div>';
     }
   } catch (err) {
+    if (myLoad !== loadSeq) {
+      console.warn('Render obsoleto de "' + name + '" ignorado:', err.message);
+      return;
+    }
     console.error('Error modulo:', err);
-    container.innerHTML = '<div class="bg-red-50 text-red-600 p-4 rounded-lg">Error cargando modulo: ' + err.message + '</div>';
+    container.innerHTML = '<div class="bg-red-50 text-red-600 p-4 rounded-lg">Error cargando modulo: ' + err.message + ' <button data-m="' + name + '" onclick="loadModule(this.dataset.m)" class="ml-3 underline">Reintentar</button></div>';
   }
 }
