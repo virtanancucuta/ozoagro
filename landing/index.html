@@ -984,13 +984,13 @@
     // Supabase config
     const SUPABASE_URL = 'https://vlcxeajnucdkwamcivgy.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNjIzMjMsImV4cCI6MjEwMzYzODMyM30.OOvxOhMm5-g3ULCJEvLcBq9UBvv-VlTBEY8KQNdJD2s';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
     // Registrar visita al cargar
     async function registrarVisita() {
       try {
         const params = new URLSearchParams(window.location.search);
-        await supabase.rpc('registrar_visita', {
+        await supabaseClient.rpc('registrar_visita', {
           p_pagina: '/',
           p_referrer: document.referrer || null,
           p_utm_source: params.get('utm_source'),
@@ -1012,7 +1012,7 @@
       if (carritoData.nombre && carritoData.telefono) {
         carritoTimeout = setTimeout(async () => {
           try {
-            await supabase.rpc('registrar_carrito_abandonado', {
+            await supabaseClient.rpc('registrar_carrito_abandonado', {
               p_nombre: carritoData.nombre,
               p_telefono: carritoData.telefono,
               p_ciudad: carritoData.ciudad || null,
@@ -1079,7 +1079,7 @@
       btn.textContent = 'Enviando...';
 
       try {
-        const { data: result, error } = await supabase.rpc('crear_pedido_web', {
+        const { data: result, error } = await supabaseClient.rpc('crear_pedido_web', {
           p_nombre: data.nombre,
           p_telefono: data.telefono,
           p_email: data.email || null,
