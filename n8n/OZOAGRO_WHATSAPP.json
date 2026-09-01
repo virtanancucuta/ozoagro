@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(msg.from) !== '573172625415';\n  return [{ json: { from: msg.from, nombre: (contact.profile || {}).name || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
+        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
       },
       "id": "extract",
       "name": "Extraer mensaje",
@@ -253,6 +253,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -271,9 +273,7 @@
               "responseFormat": "text"
             }
           }
-        },
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi"
+        }
       },
       "id": "reg_in",
       "name": "Registrar entrante",
@@ -283,15 +283,15 @@
         1456,
         368
       ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500,
       "credentials": {
         "supabaseApi": {
           "id": "LCGbR0bTrhslOHDy",
           "name": "OZOAGRO Supabase service_role"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500
+      }
     },
     {
       "parameters": {
@@ -331,8 +331,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        1664,
-        592
+        1408,
+        768
       ],
       "credentials": {
         "openAiApi": {
@@ -352,8 +352,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1,
       "position": [
-        1664,
-        704
+        1776,
+        784
       ],
       "credentials": {
         "postgres": {
@@ -371,8 +371,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1872,
-        368
+        2000,
+        528
       ]
     },
     {
@@ -394,20 +394,22 @@
         2080,
         368
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
       "credentials": {
         "httpHeaderAuth": {
           "id": "HxFbYAP7T9Wi7vGc",
           "name": "AIMMA Meta WhatsApp Token"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 2000
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_saliente",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -426,9 +428,7 @@
               "responseFormat": "text"
             }
           }
-        },
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi"
+        }
       },
       "id": "reg_out",
       "name": "Registrar saliente",
@@ -438,15 +438,15 @@
         2288,
         368
       ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500,
       "credentials": {
         "supabaseApi": {
           "id": "LCGbR0bTrhslOHDy",
           "name": "OZOAGRO Supabase service_role"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500
+      }
     },
     {
       "parameters": {
@@ -546,8 +546,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2112,
-        640
+        2640,
+        528
       ],
       "id": "7851e715-fdbf-4e11-9fdf-8f795edd35d6",
       "name": "Hay datos lead?"
@@ -579,8 +579,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2112,
-        832
+        2000,
+        1008
       ],
       "id": "c0e9c8e6-2a19-4bfa-a4ac-26547bed8467",
       "name": "Hay pedido?"
@@ -589,6 +589,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/actualizar_lead",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -607,30 +609,30 @@
               "responseFormat": "text"
             }
           }
-        },
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi"
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2304,
-        640
+        2448,
+        672
       ],
       "id": "a06cb465-92fa-4117-9d37-0765394e9ca0",
       "name": "Guardar datos lead",
-      "onError": "continueRegularOutput",
       "credentials": {
         "supabaseApi": {
           "id": "LCGbR0bTrhslOHDy",
           "name": "OZOAGRO Supabase service_role"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/crear_pedido_agente",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -649,25 +651,23 @@
               "responseFormat": "text"
             }
           }
-        },
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi"
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2304,
-        832
+        2464,
+        1008
       ],
       "id": "b980c8c0-f2a1-42c7-bc12-fad66b6e6ae8",
       "name": "Crear pedido agente",
-      "onError": "continueRegularOutput",
       "credentials": {
         "supabaseApi": {
           "id": "LCGbR0bTrhslOHDy",
           "name": "OZOAGRO Supabase service_role"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -676,8 +676,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        860,
-        420
+        864,
+        432
       ],
       "id": "2938038b-46ee-469f-b4e9-f775601f8546",
       "name": "Pausa anti-rafaga"
@@ -686,6 +686,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/mensajes_pendientes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -698,27 +700,25 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ p_telefono: $('Unir texto').item.json.from, p_contenido: $('Unir texto').item.json.texto, p_msg_id: (String($('Registrar entrante').item.json.data || '').replace(/\"/g, '').trim() || null) }) }}",
-        "options": {},
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi"
+        "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
         1040,
-        420
+        432
       ],
       "id": "a5494e48-2836-4fbb-adab-a6a497753ff5",
       "name": "Mensajes pendientes",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500,
       "credentials": {
         "supabaseApi": {
           "id": "LCGbR0bTrhslOHDy",
           "name": "OZOAGRO Supabase service_role"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500
+      }
     },
     {
       "parameters": {
@@ -747,8 +747,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1220,
-        420
+        1216,
+        608
       ],
       "id": "36b0f630-fd5e-4b30-9b1b-208332d93fef",
       "name": "Es el ultimo?"
@@ -782,7 +782,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1860,
+        1872,
         208
       ]
     }
