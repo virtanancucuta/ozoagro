@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) { return []; }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
+        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed') {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
       },
       "id": "extract",
       "name": "Extraer mensaje",
@@ -383,7 +383,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Parsear respuesta').item.json.from, type: 'text', text: { body: $('Parsear respuesta').item.json.respuesta } }) }}",
+        "jsonBody": "={{ (function(){ const f = $('Parsear respuesta').item.json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: 'text', text: { body: $('Parsear respuesta').item.json.respuesta } }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
         "options": {}
       },
       "id": "send_wa",
@@ -501,7 +501,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.from, type: $json.mediaType, [$json.mediaType]: { link: $json.mediaUrl } }) }}",
+        "jsonBody": "={{ (function(){ const f = $json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: $json.mediaType }; p[$json.mediaType] = { link: $json.mediaUrl }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
         "options": {}
       },
       "id": "send_media",
@@ -785,6 +785,80 @@
         1872,
         208
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c-fallo",
+              "leftValue": "={{ $json.es_fallo_entrega }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-fallo-entrega",
+      "name": "Fallo entrega?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        388,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_telefono: $json.from, p_contenido: $json.fallo_detalle, p_nombre: null, p_rol: 'system' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "reg-fallo-entrega",
+      "name": "Registrar fallo entrega",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        588,
+        148
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "LCGbR0bTrhslOHDy",
+          "name": "OZOAGRO Supabase service_role"
+        }
+      }
     }
   ],
   "connections": {
@@ -837,7 +911,7 @@
       "main": [
         [
           {
-            "node": "Es audio",
+            "node": "Fallo entrega?",
             "type": "main",
             "index": 0
           }
@@ -1086,6 +1160,24 @@
         [
           {
             "node": "Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallo entrega?": {
+      "main": [
+        [
+          {
+            "node": "Registrar fallo entrega",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Es audio",
             "type": "main",
             "index": 0
           }
