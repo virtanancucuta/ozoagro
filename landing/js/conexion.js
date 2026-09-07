@@ -119,7 +119,7 @@
   function tarjeta(r) {
     const meta = [r.ciudad, r.cultivo].filter(Boolean).join(' · ');
     const foto = r.foto_url
-      ? '<img src="' + esc(asset(r.foto_url)) + '" alt="Productor que usa OZOAGRO" loading="lazy">'
+      ? '<img src="' + esc(asset(r.foto_url)) + '" alt="Productor que usa OZOAGRO" decoding="async">'
       : '<div class="ozo-avatar" aria-hidden="true"><span>' + esc(String(r.nombre || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()) + '</span><small>Cliente OZOAGRO</small></div>';
     return '<article class="review-card"><div class="review-product">' + foto + '</div>' +
       '<div class="review-stars">' + estrellas(r.estrellas) + '</div>' +
