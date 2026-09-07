@@ -297,7 +297,10 @@ async function loadKpisPorCanal(range) {
   const numConvs = conversaciones?.length || 0;
   const tasa = numConvs > 0 ? Math.round((numPedidos / numConvs) * 100) : 0;
 
-  document.getElementById('kpi-agente-tasa').textContent = `${tasa}% (${numPedidos}/${numConvs})`;
+  // Si hay mas pedidos que conversaciones el dato no es comparable (pedidos sin chat registrado)
+  document.getElementById('kpi-agente-tasa').textContent = numConvs > 0 && numPedidos <= numConvs
+    ? `${tasa}% (${numPedidos}/${numConvs})`
+    : `${numPedidos} pedidos · ${numConvs} chats`;
 }
 
 window.exportVentasCSV = function() {
