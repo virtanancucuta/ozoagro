@@ -22,6 +22,10 @@
   const cssLink = document.querySelector('link[rel="stylesheet"][href$="styles.css"]');
   const ASSET_BASE = cssLink ? cssLink.getAttribute('href').replace(/styles\.css$/, '') : '';
   const asset = (u) => (!u || /^(https?:)?\/\//.test(u) || u.startsWith('data:')) ? u : ASSET_BASE + u;
+  // Meta Pixel (24936831939337917): eventos estándar de conversión
+  const PRECIOS = { 1: 129900, 4: 409900, 10: 1100000, 20: 1998000 };
+  function pixel(evento, datos) { try { if (typeof window.fbq === 'function') window.fbq('track', evento, datos || {}); } catch (e) {} }
+  function datosProducto(nombre) { const l = LITROS[nombre] || 1; return { content_name: 'OZOAGRO ' + nombre, content_ids: ['ozoagro-' + l + 'l'], content_type: 'product', value: PRECIOS[l] || 0, currency: 'COP' }; }
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* ---------- Visita ---------- */
@@ -55,6 +59,12 @@
     const el = document.getElementById(id);
     if (el) el.addEventListener('blur', () => trackCarrito(id, el.value.trim()));
   });
+
+  /* ---------- Pixel: ViewContent al elegir presentación, InitiateCheckout al abrir el formulario ---------- */
+  document.querySelectorAll('.presentation-card').forEach(card => card.addEventListener('click', () => pixel('ViewContent', datosProducto(card.dataset.product))));
+  ['mainOrderBtn', 'stickyOrderBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', () => {
+    const sel = document.querySelector('.presentation-card.selected'); pixel('InitiateCheckout', Object.assign(datosProducto(sel ? sel.dataset.product : 'Galón (4 L)'), { num_items: 1 }));
+  }); });
 
   /* ---------- Productos (por litros) ---------- */
   let productosCache = null;
@@ -105,6 +115,7 @@
         '<p>Te contactaremos por WhatsApp al <strong>' + esc(order.telefono) + '</strong> para confirmar la entrega.</p>' +
         '<a class="ozo-exito-wa" href="https://wa.me/573145933481?text=' + encodeURIComponent('Hola, acabo de hacer el pedido ' + (data.codigo || '') + ' en la página de OZOAGRO') + '" target="_blank" rel="noopener">Escribir por WhatsApp</a>' +
         '</div>';
+      pixel('Purchase', Object.assign(datosProducto(order.product), { value: Number(data.total || producto.precio_venta || 0), num_items: 1, order_id: data.codigo || '' }));
       console.log('Pedido creado:', data);
     } catch (err) {
       console.error('Error creando pedido:', err);
