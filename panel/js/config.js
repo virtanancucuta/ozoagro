@@ -9,6 +9,26 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value || 0);
 }
 
+// Ajuste automatico: los valores KPI (cifras grandes) se encogen hasta caber en su tarjeta
+function fitKpiText(root) {
+  (root || document).querySelectorAll('.text-3xl.font-bold, .text-2xl.font-bold, .text-xl.font-bold').forEach(el => {
+    if (/^H[1-6]$/.test(el.tagName) || el.closest('button')) return;
+    el.style.whiteSpace = 'nowrap';
+    el.style.fontSize = '';
+    let size = parseFloat(getComputedStyle(el).fontSize), guard = 0;
+    while (el.scrollWidth > el.clientWidth && size > 11 && guard++ < 24) {
+      size -= 1;
+      el.style.fontSize = size + 'px';
+    }
+  });
+}
+(function () {
+  let t;
+  const run = () => { clearTimeout(t); t = setTimeout(() => fitKpiText(), 60); };
+  new MutationObserver(run).observe(document.body, { childList: true, subtree: true, characterData: true });
+  window.addEventListener('resize', run);
+})();
+
 function formatDate(date) {
   if (!date) return '-';
   return new Date(date).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
