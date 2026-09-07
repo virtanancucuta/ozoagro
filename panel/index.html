@@ -3,8 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2716%27 fill=%27%2315803D%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27%3EO%3C/text%3E%3C/svg%3E">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Panel OZOAGRO Colombia</title>
+  <meta name="theme-color" content="#15803D">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="OZOAGRO">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -31,10 +39,27 @@
     #bottom-nav a, #bottom-nav button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 11px; color: #4B5563; text-decoration: none; background: none; border: 0; }
     #bottom-nav .active, #bottom-nav a.active { color: #15803D; }
     #bottom-nav svg { width: 22px; height: 22px; }
+    /* Tactil (Android/iOS): sin retraso de 300ms, sin flash azul, sin menu contextual en la nav */
+    button, a, .sidebar-link, .tab-btn, label, select, input { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    #bottom-nav, #sidebar { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+    /* Modo app (instalado en pantalla de inicio): respeta el notch */
+    @media (display-mode: standalone) {
+      #sidebar, #sidebar-toggle { padding-top: env(safe-area-inset-top); }
+      main { padding-top: calc(1.5rem + env(safe-area-inset-top)) !important; }
+    }
     /* ============ MOVIL (<=768px) — aditivo, no toca desktop ============ */
     @media (max-width: 768px) {
-      html, body { overflow-x: hidden; max-width: 100vw; }
-      main { max-width: 100vw; overflow-x: hidden; padding-bottom: 5.5rem !important; }
+      html, body { overflow-x: hidden; max-width: 100vw; overscroll-behavior-y: contain; }
+      main { max-width: 100vw; overflow-x: hidden; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; padding-left: max(1rem, env(safe-area-inset-left)) !important; padding-right: max(1rem, env(safe-area-inset-right)) !important; }
+      /* iOS Safari hace zoom si un campo tiene menos de 16px: todos los campos a 16px en movil */
+      input, select, textarea { font-size: 16px !important; }
+      input[type="date"], input[type="datetime-local"], input[type="number"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; background: #fff; }
+      input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.4em; }
+      /* Sin :has() (iOS < 15.4, Android viejo): las clases m-tabs / m-kpi las pone el JS */
+      #module-container .m-tabs { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; gap: .25rem; scrollbar-width: none; }
+      #module-container .m-tabs::-webkit-scrollbar { display: none; }
+      #module-container .m-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .6rem; }
       #module-container { min-width: 0; overflow-wrap: break-word; }
       #module-container .flex > * { min-width: 0; }
       #module-container .space-y-6 > * + * { margin-top: 1rem; }
@@ -84,7 +109,7 @@
 
       /* Modales a pantalla completa con scroll interno y acciones fijas abajo */
       div[id^="modal-"] { padding: 0 !important; align-items: stretch !important; }
-      div[id^="modal-"] > div { width: 100vw !important; max-width: 100vw !important; height: 100dvh; max-height: 100dvh !important; border-radius: 0 !important; overflow-y: auto !important; display: flex; flex-direction: column; padding: 1rem !important; }
+      div[id^="modal-"] > div { width: 100vw !important; max-width: 100vw !important; height: 100vh; max-height: 100vh !important; height: 100dvh; max-height: 100dvh !important; padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important; border-radius: 0 !important; overflow-y: auto !important; display: flex; flex-direction: column; padding: 1rem !important; }
       div[id^="modal-"] > div > form { flex: 1; display: flex; flex-direction: column; }
       div[id^="modal-"] > div > form > * + * { margin-top: .75rem; }
       div[id^="modal-"] > div > form > .flex.justify-end:last-child,
@@ -94,6 +119,8 @@
       div[id^="modal-"] .grid { grid-template-columns: minmax(0, 1fr) !important; }
       div[id^="modal-"] input, div[id^="modal-"] select, div[id^="modal-"] textarea { min-height: 40px; max-width: 100%; }
       div[id^="modal-"] .flex { flex-wrap: wrap; }
+      div[id^="modal-"] .flex > select, div[id^="modal-"] .flex > input:not([type="checkbox"]):not([type="radio"]) { flex: 1 1 100%; width: 100% !important; max-width: 100%; }
+      div[id^="modal-"] .flex > input[type="number"] { flex: 1 1 40%; }
 
       /* Login */
       #login-screen { padding: 1rem; }
@@ -240,7 +267,28 @@
           t.parentNode.insertBefore(w, t); w.appendChild(t);
         });
       }
-      new MutationObserver(wrapTables).observe(mc, { childList: true, subtree: true });
+      // Fallback de :has() para Safari/Android viejos: marcar pestanas y grids de KPIs con clases
+      function tagLayout() {
+        mc.querySelectorAll('.flex').forEach(function (f) { if (f.querySelector(':scope > .tab-btn')) f.classList.add('m-tabs'); });
+        mc.querySelectorAll('.grid').forEach(function (g) {
+          if (g.querySelector(':scope > .rounded-xl.p-4, :scope > .rounded-xl.p-6, :scope > .rounded-lg.p-4, :scope > .rounded-lg.p-3')) g.classList.add('m-kpi');
+        });
+      }
+      function onMut() { wrapTables(); tagLayout(); }
+      new MutationObserver(onMut).observe(mc, { childList: true, subtree: true });
+      onMut();
+
+      // Modal abierto => el fondo no se desplaza (iOS ignora overflow:hidden si no es position:fixed)
+      var scrollY = 0;
+      function syncModalOpen() {
+        var open = !!document.querySelector('div[id^="modal-"]:not(.hidden)');
+        if (open && !document.body.classList.contains('modal-open')) {
+          scrollY = window.scrollY; document.body.classList.add('modal-open'); document.body.style.top = (-scrollY) + 'px';
+        } else if (!open && document.body.classList.contains('modal-open')) {
+          document.body.classList.remove('modal-open'); document.body.style.top = ''; window.scrollTo(0, scrollY);
+        }
+      }
+      new MutationObserver(syncModalOpen).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
     })();
   </script>
   <script src="js/config.js?v=20260906a"></script>
