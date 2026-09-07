@@ -1,0 +1,5689 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap");
+:root{--green:#07843d;--green-dark:#064525;--green-deep:#063f23;--green-2:#3b9b25;--green-soft:#edf7ef;--yellow:#f2d000;--text:#0b3a22;--muted:#637269;--line:#dce7df;--white:#fff;--shadow:0 16px 42px rgba(6,61,32,.10)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#fff;overflow-x:hidden}body.modal-open{overflow:hidden}button,input,select,textarea{font:inherit}button,a{-webkit-tap-highlight-color:transparent}img{display:block;max-width:100%}button{border:0}
+.site-header{height:82px;background:var(--green-deep);color:#fff}.header-inner{width:min(1600px,100%);height:100%;margin:auto;padding:8px 48px;display:flex;align-items:center;justify-content:space-between;gap:30px}.site-logo{height:66px;display:flex;align-items:center}.site-logo img{height:100%;width:auto;object-fit:contain}.header-trust{display:flex;align-items:center;gap:28px}.header-trust-item{display:flex;align-items:center;gap:11px;white-space:nowrap;font-family:Oswald,sans-serif}.header-trust-item b{display:block;font-size:16px;line-height:1.05}.header-trust-item small{display:block;font-size:11px;line-height:1.1;margin-top:3px}.header-divider{height:35px;width:1px;background:rgba(255,255,255,.25)}.icon-circle{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--green-deep);display:grid;place-items:center;flex:0 0 38px}.icon-circle i{font-size:21px}
+.product-hero{width:min(1600px,100%);margin:auto;padding:18px 32px 0;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(480px,.92fr);gap:34px;align-items:start}.gallery-column{min-width:0}.gallery-layout{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;align-items:start}.gallery-rail{height:min(700px,calc(100vh - 135px));min-height:560px;display:grid;grid-template-rows:40px 1fr 40px;gap:9px;align-items:center}.gallery-thumbs{min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:9px}.thumb{width:76px;height:calc((100% - 27px)/4);min-height:105px;flex:0 0 auto;border:2px solid transparent;border-radius:12px;background:#fff;overflow:hidden;cursor:pointer;padding:0;opacity:.88;transition:.18s ease;box-shadow:0 3px 12px rgba(6,61,32,.07)}.thumb img{width:100%;height:100%;object-fit:cover}.thumb:hover{opacity:1;transform:translateX(2px)}.thumb.active{border-color:var(--green);opacity:1;box-shadow:0 5px 18px rgba(8,123,53,.17)}.gallery-arrow{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#eff6f1;color:var(--green);font-size:20px;cursor:pointer;transition:.18s ease}.gallery-arrow:hover{background:#e2efe6;transform:scale(1.03)}.gallery-main{width:100%;height:min(700px,calc(100vh - 135px));min-height:560px;background:#fff;border-radius:2px;overflow:hidden;display:flex;align-items:center;justify-content:center}.gallery-main img{width:100%;height:100%;object-fit:contain;object-position:center}.gallery-dots{display:none}
+.buy-column{min-width:0;padding:2px 0 18px}.product-heading{text-align:center;padding:8px 0 12px}.product-heading h1{font-family:Oswald,sans-serif;font-size:clamp(48px,4.3vw,74px);line-height:.94;letter-spacing:-1px;font-weight:700}.product-heading h1 span{color:var(--green-2)}.product-heading p{font-family:Oswald,sans-serif;font-size:clamp(19px,1.55vw,25px);line-height:1.1;margin-top:9px;font-weight:400}.rating-bar{height:54px;border:1px solid var(--line);border-radius:13px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 14px;font-size:13px;margin-bottom:14px;white-space:nowrap}.stars{font-size:22px;letter-spacing:1px;color:#efc400}.rating-bar strong{font-size:13px}.rating-bar>span:last-child{color:#263a2d}.presentation-panel{background:#fff;border:1px solid #dfe9e2;border-radius:23px;padding:18px 18px 17px;box-shadow:var(--shadow)}.panel-title{display:flex;align-items:center;justify-content:center;gap:13px;padding:1px 0 14px}.panel-title h2{font-family:Oswald,sans-serif;font-size:25px;line-height:1;font-weight:700}.decor-leaf{width:24px;height:24px;color:#45a72e;display:grid;place-items:center}.decor-leaf i{font-size:24px}.decor-leaf.right{transform:scaleX(-1)}
+.presentation-list{display:flex;flex-direction:column;gap:9px}.presentation-card{position:relative;min-height:86px;width:100%;display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:14px;border:1px solid #dce5df;border-radius:15px;background:#fff;padding:8px 17px;cursor:pointer;text-align:left;color:var(--text);transition:border-color .18s,box-shadow .18s,transform .18s}.presentation-card:hover{border-color:#7db78e;box-shadow:0 8px 22px rgba(8,123,53,.09);transform:translateY(-1px)}.presentation-card.selected{border:2px solid var(--green);background:linear-gradient(90deg,#fff,#fafffb);box-shadow:0 8px 24px rgba(8,123,53,.12)}.card-product-image{width:100px;height:64px;display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1}.card-product-image img{width:100%;height:100%;object-fit:contain}.card-copy{grid-column:2;grid-row:1;align-self:center}.card-copy b{display:block;font-family:Oswald,sans-serif;font-size:20px;line-height:1.05;font-weight:700}.card-price{grid-column:3;grid-row:1;font-family:Oswald,sans-serif;font-size:27px;line-height:1;color:var(--green);white-space:nowrap}.card-detail{display:block;grid-column:2;grid-row:1;align-self:end;padding-bottom:1px;font-size:12px;color:#52655a;font-weight:600}.popular-label{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--yellow);color:#314b19;border-radius:999px;padding:4px 14px;font-family:Oswald,sans-serif;font-size:11px;font-weight:700;white-space:nowrap;z-index:2;box-shadow:0 4px 9px rgba(0,0,0,.11)}.selection-check{display:none;position:absolute;right:-8px;top:-9px;width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-size:15px;font-weight:800;line-height:26px;text-align:center;box-shadow:0 4px 9px rgba(0,0,0,.16)}.presentation-card.selected .selection-check{display:block}
+.purchase-benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.purchase-benefit{min-height:70px;border-radius:15px;background:linear-gradient(135deg,#f3f9f4,#e9f4ec);display:flex;align-items:center;gap:11px;padding:9px 13px}.benefit-icon{width:43px;height:43px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:0 0 43px;box-shadow:0 5px 13px rgba(8,123,53,.18)}.benefit-icon i{font-size:22px}.purchase-benefit b{display:block;font-family:Oswald,sans-serif;font-size:17px;line-height:1.05}.purchase-benefit small{display:block;font-size:11px;font-weight:600;color:#607066;margin-top:4px}.main-cta{width:100%;min-height:69px;margin-top:12px;border-radius:16px;background:linear-gradient(180deg,#0a9b47,#087b35);color:#fff;display:flex;align-items:center;justify-content:center;gap:17px;padding:10px 18px;font-family:Oswald,sans-serif;font-size:25px;font-weight:600;letter-spacing:.2px;cursor:pointer;box-shadow:0 10px 25px rgba(7,92,41,.28);transition:.15s}.main-cta:hover{transform:translateY(-1px);box-shadow:0 13px 29px rgba(7,92,41,.34)}.main-cta:active{transform:scale(.988)}.cta-cart,.cta-arrow{display:grid;place-items:center}.cta-cart{width:34px;height:34px}.cta-cart i{font-size:30px}.cta-arrow i{font-size:27px}.secure-note{text-align:center;color:#5e6e64;font-size:12px;font-weight:600;margin-top:7px}.whatsapp-cta{min-height:53px;border:1px solid #c3dfca;border-radius:28px;margin-top:11px;display:flex;align-items:center;gap:11px;padding:8px 15px;text-decoration:none;color:#284936;background:#fff;font-size:14px;font-weight:700;transition:.18s}.whatsapp-cta:hover{border-color:#79ba8b;box-shadow:0 5px 15px rgba(8,123,53,.08)}.whatsapp-icon{width:29px;height:29px;color:#16a34a;display:grid;place-items:center;flex:0 0 29px}.whatsapp-icon i{font-size:28px}.whatsapp-cta>span:nth-child(2){flex:1}.whatsapp-cta>strong{font-size:20px;color:var(--green);display:grid;place-items:center}
+.benefit-strip{width:min(1500px,100%);margin:6px auto 0;padding:18px 38px 26px;display:grid;grid-template-columns:repeat(4,1fr) 1.25fr;gap:20px;align-items:center}.benefit-strip>div:not(.strip-signature){display:flex;align-items:center;gap:10px}.strip-icon{width:43px;height:43px;color:#4ca72d;display:grid;place-items:center;flex:0 0 43px}.strip-icon svg{width:38px;height:38px}.benefit-strip b{font-family:Oswald,sans-serif;font-size:14px;line-height:1.05}.strip-signature{text-align:right;font-family:cursive;font-size:26px;line-height:.82;transform:rotate(-4deg)}.strip-signature strong{font-size:30px}.strip-signature small{font-size:15px}.image-section{width:100%}.image-section img{width:100%;height:auto}footer{text-align:center;background:#f2f5f3;padding:22px 15px;color:#657069;font-size:12px;line-height:1.7}.sticky-order-bar{display:none}
+.cod-modal{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}.cod-modal.open{display:flex}.cod-backdrop{position:absolute;inset:0;background:rgba(4,30,15,.66);backdrop-filter:blur(4px)}.cod-dialog{position:relative;z-index:1;width:min(680px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:22px;padding:25px;box-shadow:0 30px 70px rgba(0,0,0,.25)}.cod-close{position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;background:#edf4ee;color:var(--green-dark);font-size:27px;cursor:pointer}.cod-header{text-align:center;padding-right:28px}.cod-header>span{font-family:Oswald,sans-serif;font-size:12px;color:var(--green);font-weight:700}.cod-header h2{font-family:Oswald,sans-serif;font-size:30px;margin:3px 0}.cod-header p{font-size:13px;color:#657168}.selected-product-box{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:#f8fbf8;border-radius:15px;padding:10px;margin:18px 0}.selected-product-image{width:75px;height:65px;display:grid;place-items:center}.selected-product-image img{max-width:100%;max-height:100%;object-fit:contain}.selected-product-box>div:last-child>span{display:block;font-size:10px;font-weight:700;color:#718078}.selected-product-box strong{display:block;font-family:Oswald,sans-serif;font-size:18px}.selected-product-box b{display:block;color:var(--green);font-family:Oswald,sans-serif;font-size:20px}.variant-block label,.field label{display:block;font-size:12px;font-weight:700;color:#42554a;margin-bottom:5px}.variant-block select,.field input,.field select,.field textarea{width:100%;border:1px solid #cedbd1;border-radius:10px;background:#fff;padding:11px 12px;outline:0}.variant-block select:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:#6cad7f;box-shadow:0 0 0 3px rgba(8,123,53,.09)}.cod-form{margin-top:17px}.form-section-title{font-family:Oswald,sans-serif;font-size:20px;margin-bottom:10px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:10px}.cod-summary{background:#edf7ef;border-radius:13px;padding:12px 14px;margin:15px 0;display:grid;grid-template-columns:1fr auto;align-items:center}.cod-summary span{font-size:12px;font-weight:700}.cod-summary strong{font-family:Oswald,sans-serif;font-size:23px;color:var(--green)}.cod-summary small{grid-column:1/-1;color:#64736a;font-size:10px;margin-top:3px}.confirm-order-btn{width:100%;min-height:58px;border-radius:13px;background:var(--green);color:#fff;font-family:Oswald,sans-serif;cursor:pointer}.confirm-order-btn span,.confirm-order-btn small{display:block}.confirm-order-btn span{font-size:20px}.confirm-order-btn small{font-size:11px;margin-top:2px}.form-message{text-align:center;color:var(--green);font-size:12px;font-weight:700;margin-top:9px;min-height:18px}.cod-security{text-align:center;font-size:10px;color:#738078;margin-top:7px}
+@media(max-width:1200px){.product-hero{grid-template-columns:minmax(0,1fr) minmax(420px,.9fr);gap:22px;padding-inline:20px}.header-inner{padding-inline:28px}.header-trust{gap:16px}.header-trust-item b{font-size:14px}.header-trust-item small{font-size:10px}.gallery-rail,.gallery-main{height:min(650px,calc(100vh - 130px));min-height:520px}.thumb{min-height:96px;width:70px}.gallery-layout{grid-template-columns:70px minmax(0,1fr)}.presentation-card{grid-template-columns:82px 1fr auto}.card-product-image{width:82px}.card-price{font-size:23px}}
+@media(max-width:820px){.site-header{height:76px}.header-inner{justify-content:center;padding:5px 14px}.site-logo{height:64px}.header-trust{display:none}.product-hero{display:flex;flex-direction:column;gap:0;padding:0;width:100%}.gallery-column{width:100%}.gallery-layout{display:flex;flex-direction:column;gap:0}.gallery-main{order:1;width:100%;height:auto;min-height:0;aspect-ratio:4/5;border-radius:0}.gallery-main img{width:100%;height:100%;object-fit:contain}.gallery-rail{order:2;width:100%;height:auto;min-height:0;display:grid;grid-template-columns:38px minmax(0,1fr) 38px;grid-template-rows:none;gap:7px;padding:9px 8px 0;align-items:center}.gallery-thumbs{height:76px;min-width:0;display:flex;flex-direction:row;gap:7px;overflow:hidden}.thumb{width:calc((100% - 14px)/3);height:76px;min-height:0;flex:0 0 calc((100% - 14px)/3);border-radius:10px}.rail-arrow{width:38px;height:48px;border-radius:13px;font-size:19px}.gallery-dots{display:flex;justify-content:center;gap:5px;padding:7px 0 3px}.gallery-dot{width:6px;height:6px;border-radius:50%;background:#c8d5cc}.gallery-dot.active{width:17px;border-radius:6px;background:var(--green)}.buy-column{width:100%;padding:0}.product-heading{padding:10px 12px 13px}.product-heading h1{font-size:clamp(38px,10vw,54px);letter-spacing:-.5px}.product-heading p{font-size:16px;margin-top:6px}.rating-bar{margin:0 11px 12px;height:48px;font-size:12px;gap:7px}.stars{font-size:21px}.rating-bar>span:last-child{font-size:11px}.presentation-panel{border:0;border-radius:0;box-shadow:none;padding:5px 12px 18px}.panel-title{padding:8px 0 13px}.panel-title h2{font-size:20px}.presentation-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}.presentation-card{min-height:184px;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:0;text-align:center;padding:14px 8px 10px;border-radius:16px}.card-copy{display:flex;align-items:center;justify-content:center;order:1}.card-copy b{font-size:16px}.card-product-image{order:2;width:100%;height:88px;margin-top:3px}.card-price{order:3;font-size:24px;margin-top:5px}.card-detail{order:4;font-size:11px;margin-top:4px}.popular-label{font-size:10px;top:-9px;padding:4px 12px}.selection-check{right:-7px;top:-8px;width:24px;height:24px;line-height:24px;font-size:15px}.purchase-benefits{gap:9px;margin-top:12px}.purchase-benefit{min-height:68px;padding:8px 9px;gap:8px}.benefit-icon{width:39px;height:39px;flex-basis:39px}.purchase-benefit b{font-size:15px}.purchase-benefit small{font-size:10px}.main-cta{min-height:64px;border-radius:15px;font-size:22px;gap:12px}.whatsapp-cta{min-height:51px;font-size:13px;padding-inline:12px}.benefit-strip{display:none}.sticky-order-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:1000;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);box-shadow:0 -5px 18px rgba(0,0,0,.13);transform:translateY(110%);opacity:0;pointer-events:none;transition:.25s ease}.sticky-order-bar.is-visible{transform:translateY(0);opacity:1;pointer-events:auto}.sticky-order-btn{width:100%;min-height:54px;border-radius:14px;background:var(--green);color:#fff;font-family:Oswald,sans-serif;font-size:19px;font-weight:600;box-shadow:0 5px 18px rgba(5,91,41,.25)}.sticky-order-btn i{font-size:22px;margin-left:8px}body.sticky-visible{padding-bottom:70px}.cod-modal{padding:8px}.cod-dialog{max-height:calc(100vh - 16px);padding:20px 14px 18px;border-radius:18px}.cod-header h2{font-size:27px}.form-row{grid-template-columns:1fr}.cod-close{right:8px;top:8px}}
+@media(max-width:430px){.gallery-thumbs{height:72px}.thumb{height:72px}.gallery-rail{grid-template-columns:36px minmax(0,1fr) 36px;padding-inline:7px}.presentation-panel{padding-inline:10px}.presentation-list{gap:8px}.presentation-card{min-height:178px;padding-inline:6px}.card-product-image{height:82px}.card-price{font-size:23px}.purchase-benefit{padding-inline:7px}.purchase-benefit b{font-size:14px}.benefit-icon{width:37px;height:37px;flex-basis:37px}.main-cta{font-size:21px}.whatsapp-cta{font-size:12px}.rating-bar>span:last-child{font-size:10px}}
+@media(max-width:360px){.product-heading h1{font-size:36px}.product-heading p{font-size:14px}.presentation-card{min-height:169px}.card-copy b{font-size:14px}.card-product-image{height:75px}.card-price{font-size:21px}.purchase-benefit b{font-size:12px}.purchase-benefit small{font-size:9px}.main-cta{font-size:19px}.whatsapp-cta{font-size:11px}}
+
+
+/* =========================================================
+   SECCIONES DE CONTENIDO — 2 COLUMNAS
+   ========================================================= */
+
+
+
+.content-section {
+  width: 100%;
+  padding: 5em 28px;
+  background: #f3f8f4;
+}
+
+.section-2 {
+  background: #fff;
+  padding: 0em 5px !important;
+}
+
+
+.section-4 {
+  padding-top: 3em;
+  padding-bottom: 3em;
+}
+
+.content-section-grid {
+  width: min(1540px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+
+  align-items: stretch;
+}
+
+/* Cada columna ocupa exactamente la misma altura */
+.content-media-card {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+
+  overflow: hidden;
+  border-radius: 22px;
+  background: #fff;
+
+  box-shadow: 0 12px 35px rgba(6, 61, 32, .08);
+}
+
+.content-media-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+  .content-media-card2 {
+	  width: 100%;
+	  min-width: 0;
+	  height: 100%;
+
+	  overflow: hidden;
+	  border-radius: 22px;
+	  background: #fff;
+
+	  box-shadow: 0 12px 35px rgba(6, 61, 32, .08);
+	}
+
+	.content-media-card2 img {
+	  display: block;
+	  width: 100%;
+	  height: 100%;
+
+	  object-fit: cover;
+	  object-position: center;
+	}
+
+
+
+/* Video */
+.content-video-card {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.content-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  background: #000;
+}
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 820px) {
+
+  .content-section {
+    padding: 2.5em 12px;
+  }
+
+  .content-section-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .content-media-card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 6;
+    border-radius: 16px;
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+
+
+
+
+  .content-media-card img,
+  .content-video {
+    width: 100%;
+    height: 100%;
+  }
+
+  	  .content-media-card2 {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 6;
+    border-radius: 16px;
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+
+
+
+
+  .content-media-card2 img,
+  .content-video {
+    width: 100%;
+    height: 100%;
+  }
+
+
+
+}
+
+.section-beneficios {
+  background: #eeefec;
+  padding-top: 3em;
+  padding-bottom: 3em;
+}
+
+
+/* =========================================================
+   OZOAGRO — FINAL UX/CRO FIXES
+   ========================================================= */
+
+/* Lucide */
+[data-lucide] {
+  width: 1em;
+  height: 1em;
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+.icon-circle [data-lucide] { width: 21px; height: 21px; }
+.gallery-arrow [data-lucide] { width: 20px; height: 20px; }
+.decor-leaf [data-lucide] { width: 24px; height: 24px; }
+.benefit-icon [data-lucide] { width: 22px; height: 22px; }
+.cta-cart [data-lucide] { width: 30px; height: 30px; }
+.cta-arrow [data-lucide] { width: 27px; height: 27px; }
+.whatsapp-icon [data-lucide] { width: 27px; height: 27px; }
+.secure-note [data-lucide] { width: 13px; height: 13px; }
+.strip-icon [data-lucide] { width: 38px; height: 38px; }
+
+@media (min-width:821px) {
+  .site-header { height: 72px; }
+  .header-inner { padding: 6px 42px; }
+  .site-logo { height: 58px; }
+  .header-trust { gap: 22px; }
+  .header-trust-item b { font-size: 15px; }
+  .header-trust-item small { font-size: 10px; }
+
+  .product-hero {
+    padding: 14px 28px 0;
+    gap: 28px;
+    grid-template-columns: minmax(0, 1.04fr) minmax(500px, .96fr);
+  }
+
+  .gallery-layout {
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .gallery-rail {
+    height: min(650px, calc(100vh - 110px));
+    min-height: 500px;
+    grid-template-rows: 32px 1fr 32px;
+    gap: 7px;
+  }
+
+  .gallery-thumbs {
+    min-height: 0;
+    overflow: hidden;
+    padding: 2px 1px;
+    gap: 8px;
+  }
+
+  .thumb {
+    width: 82px;
+    height: calc((100% - 24px) / 4);
+    min-height: 0;
+    max-height: 118px;
+    flex: 0 0 calc((100% - 24px) / 4);
+    border-radius: 10px;
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    background: #fff;
+  }
+
+  .gallery-main {
+    height: min(650px, calc(100vh - 110px));
+    min-height: 500px;
+  }
+
+  .buy-column { padding-bottom: 8px; }
+
+  .product-heading { padding: 2px 0 8px; }
+  .product-heading h1 {
+    font-size: clamp(44px, 3.5vw, 60px);
+    line-height: .94;
+  }
+  .product-heading p {
+    font-size: clamp(17px, 1.25vw, 21px);
+    margin-top: 6px;
+  }
+
+  .rating-bar {
+    height: 48px;
+    margin-bottom: 10px;
+  }
+
+  .presentation-panel {
+    border-radius: 20px;
+    padding: 14px 16px 13px;
+  }
+
+  .panel-title { padding: 0 0 10px; }
+  .panel-title h2 { font-size: 22px; }
+
+  .presentation-list { gap: 7px; }
+
+  .presentation-card {
+    min-height: 70px;
+    height: 70px;
+    grid-template-columns: 78px 1fr auto;
+    gap: 11px;
+    padding: 6px 14px;
+    border-radius: 13px;
+  }
+
+  .card-product-image {
+    width: 78px;
+    height: 54px;
+  }
+
+  .card-copy b { font-size: 18px; }
+  .card-detail { font-size: 11px; }
+  .card-price { font-size: 24px; }
+
+  .popular-label {
+    top: -10px;
+    font-size: 10px;
+    padding: 4px 12px;
+  }
+
+  .selection-check {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    right: -7px;
+    top: -8px;
+  }
+
+  .purchase-benefits {
+    gap: 8px;
+    margin-top: 9px;
+  }
+
+  .purchase-benefit {
+    min-height: 58px;
+    padding: 7px 10px;
+    gap: 8px;
+    border-radius: 13px;
+  }
+
+  .benefit-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .purchase-benefit b { font-size: 15px; }
+  .purchase-benefit small { font-size: 10px; margin-top: 2px; }
+
+  .main-cta {
+    min-height: 58px;
+    margin-top: 9px;
+    border-radius: 14px;
+    font-size: 22px;
+  }
+
+  .secure-note { margin-top: 5px; font-size: 11px; }
+
+  .whatsapp-cta {
+    min-height: 45px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  /* Requested: remove the old desktop horizontal strip. */
+  .benefit-strip { display: none; }
+
+  /* Requested: darker modal backdrop. */
+  .cod-backdrop {
+    background: rgba(1, 18, 9, .78);
+    backdrop-filter: blur(5px);
+  }
+}
+
+@media (max-width:820px) {
+  .cod-backdrop {
+    background: rgba(1, 18, 9, .78);
+    backdrop-filter: blur(5px);
+  }
+
+  .sticky-order-bar {
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sticky-order-bar.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.gallery-column,
+.gallery-layout,
+.gallery-rail,
+.gallery-thumbs {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   OZOAGRO — CORRECCIÓN FINAL: GALERÍA PC + ICONOGRAFÍA + CRO
+   ========================================================= */
+
+/* La galería de escritorio es un carril cerrado: nunca puede crecer
+   fuera de su columna ni pintar las 7 miniaturas simultáneamente. */
+@media (min-width:821px) {
+  .site-header { height:72px; }
+  .header-inner { padding:5px 50px; }
+  .site-logo { height:58px; }
+
+  .product-hero {
+    padding:12px 28px 0;
+    gap:26px;
+    grid-template-columns:minmax(0,1.04fr) minmax(470px,.96fr);
+  }
+
+	a.site-logo img {
+	    margin-left: 18em;
+	}
+
+  .gallery-layout {
+    grid-template-columns:82px minmax(0,1fr);
+    gap:11px;
+    width:100%;
+    align-items:stretch;
+  }
+
+  .gallery-rail {
+    width:82px;
+    height:auto;
+    min-height:0;
+    align-self:stretch;
+    grid-template-rows:30px minmax(0,1fr) 30px;
+    gap:6px;
+    overflow:hidden;
+  }
+
+  .gallery-thumbs {
+    width:82px;
+    height:100%;
+    min-height:0;
+    max-height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    align-items:center;
+    gap:7px;
+    overflow:hidden;
+    padding:0;
+  }
+
+  .thumb {
+    display:none;
+    width:82px;
+    height:103px;
+    min-height:0;
+    max-height:103px;
+    flex:0 0 103px;
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  .thumb.is-visible { display:flex; }
+
+  .thumb img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    object-position:center;
+    background:#fff;
+  }
+
+  /* PC: la imagen conserva su proporción natural y llega hasta el final de la columna.
+     Esto evita recortarla dentro de una altura fija y no altera la versión móvil. */
+  .gallery-main {
+    width:100%;
+    height:auto;
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .gallery-main img {
+    width:100%;
+    height:auto;
+    object-fit:contain;
+    object-position:center top;
+  }
+
+  .gallery-arrow {
+    width:32px;
+    height:30px;
+    border-radius:10px;
+  }
+
+  /* Más aire para que el CTA real quede dentro del primer pantallazo. */
+  .product-heading { padding:0 0 6px; }
+  .product-heading h1 {
+    font-size:clamp(46px,3.1vw,54px);
+    line-height:.94;
+    letter-spacing:-.8px;
+  }
+  .product-heading p {
+    font-size:clamp(16px,1.15vw,19px);
+    margin-top:5px;
+  }
+
+  .rating-bar {
+    height:44px;
+    margin-bottom:8px;
+  }
+
+  .presentation-panel {
+    border-radius:18px;
+    padding:12px 14px 12px;
+  }
+
+  .panel-title { padding:0 0 8px; gap:10px; }
+  .panel-title h2 { font-size:21px; }
+  .decor-leaf { width:21px; height:21px; }
+  .decor-leaf [data-lucide] { width:21px; height:21px; }
+
+  .presentation-list { gap:6px; }
+  .presentation-card {
+    min-height:64px;
+    height:64px;
+    grid-template-columns:72px minmax(0,1fr) auto;
+    gap:10px;
+    padding:5px 12px;
+    border-radius:12px;
+  }
+  .card-product-image { width:72px; height:50px; }
+  .card-copy b { font-size:17px; }
+  .card-detail { font-size:10px; }
+  .card-price { font-size:22px; }
+  .popular-label { top:-9px; font-size:9px; padding:3px 11px; }
+
+  .selection-check {
+    display:none;
+    width:24px;
+    height:24px;
+    right:-7px;
+    top:-7px;
+    line-height:24px;
+    border:2px solid #fff;
+  }
+  .presentation-card.selected .selection-check { display:grid; place-items:center; }
+  .selection-check [data-lucide] { width:14px; height:14px; stroke-width:3; }
+
+  /* Diferencia visual clara según la presentación seleccionada. */
+  .presentation-card.selected { border-width:2px; }
+  .presentation-card[data-tone="light"].selected { background:linear-gradient(90deg,#f3faee 0%,#fff 70%); }
+  .presentation-card[data-tone="mint"].selected { background:linear-gradient(90deg,#edf9f1 0%,#fff 70%); }
+  .presentation-card[data-tone="green"].selected { background:linear-gradient(90deg,#eaf7ed 0%,#fff 70%); }
+  .presentation-card[data-tone="deep"].selected { background:linear-gradient(90deg,#e7f5ea 0%,#fff 70%); }
+
+  .purchase-benefits { gap:8px; margin-top:8px; }
+  .purchase-benefit {
+    min-height:54px;
+    border-radius:13px;
+    padding:6px 9px;
+    gap:8px;
+  }
+  .benefit-icon { width:34px; height:34px; flex-basis:34px; }
+  .benefit-icon [data-lucide] { width:19px; height:19px; stroke-width:2.25; }
+  .purchase-benefit b { font-size:14px; }
+  .purchase-benefit small { font-size:9px; margin-top:2px; }
+
+  .main-cta {
+    min-height:56px;
+    margin-top:8px;
+    border-radius:13px;
+    font-size:21px;
+    gap:12px;
+  }
+  .cta-cart [data-lucide] { width:27px; height:27px; }
+  .cta-arrow [data-lucide] { width:24px; height:24px; }
+  .secure-note { margin-top:4px; font-size:10px; }
+  .whatsapp-cta { min-height:43px; margin-top:7px; font-size:12px; }
+  .whatsapp-icon { width:26px; height:26px; flex-basis:26px; }
+  .whatsapp-icon img { width:25px; height:25px; display:block; }
+
+  /* Iconos de header: Lucide consistente, sin SVGs dibujados a mano. */
+  .icon-circle [data-lucide] { width:21px; height:21px; stroke-width:2.4; }
+}
+
+/* El carril móvil conserva exactamente el comportamiento horizontal de 3
+   miniaturas; no se aplican las reglas de cierre de escritorio. */
+@media (max-width:820px) {
+  .thumb.is-visible { display:flex; }
+  .thumb { display:none; }
+  .gallery-thumbs .thumb.is-visible { display:flex; }
+
+  .presentation-card[data-tone="light"].selected { background:linear-gradient(180deg,#f3faee,#fff); }
+  .presentation-card[data-tone="mint"].selected { background:linear-gradient(180deg,#edf9f1,#fff); }
+  .presentation-card[data-tone="green"].selected { background:linear-gradient(180deg,#eaf7ed,#fff); }
+  .presentation-card[data-tone="deep"].selected { background:linear-gradient(180deg,#e7f5ea,#fff); }
+
+  .selection-check { display:none; }
+  .presentation-card.selected .selection-check { display:grid; place-items:center; }
+  .selection-check [data-lucide] { width:14px; height:14px; stroke-width:3; }
+
+  .whatsapp-icon img { width:27px; height:27px; display:block; }
+}
+
+/* Modal más contrastado. */
+.cod-backdrop {
+  background:rgba(0,15,7,.82);
+  backdrop-filter:blur(5px);
+}
+
+/* =========================================================
+   OZOAGRO — LIGHTBOX DE GALERÍA
+   Solo afecta al visor ampliado; no modifica el slider existente.
+   ========================================================= */
+body.lightbox-open { overflow:hidden; }
+
+.product-lightbox {
+  position:fixed;
+  inset:0;
+  z-index:3000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.product-lightbox.is-open { display:flex; }
+
+.lightbox-backdrop {
+  position:absolute;
+  inset:0;
+  background:rgba(0,12,6,.90);
+  backdrop-filter:blur(7px);
+}
+
+.lightbox-dialog {
+  position:relative;
+  z-index:1;
+  width:min(1180px,100%);
+  height:min(92vh,900px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.lightbox-stage {
+  position:relative;
+  width:min(82vw,920px);
+  height:min(86vh,820px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:18px;
+  touch-action:none;
+  user-select:none;
+}
+
+.lightbox-image {
+  display:block;
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  transform:translate3d(0,0,0) scale(1);
+  transform-origin:center center;
+  transition:transform .18s ease;
+  cursor:zoom-in;
+  will-change:transform;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.lightbox-image.is-zoomed { cursor:grab; }
+.lightbox-image:active { cursor:grabbing; }
+
+.lightbox-close,
+.lightbox-nav,
+.lightbox-zoom-btn {
+  appearance:none;
+  border:0;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:rgba(255,255,255,.14);
+  box-shadow:0 5px 18px rgba(0,0,0,.20);
+  transition:background .18s ease, transform .18s ease;
+}
+.lightbox-close:hover,
+.lightbox-nav:hover,
+.lightbox-zoom-btn:hover {
+  background:rgba(255,255,255,.24);
+  transform:translateY(-1px);
+}
+.lightbox-close:focus-visible,
+.lightbox-nav:focus-visible,
+.lightbox-zoom-btn:focus-visible {
+  outline:2px solid #8fd36e;
+  outline-offset:3px;
+}
+
+.lightbox-close {
+  position:absolute;
+  top:4px;
+  right:4px;
+  z-index:5;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  font-size:31px;
+  line-height:1;
+}
+
+.lightbox-nav {
+  position:absolute;
+  top:50%;
+  z-index:4;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  transform:translateY(-50%);
+}
+.lightbox-nav:hover { transform:translateY(-50%) scale(1.03); }
+.lightbox-prev { left:6px; }
+.lightbox-next { right:6px; }
+.lightbox-nav svg { width:25px; height:25px; }
+
+.lightbox-controls {
+  position:absolute;
+  left:50%;
+  bottom:4px;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px;
+  border-radius:14px;
+  background:rgba(0,0,0,.48);
+  backdrop-filter:blur(7px);
+}
+.lightbox-zoom-btn {
+  width:38px;
+  height:38px;
+  border-radius:10px;
+}
+.lightbox-zoom-btn svg { width:19px; height:19px; }
+.lightbox-zoom-level {
+  min-width:52px;
+  text-align:center;
+  color:#fff;
+  font:600 12px/1 Arial,sans-serif;
+}
+
+.lightbox-counter {
+  position:absolute;
+  left:50%;
+  top:8px;
+  z-index:5;
+  transform:translateX(-50%);
+  padding:6px 11px;
+  border-radius:20px;
+  color:#fff;
+  background:rgba(0,0,0,.45);
+  font:600 12px/1 Arial,sans-serif;
+}
+
+.lightbox-zoom-hint {
+  position:absolute;
+  left:50%;
+  bottom:62px;
+  z-index:3;
+  transform:translateX(-50%);
+  padding:5px 9px;
+  border-radius:12px;
+  color:rgba(255,255,255,.78);
+  background:rgba(0,0,0,.30);
+  font:500 10px/1.2 Arial,sans-serif;
+  pointer-events:none;
+  white-space:nowrap;
+}
+
+@media (max-width:820px) {
+  .product-lightbox { padding:10px; }
+  .lightbox-dialog { width:100%; height:100%; }
+  .lightbox-stage {
+    width:100%;
+    height:calc(100vh - 80px);
+    border-radius:12px;
+  }
+  .lightbox-close { top:4px; right:4px; width:42px; height:42px; }
+  .lightbox-nav { width:42px; height:42px; }
+  .lightbox-prev { left:2px; }
+  .lightbox-next { right:2px; }
+  .lightbox-controls { bottom:2px; }
+  .lightbox-zoom-hint { display:none; }
+}
+
+
+
+/* =========================================================
+   SECCIÓN MEDIA — AJUSTE FINAL PC
+   ========================================================= */
+@media (min-width: 821px) {
+
+  .content-section-grid {
+    width: min(1120px, calc(100% - 56px));
+    max-width: 1120px;
+    margin-left: auto;
+    margin-right: auto;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+
+    align-items: stretch;
+  }
+
+  .content-media-card {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* La imagen conserva TODA su proporción */
+  .content-media-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+  }
+
+	  .content-media-card2 {
+	    width: 100%;
+	    height: auto;
+	    min-height: 0;
+	  }
+
+	  /* La imagen conserva TODA su proporción */
+	  .content-media-card2 img {
+	    display: block;
+	    width: 100%;
+	    height: auto;
+	    object-fit: contain;
+	    object-position: center;
+	  }
+
+
+  /* El video toma exactamente la altura de la imagen */
+  .content-video-card {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .content-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+/* Banner */
+.banner-naturalmente {
+    width: 100%;
+    max-width: 2200px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.banner-naturalmente img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* MÓVIL */
+@media (max-width: 768px) {
+
+    .banner-naturalmente {
+        height: 150px;
+    }
+
+    .banner-naturalmente img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        object-position: center center;
+    }
+}
+/* =========================================================
+   SECCIÓN — FÁCIL DE APLICAR
+   ESTILO OZOAGRO
+   MOBILE FIRST
+   ========================================================= */
+
+.steps-section {
+  width: 100%;
+  background: #16823d;
+
+  padding: 42px 14px 50px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   CONTENEDOR
+   ========================================================= */
+
+.steps-container {
+  width: 100%;
+
+  max-width: 1100px;
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.steps-header {
+  width: 100%;
+
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+
+/* =========================================================
+   BADGE
+   ========================================================= */
+
+.steps-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 36px;
+
+  padding: 6px 17px;
+
+  box-sizing: border-box;
+
+  border: 1.5px solid rgba(255,255,255,0.75);
+
+  border-radius: 999px;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.3px;
+
+  margin-bottom: 18px;
+}
+
+
+.steps-badge svg {
+  width: 19px;
+  height: 19px;
+
+  color: #d9ff4f;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.steps-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 34px;
+
+  font-weight: 800;
+
+  line-height: 1;
+
+  letter-spacing: -0.8px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   SUBTÍTULO
+   ========================================================= */
+
+.steps-subtitle {
+  max-width: 600px;
+
+  margin: 18px auto 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 16px;
+
+  font-weight: 400;
+
+  line-height: 1.45;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.steps-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.step-card {
+  min-width: 0;
+
+  min-height: 225px;
+
+  padding: 24px 12px 22px;
+
+  box-sizing: border-box;
+
+  background: #319556;
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  border-radius: 22px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  text-align: center;
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   LÍNEA SUPERIOR SUTIL
+   ========================================================= */
+
+.step-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+
+  left: 18%;
+
+  right: 18%;
+
+  height: 1px;
+
+  background: rgba(255,255,255,0.28);
+}
+
+
+/* =========================================================
+   NÚMERO
+   ========================================================= */
+
+.step-number {
+  width: 62px;
+
+  height: 62px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #d9ff4f;
+
+  color: #16823d;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 28px;
+
+  font-weight: 800;
+
+  line-height: 1;
+
+  margin-bottom: 20px;
+
+  box-shadow:
+    0 6px 15px rgba(0,0,0,0.08);
+}
+
+
+/* =========================================================
+   TÍTULO DEL PASO
+   ========================================================= */
+
+.step-card h3 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  line-height: 1.15;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   DESCRIPCIÓN
+   ========================================================= */
+
+.step-card p {
+  max-width: 190px;
+
+  margin: 10px 0 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+
+  font-weight: 400;
+
+  line-height: 1.4;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .steps-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+
+  .steps-header {
+    margin-bottom: 27px;
+  }
+
+
+  .steps-badge {
+    font-size: 13px;
+
+    padding: 6px 14px;
+
+    margin-bottom: 17px;
+  }
+
+
+  .steps-title {
+    font-size: 31px;
+  }
+
+
+  .steps-subtitle {
+    font-size: 15px;
+
+    margin-top: 17px;
+  }
+
+
+  .steps-grid {
+    gap: 12px;
+  }
+
+
+  .step-card {
+    min-height: 215px;
+
+    padding: 23px 8px 19px;
+
+    border-radius: 20px;
+  }
+
+
+  .step-number {
+    width: 59px;
+
+    height: 59px;
+
+    font-size: 26px;
+
+    margin-bottom: 18px;
+  }
+
+
+  .step-card h3 {
+    font-size: 16px;
+  }
+
+
+  .step-card p {
+    font-size: 12px;
+
+    margin-top: 9px;
+
+    max-width: 165px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .steps-section {
+    padding: 52px 28px 58px;
+  }
+
+
+  .steps-header {
+    margin-bottom: 38px;
+  }
+
+
+  .steps-badge {
+    font-size: 16px;
+
+    padding: 7px 20px;
+  }
+
+
+  .steps-title {
+    font-size: 46px;
+  }
+
+
+  .steps-subtitle {
+    font-size: 18px;
+
+    margin-top: 20px;
+  }
+
+
+  .steps-grid {
+    gap: 18px;
+  }
+
+
+  .step-card {
+    min-height: 255px;
+
+    padding: 28px 18px 24px;
+
+    border-radius: 23px;
+  }
+
+
+  .step-number {
+    width: 68px;
+
+    height: 68px;
+
+    font-size: 30px;
+
+    margin-bottom: 21px;
+  }
+
+
+  .step-card h3 {
+    font-size: 19px;
+  }
+
+
+  .step-card p {
+    font-size: 15px;
+
+    margin-top: 10px;
+
+    max-width: 200px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   4 PASOS EN UNA SOLA FILA
+   ========================================================= */
+
+@media (min-width: 1100px) {
+
+  .steps-section {
+    padding: 58px 32px 64px;
+  }
+
+
+  .steps-header {
+    margin-bottom: 40px;
+  }
+
+
+  .steps-badge {
+    font-size: 17px;
+
+    min-height: 40px;
+
+    padding: 7px 22px;
+  }
+
+
+  .steps-title {
+    font-size: 52px;
+  }
+
+
+  .steps-subtitle {
+    font-size: 19px;
+
+    max-width: 650px;
+  }
+
+
+  .steps-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 22px;
+  }
+
+
+  .step-card {
+    min-height: 235px;
+
+    padding: 27px 18px 22px;
+
+    border-radius: 22px;
+  }
+
+
+  .step-number {
+    width: 70px;
+
+    height: 70px;
+
+    font-size: 31px;
+
+    margin-bottom: 21px;
+  }
+
+
+  .step-card h3 {
+    font-size: 18px;
+  }
+
+
+  .step-card p {
+    font-size: 14px;
+
+    max-width: 210px;
+
+    margin-top: 10px;
+  }
+
+}
+
+
+/* =========================================================
+   PC GRANDE
+   ========================================================= */
+
+@media (min-width: 1500px) {
+
+  .steps-section {
+    padding-top: 60px;
+
+    padding-bottom: 66px;
+  }
+
+
+  .steps-title {
+    font-size: 54px;
+  }
+
+
+  .steps-subtitle {
+    font-size: 20px;
+  }
+
+}
+
+/* =========================================================
+   SECCIÓN — UN LITRO RINDE MUCHÍSIMO
+   MOBILE FIRST
+   ========================================================= */
+
+.yield-section {
+  width: 100%;
+  background: #16823d;
+  padding: 42px 14px 50px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.yield-container {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.yield-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+
+/* =========================================================
+   BADGE SUPERIOR
+   ========================================================= */
+
+.yield-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 38px;
+
+  padding: 7px 18px;
+
+  border: 1.5px solid rgba(255,255,255,0.8);
+  border-radius: 999px;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+
+  letter-spacing: 0.5px;
+
+  margin-bottom: 20px;
+}
+
+.yield-badge svg {
+  width: 20px;
+  height: 20px;
+
+  stroke: #d9ff4f;
+  stroke-width: 2.4;
+}
+
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.yield-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 36px;
+  font-weight: 800;
+
+  line-height: 0.98;
+  letter-spacing: -1px;
+
+  text-align: center;
+}
+
+.yield-title span {
+  display: block;
+
+  color: #d9ff4f;
+
+  margin-top: 4px;
+}
+
+
+/* =========================================================
+   SUBTÍTULO
+   ========================================================= */
+
+.yield-subtitle {
+  max-width: 680px;
+
+  margin: 22px auto 0;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  line-height: 1.45;
+
+  text-align: center;
+}
+
+.yield-subtitle strong {
+  color: #d9ff4f;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.yield-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.yield-card {
+  min-width: 0;
+
+  min-height: 290px;
+
+  padding: 12px 10px 18px;
+
+  box-sizing: border-box;
+
+  background: #319556;
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  border-radius: 22px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   DETALLE SUPERIOR DE TARJETA
+   ========================================================= */
+
+.yield-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 18%;
+  right: 18%;
+
+  height: 1px;
+
+  background: rgba(255,255,255,0.28);
+}
+
+
+/* =========================================================
+   ICONO
+   ========================================================= */
+
+.yield-icon {
+  width: 57px;
+  height: 57px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #d9ff4f;
+  color: #16823d;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 17px;
+
+  box-shadow:
+    0 6px 15px rgba(0,0,0,0.08);
+}
+
+.yield-icon svg {
+  width: 27px;
+  height: 27px;
+
+  stroke: currentColor;
+  stroke-width: 2.5;
+
+  display: block;
+}
+
+
+/* =========================================================
+   CANTIDAD DE OZOAGRO
+   ========================================================= */
+
+.yield-input {
+  width: 100%;
+
+  min-height: 38px;
+
+  padding: 8px 7px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #d9ff4f;
+
+  color: #0d5630;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  line-height: 1.15;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   FLECHA
+   ========================================================= */
+
+.yield-arrow {
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  position: relative;
+}
+
+.yield-arrow::before {
+  content: "";
+
+  position: absolute;
+
+  top: 1px;
+
+  height: 20px;
+
+  border-left: 2px dashed rgba(255,255,255,0.85);
+}
+
+.yield-arrow svg {
+  width: 25px;
+  height: 25px;
+
+  stroke: currentColor;
+  stroke-width: 2.5;
+
+  margin-top: 19px;
+}
+
+
+/* =========================================================
+   RESULTADO
+   ========================================================= */
+
+.yield-result {
+  width: 100%;
+
+  min-height: 101px;
+
+  margin-top: 0;
+
+  padding: 10px 5px 12px;
+
+  box-sizing: border-box;
+
+  border-radius: 19px;
+
+  background: #08652f;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+
+/* =========================================================
+   NÚMERO
+   ========================================================= */
+
+.yield-number {
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 33px;
+  font-weight: 800;
+
+  line-height: 0.95;
+
+  letter-spacing: -1.5px;
+
+  font-variant-numeric: tabular-nums;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   TEXTO ASOCIADO AL NÚMERO
+   ========================================================= */
+
+.yield-label {
+  margin-top: 7px;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.05;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .yield-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .yield-header {
+    margin-bottom: 27px;
+  }
+
+  .yield-badge {
+    font-size: 14px;
+    padding: 6px 15px;
+    margin-bottom: 18px;
+  }
+
+  .yield-title {
+    font-size: 32px;
+  }
+
+  .yield-subtitle {
+    font-size: 15px;
+    line-height: 1.4;
+    margin-top: 20px;
+  }
+
+  .yield-grid {
+    gap: 12px;
+  }
+
+  .yield-card {
+    min-height: 290px;
+    padding: 21px 8px 17px;
+    border-radius: 20px;
+  }
+
+  .yield-icon {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 16px;
+  }
+
+  .yield-icon svg {
+    width: 29px;
+    height: 29px;
+  }
+
+  .yield-input {
+    font-size: 10px;
+  }
+
+  .yield-number {
+    font-size: 39px;
+  }
+
+  .yield-label {
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .yield-section {
+    padding: 52px 28px 58px;
+  }
+
+  .yield-container {
+    max-width: 900px;
+  }
+
+  .yield-header {
+    margin-bottom: 34px;
+  }
+
+  .yield-badge {
+    font-size: 16px;
+    padding: 8px 20px;
+  }
+
+  .yield-title {
+    font-size: 44px;
+    letter-spacing: -1.2px;
+  }
+
+  .yield-subtitle {
+    font-size: 17px;
+    margin-top: 22px;
+  }
+
+  .yield-grid {
+    gap: 18px;
+  }
+
+  .yield-card {
+    min-height: 330px;
+    padding: 25px 16px 21px;
+    border-radius: 23px;
+  }
+
+  .yield-icon {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 18px;
+  }
+
+  .yield-icon svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .yield-input {
+    font-size: 12px;
+  }
+
+  .yield-arrow {
+    height: 44px;
+  }
+
+  .yield-result {
+    min-height: 108px;
+  }
+
+  .yield-number {
+    font-size: 48px;
+  }
+
+  .yield-label {
+    font-size: 14px;
+  }
+}
+
+
+/* =========================================================
+   PC
+   CONTENIDO MÁXIMO 1100 PX
+   ========================================================= */
+
+@media (min-width: 1100px) {
+
+  .yield-section {
+    padding: 48px 32px 52px;
+  }
+
+  .yield-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .yield-header {
+    margin-bottom: 34px;
+  }
+
+
+  /* -------------------------------------------------------
+     BADGE
+     ------------------------------------------------------- */
+
+  .yield-badge {
+    font-size: 16px;
+
+    min-height: 40px;
+
+    padding: 7px 21px;
+
+    margin-bottom: 17px;
+  }
+
+  .yield-badge svg {
+    width: 19px;
+    height: 19px;
+  }
+
+
+  /* -------------------------------------------------------
+     TÍTULO
+     ------------------------------------------------------- */
+
+  .yield-title {
+    font-size: 48px;
+
+    line-height: 1;
+
+    letter-spacing: -1.2px;
+  }
+
+  .yield-title span {
+    display: inline;
+
+    margin-top: 0;
+  }
+
+
+  /* -------------------------------------------------------
+     SUBTÍTULO
+     ------------------------------------------------------- */
+
+  .yield-subtitle {
+    max-width: 780px;
+
+    margin-top: 18px;
+
+    font-size: 18px;
+
+    line-height: 1.4;
+  }
+
+
+  /* -------------------------------------------------------
+     GRID
+     ------------------------------------------------------- */
+
+  .yield-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+  }
+
+
+  /* -------------------------------------------------------
+     TARJETAS
+     ------------------------------------------------------- */
+
+  .yield-card {
+    min-height: 275px;
+
+    padding: 24px 14px 20px;
+
+    border-radius: 21px;
+  }
+
+
+  /* -------------------------------------------------------
+     ICONO
+     ------------------------------------------------------- */
+
+  .yield-icon {
+    width: 66px;
+    height: 66px;
+
+    margin-bottom: 17px;
+  }
+
+  .yield-icon svg {
+    width: 33px;
+    height: 33px;
+  }
+
+
+  /* -------------------------------------------------------
+     CANTIDAD DE OZOAGRO
+     ------------------------------------------------------- */
+
+  .yield-input {
+    min-height: 36px;
+
+    padding: 7px 6px;
+
+    font-size: 11px;
+  }
+
+
+  /* -------------------------------------------------------
+     FLECHA
+     ------------------------------------------------------- */
+
+  .yield-arrow {
+    height: 41px;
+  }
+
+  .yield-arrow::before {
+    height: 19px;
+  }
+
+  .yield-arrow svg {
+    width: 23px;
+    height: 23px;
+
+    margin-top: 18px;
+  }
+
+
+  /* -------------------------------------------------------
+     RESULTADO
+     ------------------------------------------------------- */
+
+  .yield-result {
+    min-height: 101px;
+
+    padding: 9px 5px 11px;
+
+    border-radius: 18px;
+  }
+
+
+  /* -------------------------------------------------------
+     NÚMERO
+     ------------------------------------------------------- */
+
+  .yield-number {
+    font-size: 48px;
+
+    letter-spacing: -1.3px;
+  }
+
+
+  /* -------------------------------------------------------
+     TEXTO
+     ------------------------------------------------------- */
+
+  .yield-label {
+    margin-top: 6px;
+
+    font-size: 13px;
+  }
+}
+
+
+/* =========================================================
+   PC GRANDE
+   MANTENER CONTENIDO EN 1100 PX
+   ========================================================= */
+
+@media (min-width: 1500px) {
+
+  .yield-section {
+    padding-top: 52px;
+    padding-bottom: 58px;
+  }
+
+  .yield-container {
+    max-width: 1100px;
+  }
+
+  .yield-title {
+    font-size: 50px;
+  }
+
+  .yield-subtitle {
+    font-size: 18px;
+  }
+
+  .yield-grid {
+    gap: 18px;
+  }
+
+  .yield-card {
+    min-height: 280px;
+  }
+
+  .yield-number {
+    font-size: 50px;
+  }
+}
+
+
+/* =========================================================
+   SECCIÓN — TESTIMONIOS DE PRODUCTORES
+   MOBILE FIRST
+   ========================================================= */
+
+.testimonials-section {
+  width: 100%;
+  background: #f8fbf8;
+  padding: 48px 0 46px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.testimonials-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.testimonials-header {
+  text-align: center;
+  padding: 0 16px;
+  margin-bottom: 28px;
+}
+
+.testimonials-title {
+  margin: 0;
+
+  color: #073f21;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 34px;
+  font-weight: 900;
+
+  line-height: 0.98;
+
+  letter-spacing: -1.2px;
+}
+
+.testimonials-title span {
+  color: #16823d;
+}
+
+.testimonials-subtitle {
+  margin: 18px auto 0;
+
+  max-width: 620px;
+
+  color: #285d42;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   SLIDER
+   ========================================================= */
+
+.testimonials-slider {
+  width: 100%;
+
+  display: flex;
+
+  gap: 9px;
+
+  overflow-x: auto;
+
+  padding: 0 14px 8px;
+
+  box-sizing: border-box;
+
+  scroll-snap-type: x mandatory;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+.testimonials-slider::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   TARJETA
+   ========================================================= */
+
+.testimonial-card {
+  flex: 0 0 29vw;
+
+  max-width: 150px;
+
+  min-width: 120px;
+
+  scroll-snap-align: start;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   IMAGEN / VIDEO
+   ========================================================= */
+
+.testimonial-media {
+  width: 100%;
+
+  aspect-ratio: 0.72;
+
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background: #319556;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.08);
+}
+
+.testimonial-media img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  object-position: center;
+}
+
+
+/* =========================================================
+   CAPA INFERIOR
+   ========================================================= */
+
+.testimonial-media::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 42%;
+
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.78),
+    rgba(0,0,0,0)
+  );
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   BOTÓN PLAY
+   ========================================================= */
+
+.testimonial-play {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: 48px;
+  height: 48px;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.96);
+
+  color: #16823d;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  z-index: 3;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.16);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.testimonial-play:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.testimonial-play svg {
+  width: 22px;
+  height: 22px;
+
+  fill: currentColor;
+
+  margin-left: 3px;
+}
+
+
+/* =========================================================
+   INFORMACIÓN
+   ========================================================= */
+
+.testimonial-info {
+  position: absolute;
+
+  left: 9px;
+  right: 7px;
+  bottom: 9px;
+
+  z-index: 4;
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.testimonial-info strong {
+  display: block;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.15;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.testimonial-info span {
+  display: flex;
+
+  align-items: center;
+
+  gap: 3px;
+
+  margin-top: 3px;
+
+  font-size: 10px;
+
+  line-height: 1;
+}
+
+.testimonial-info span svg {
+  width: 11px;
+  height: 11px;
+
+  fill: none;
+
+  stroke: #d9ff4f;
+
+  stroke-width: 2;
+}
+
+
+/* =========================================================
+   PUNTOS
+   ========================================================= */
+
+.testimonial-dots {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 13px;
+}
+
+.testimonial-dot {
+  width: 7px;
+  height: 7px;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: #c8c8c8;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+
+  cursor: pointer;
+}
+
+.testimonial-dot.active {
+  background: #16823d;
+
+  transform: scale(1.15);
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.testimonial-modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 99999;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+}
+
+.testimonial-modal.active {
+  display: flex;
+}
+
+.testimonial-modal-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: rgba(0,0,0,0.82);
+}
+
+.testimonial-modal-content {
+  position: relative;
+
+  width: min(92vw, 520px);
+
+  max-height: 90vh;
+
+  z-index: 2;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.testimonial-modal-content video {
+  width: 100%;
+  max-height: 88vh;
+
+  display: block;
+
+  border-radius: 12px;
+
+  background: #000;
+
+  object-fit: contain;
+}
+
+.testimonial-modal-close {
+  position: absolute;
+
+  top: -42px;
+  right: 0;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #16823d;
+
+  font-size: 28px;
+
+  line-height: 30px;
+
+  cursor: pointer;
+
+  z-index: 5;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .testimonials-section {
+    padding: 56px 28px 58px;
+  }
+
+  .testimonials-header {
+    margin-bottom: 34px;
+  }
+
+  .testimonials-title {
+    font-size: 46px;
+  }
+
+  .testimonials-subtitle {
+    font-size: 18px;
+    margin-top: 20px;
+  }
+
+  .testimonials-slider {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .testimonial-card {
+    flex-basis: 150px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   ========================================================= */
+
+@media (min-width: 1100px) {
+
+  .testimonials-section {
+    padding: 58px 32px 64px;
+  }
+
+  .testimonials-header {
+    margin-bottom: 38px;
+  }
+
+  .testimonials-title {
+    font-size: 50px;
+    letter-spacing: -1.5px;
+  }
+
+  .testimonials-subtitle {
+    font-size: 18px;
+  }
+
+  /* LOS 7 EN UNA SOLA FILA */
+
+  .testimonials-slider {
+    display: grid;
+
+    grid-template-columns:
+      repeat(7, minmax(0, 1fr));
+
+    gap: 12px;
+
+    overflow: visible;
+
+    padding: 0;
+  }
+
+  .testimonial-card {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .testimonial-media {
+    border-radius: 15px;
+  }
+
+  .testimonial-play {
+    width: 46px;
+    height: 46px;
+  }
+
+  .testimonial-info {
+    left: 8px;
+    bottom: 9px;
+  }
+
+  .testimonial-info strong {
+    font-size: 10px;
+  }
+
+  .testimonial-info span {
+    font-size: 9px;
+  }
+
+  /* EN PC NO NECESITAMOS LOS PUNTOS */
+
+  .testimonial-dots {
+    display: none;
+  }
+
+}
+
+
+/* =========================================================
+   PC GRANDE
+   ========================================================= */
+
+@media (min-width: 1400px) {
+
+  .testimonials-slider {
+    gap: 14px;
+  }
+
+  .testimonial-info strong {
+    font-size: 11px;
+  }
+
+  .testimonial-info span {
+    font-size: 10px;
+  }
+
+}
+
+
+/* =========================================================
+   MÓVILES MUY PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .testimonials-section {
+    padding-top: 42px;
+    padding-bottom: 42px;
+  }
+
+  .testimonials-title {
+    font-size: 31px;
+  }
+
+  .testimonials-subtitle {
+    font-size: 15px;
+  }
+
+  .testimonial-card {
+    flex-basis: 29vw;
+    min-width: 112px;
+  }
+
+  .testimonial-play {
+    width: 44px;
+    height: 44px;
+  }
+
+  .testimonial-info strong {
+    font-size: 10px;
+  }
+
+  .testimonial-info span {
+    font-size: 9px;
+  }
+
+}
+
+/* =========================================================
+   OZOAGRO — MODAL TESTIMONIOS
+   ========================================================= */
+
+.testimonial-modal {
+  position: fixed !important;
+  inset: 0 !important;
+
+  width: 100vw !important;
+  height: 100vh !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 20px !important;
+  box-sizing: border-box !important;
+
+  background: rgba(0, 0, 0, 0.88) !important;
+
+  z-index: 999999 !important;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+}
+
+
+/* MODAL ABIERTO */
+
+.testimonial-modal.is-open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+
+/* =========================================================
+   FONDO
+   ========================================================= */
+
+.testimonial-modal-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  background: rgba(0, 0, 0, 0.88) !important;
+}
+
+
+/* =========================================================
+   CONTENEDOR DEL VIDEO
+   ========================================================= */
+
+.testimonial-modal-content {
+  position: relative !important;
+
+  z-index: 2 !important;
+
+  width: min(92vw, 900px) !important;
+  max-width: 900px !important;
+
+  max-height: 92vh !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: #000 !important;
+
+  border-radius: 14px !important;
+
+  overflow: visible !important;
+}
+
+
+/* =========================================================
+   VIDEO
+   ========================================================= */
+
+#testimonialVideo,
+.testimonial-modal-video {
+  display: block !important;
+
+  width: 100% !important;
+  max-width: 900px !important;
+
+  max-height: 88vh !important;
+
+  height: auto !important;
+
+  object-fit: contain !important;
+
+  background: #000 !important;
+
+  border-radius: 14px !important;
+}
+
+
+/* =========================================================
+   BOTÓN CERRAR
+   ========================================================= */
+
+.testimonial-modal-close {
+  position: absolute !important;
+
+  top: -16px !important;
+  right: -16px !important;
+
+  z-index: 10 !important;
+
+  width: 42px !important;
+  height: 42px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+
+  background: #16823d !important;
+  color: #fff !important;
+
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 30px !important;
+  font-weight: 400 !important;
+
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  box-shadow: 0 4px 15px rgba(0,0,0,0.35) !important;
+}
+
+
+/* =========================================================
+   BLOQUEAR SCROLL CUANDO EL MODAL ESTÁ ABIERTO
+   ========================================================= */
+
+body.testimonial-modal-open {
+  overflow: hidden !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+  .testimonial-modal {
+    padding: 15px !important;
+  }
+
+  .testimonial-modal-content {
+    width: 94vw !important;
+    max-width: 94vw !important;
+
+    max-height: 88vh !important;
+
+    border-radius: 12px !important;
+  }
+
+  #testimonialVideo,
+  .testimonial-modal-video {
+    width: 100% !important;
+    max-width: 94vw !important;
+    max-height: 82vh !important;
+
+    border-radius: 12px !important;
+  }
+
+  .testimonial-modal-close {
+    top: -14px !important;
+    right: -8px !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    font-size: 27px !important;
+  }
+
+}
+
+
+/* =========================================================
+   CORRECCIÓN DEL SLIDER
+   ========================================================= */
+
+.testimonials-section {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  overflow: hidden !important;
+
+  box-sizing: border-box !important;
+}
+
+
+.testimonials-container {
+  width: 100% !important;
+  max-width: 1100px !important;
+
+  margin-left: auto !important;
+  margin-right: auto !important;
+
+  box-sizing: border-box !important;
+}
+
+
+.testimonials-slider {
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   MOBILE — SLIDER HORIZONTAL
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+  .testimonials-slider {
+    display: flex !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scroll-snap-type: x mandatory !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    scrollbar-width: none !important;
+
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .testimonials-slider::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .testimonial-card {
+    flex: 0 0 72% !important;
+
+    width: 72% !important;
+
+    max-width: 72% !important;
+
+    scroll-snap-align: center !important;
+
+    box-sizing: border-box !important;
+  }
+
+}
+
+
+/* =========================================================
+   PC — 7 TESTIMONIOS EN UNA FILA
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .testimonials-slider {
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(7, minmax(0, 1fr)) !important;
+
+    gap: 10px !important;
+
+    overflow: visible !important;
+  }
+
+  .testimonial-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   OZOAGRO — RESEÑAS DE PRODUCTORES
+   MOBILE FIRST
+   ========================================================= */
+
+.reviews-section {
+  width: 100%;
+  background: #fff;
+
+  padding: 48px 14px 52px;
+
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.reviews-container {
+  width: 100%;
+  max-width: 1100px;
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.reviews-header {
+  width: 100%;
+
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+
+/* =========================================================
+   BADGE
+   ========================================================= */
+
+.reviews-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 34px;
+
+  padding: 6px 16px;
+
+  border: 1.5px solid #16823d;
+  border-radius: 999px;
+
+  box-sizing: border-box;
+
+  color: #16823d;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  letter-spacing: .3px;
+
+  margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.reviews-title {
+  margin: 0;
+
+  color: #07552a;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 29px;
+  font-weight: 900;
+
+  line-height: 1.05;
+
+  letter-spacing: -0.8px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   SUBTÍTULO
+   ========================================================= */
+
+.reviews-subtitle {
+  max-width: 560px;
+
+  margin: 14px auto 0;
+
+  color: #315d43;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 15px;
+  font-weight: 400;
+
+  line-height: 1.45;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.reviews-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+
+/* =========================================================
+   TARJETA
+   ========================================================= */
+
+.review-card {
+  min-width: 0;
+
+  background: #ffffff;
+
+  border: 1px solid rgba(22,130,61,.12);
+
+  border-radius: 18px;
+
+  padding: 10px 10px 15px;
+
+  box-sizing: border-box;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.055);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+
+/* =========================================================
+   FOTO DEL PRODUCTO
+   ========================================================= */
+
+.review-product {
+  width: 100%;
+
+  aspect-ratio: 1 / 1;
+
+  border-radius: 13px;
+
+  overflow: hidden;
+
+  background: #eef6f0;
+}
+
+
+.review-product img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform .35s ease;
+}
+
+
+/* =========================================================
+   ESTRELLAS
+   ========================================================= */
+
+.review-stars {
+  margin-top: 12px;
+
+  color: #16823d;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+
+  line-height: 1;
+
+  letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   NOMBRE
+   ========================================================= */
+
+.review-card h3 {
+  margin: 8px 0 0;
+
+  color: #07552a;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+
+/* =========================================================
+   UBICACIÓN / CULTIVO
+   ========================================================= */
+
+.review-meta {
+  margin-top: 4px;
+
+  color: #6a8273;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   RESEÑA
+   ========================================================= */
+
+.review-text {
+  margin: 9px 0 0;
+
+  color: #31533e;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   HOVER PC
+   ========================================================= */
+
+@media (hover: hover) {
+
+  .review-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+      0 10px 25px rgba(0,0,0,.09);
+  }
+
+  .review-card:hover .review-product img {
+    transform: scale(1.035);
+  }
+
+}
+
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .reviews-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .reviews-title {
+    font-size: 27px;
+  }
+
+  .reviews-subtitle {
+    font-size: 14px;
+  }
+
+  .reviews-grid {
+    gap: 11px;
+  }
+
+  .review-card {
+    padding: 8px 8px 13px;
+
+    border-radius: 17px;
+  }
+
+  .review-product {
+    border-radius: 12px;
+  }
+
+  .review-stars {
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .review-card h3 {
+    font-size: 13px;
+  }
+
+  .review-meta {
+    font-size: 9px;
+  }
+
+  .review-text {
+    font-size: 10.5px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .reviews-section {
+    padding: 55px 28px 60px;
+  }
+
+  .reviews-header {
+    margin-bottom: 36px;
+  }
+
+  .reviews-title {
+    font-size: 40px;
+  }
+
+  .reviews-subtitle {
+    font-size: 17px;
+  }
+
+  .reviews-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    gap: 17px;
+  }
+
+  .review-card {
+    padding: 11px 11px 17px;
+
+    border-radius: 18px;
+  }
+
+  .review-stars {
+    font-size: 15px;
+  }
+
+  .review-card h3 {
+    font-size: 15px;
+  }
+
+  .review-meta {
+    font-size: 11px;
+  }
+
+  .review-text {
+    font-size: 12px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   ========================================================= */
+
+@media (min-width: 1100px) {
+
+  .reviews-section {
+    padding: 58px 32px 64px;
+  }
+
+  .reviews-header {
+    margin-bottom: 38px;
+  }
+
+  .reviews-title {
+    font-size: 44px;
+  }
+
+  .reviews-subtitle {
+    font-size: 18px;
+  }
+
+
+  /* 6 RESEÑAS EN UNA SOLA FILA */
+
+  .reviews-grid {
+    grid-template-columns:
+      repeat(6, minmax(0, 1fr));
+
+    gap: 14px;
+  }
+
+
+  .review-card {
+    padding: 10px 10px 16px;
+
+    border-radius: 17px;
+  }
+
+
+  .review-product {
+    border-radius: 12px;
+  }
+
+
+  .review-stars {
+    font-size: 13px;
+
+    margin-top: 11px;
+  }
+
+
+  .review-card h3 {
+    font-size: 12px;
+
+    margin-top: 7px;
+  }
+
+
+  .review-meta {
+    font-size: 9px;
+  }
+
+
+  .review-text {
+    font-size: 10.5px;
+
+    line-height: 1.4;
+  }
+
+}
+
+
+/* =========================================================
+   OZOAGRO — FAQ + IMAGEN
+   MOBILE FIRST
+   ========================================================= */
+
+.faq-image-section {
+  width: 100%;
+  background: #f4faf6;
+  padding: 48px 14px 52px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   CONTENEDOR
+   ========================================================= */
+
+.faq-image-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 34px;
+}
+
+
+/* =========================================================
+   COLUMNA FAQ
+   ========================================================= */
+
+.faq-column {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.faq-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+
+/* =========================================================
+   ETIQUETA
+   ========================================================= */
+
+.faq-label {
+  display: inline-block;
+
+  color: #16823d;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  margin-bottom: 8px;
+}
+
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.faq-title {
+  margin: 0;
+
+  color: #073d20;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 30px;
+  font-weight: 900;
+
+  line-height: 1.05;
+
+  letter-spacing: -0.8px;
+}
+
+.faq-title span {
+  color: #55aF18;
+}
+
+
+/* =========================================================
+   SUBTÍTULO
+   ========================================================= */
+
+.faq-subtitle {
+  margin: 10px auto 0;
+
+  max-width: 500px;
+
+  color: #3e6650;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   LISTA FAQ
+   ========================================================= */
+
+.faq-list {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+/* =========================================================
+   ITEM
+   ========================================================= */
+
+.faq-item {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid rgba(22,130,61,0.08);
+
+  border-radius: 10px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.025);
+}
+
+
+/* =========================================================
+   PREGUNTA
+   ========================================================= */
+
+.faq-item summary {
+  min-height: 44px;
+
+  padding: 11px 13px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  cursor: pointer;
+
+  list-style: none;
+
+  color: #17452b;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+
+/* =========================================================
+   ICONO +
+   ========================================================= */
+
+.faq-arrow {
+  width: 22px;
+  height: 22px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #16823d;
+
+  font-size: 20px;
+  font-weight: 400;
+
+  line-height: 1;
+
+  transition: transform 0.2s ease;
+}
+
+
+/* Cambiar + por − */
+
+.faq-item[open] .faq-arrow {
+  transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   RESPUESTA
+   ========================================================= */
+
+.faq-answer {
+  padding: 0 13px 13px;
+
+  color: #4c6555;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 18px;
+  font-weight: 400;
+
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   COLUMNA IMAGEN
+   ========================================================= */
+
+.faq-image-column {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   CONTENEDOR IMAGEN
+   ========================================================= */
+
+.faq-image-wrapper {
+  width: 100%;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  background: #000000;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.10);
+}
+
+
+/* =========================================================
+   IMAGEN
+   ========================================================= */
+
+.faq-image-wrapper img {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  max-width: 100%;
+}
+
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .faq-image-section {
+    padding: 42px 12px 46px;
+  }
+
+  .faq-image-container {
+    gap: 28px;
+  }
+
+  .faq-title {
+    font-size: 28px;
+  }
+
+  .faq-subtitle {
+    font-size: 13px;
+  }
+
+  .faq-item summary {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+
+  .faq-answer {
+    font-size: 11px;
+    padding: 0 12px 12px;
+  }
+
+  .faq-image-wrapper {
+    border-radius: 16px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .faq-image-section {
+    padding: 58px 28px 64px;
+  }
+
+  .faq-image-container {
+    gap: 40px;
+  }
+
+  .faq-title {
+    font-size: 40px;
+  }
+
+  .faq-subtitle {
+    font-size: 16px;
+  }
+
+  .faq-item summary {
+    min-height: 48px;
+
+    padding: 13px 15px;
+
+    font-size: 15px;
+  }
+
+  .faq-answer {
+    padding: 0 15px 15px;
+
+    font-size: 13px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   ========================================================= */
+
+@media (min-width: 1100px) {
+
+  .faq-image-section {
+    padding: 64px 32px 70px;
+  }
+
+  .faq-image-container {
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+
+    align-items: center;
+
+    gap: 50px;
+  }
+
+
+  /* FAQ */
+
+  .faq-header {
+    text-align: left;
+
+    margin-bottom: 25px;
+  }
+
+  .faq-title {
+    font-size: 42px;
+  }
+
+  .faq-subtitle {
+    margin-left: 0;
+    margin-right: 0;
+
+    font-size: 16px;
+  }
+
+
+  /* Items */
+
+  .faq-list {
+    gap: 8px;
+  }
+
+  .faq-item {
+    border-radius: 11px;
+  }
+
+  .faq-item summary {
+    min-height: 47px;
+
+    padding: 12px 15px;
+
+    font-size: 15px;
+  }
+
+  .faq-answer {
+    padding: 0 15px 14px;
+
+    font-size: 16px;
+  }
+
+
+  /* Imagen */
+
+  .faq-image-wrapper {
+    border-radius: 20px;
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.12);
+  }
+
+}
+
+
+/* =========================================================
+   OZOAGRO — LATINOAMÉRICA
+   GALERÍA + IMAGEN
+   MOBILE FIRST
+   ========================================================= */
+
+
+/* =========================================================
+   SECCIÓN PRINCIPAL
+   ========================================================= */
+
+.latam-section {
+  width: 100%;
+  background: #ffffff;
+
+  padding: 40px 16px 45px;
+
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.latam-container {
+  width: 100%;
+  max-width: 1250px;
+
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 1fr;
+
+  gap: 38px;
+}
+
+
+/* =========================================================
+   COLUMNA GALERÍA
+   ========================================================= */
+
+.latam-gallery-column {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.latam-header {
+  width: 100%;
+
+  text-align: center;
+
+  margin-bottom: 28px;
+}
+
+.latam-header h2 {
+  margin: 0;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 32px;
+  font-weight: 900;
+
+  line-height: 0.98;
+
+  letter-spacing: -1.2px;
+
+  color: #064d29;
+
+  text-transform: uppercase;
+}
+
+.latam-header h2 span {
+  color: #48a91f;
+}
+
+.latam-header p {
+  margin: 15px 0 0;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  letter-spacing: 5px;
+
+  color: #064d29;
+
+  text-transform: uppercase;
+}
+
+.mobile-only {
+  display: block;
+}
+
+
+/* =========================================================
+   CONTENEDOR DEL SLIDER
+   ========================================================= */
+
+.latam-slider-wrapper {
+  position: relative;
+
+  width: 100%;
+
+  overflow: visible;
+}
+
+
+/* =========================================================
+   SLIDER MOBILE
+   2 COLUMNAS × 2 FILAS VISIBLES
+   4 IMÁGENES POR PANTALLA
+   ========================================================= */
+
+.latam-slider {
+  width: 100%;
+
+  display: grid;
+
+  /*
+   * Dos filas.
+   */
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+
+  /*
+   * Las columnas se generan horizontalmente.
+   */
+  grid-auto-flow: column;
+
+  /*
+   * Cada página ocupa exactamente
+   * el ancho disponible para 2 columnas.
+   */
+  grid-auto-columns: calc((100% - 10px) / 2);
+
+  gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  /*
+   * Desplazamiento horizontal.
+   */
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+
+  /*
+   * Ocultar scrollbar.
+   */
+  scrollbar-width: none;
+
+  -ms-overflow-style: none;
+
+  padding: 0 0 5px;
+
+  box-sizing: border-box;
+
+  touch-action: pan-x;
+
+  overscroll-behavior-x: contain;
+}
+
+.latam-slider::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.latam-card {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  aspect-ratio: 1 / 1;
+
+  background: #eeeeee;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  scroll-snap-align: start;
+
+  box-sizing: border-box;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.latam-card img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+
+/* Efecto PC */
+
+@media (hover: hover) {
+
+  .latam-card:hover img {
+    transform: scale(1.035);
+  }
+
+}
+
+
+/* =========================================================
+   ETIQUETA DEL PAÍS
+   ========================================================= */
+
+.latam-country {
+  position: absolute;
+
+  left: 7px;
+  bottom: 7px;
+
+  z-index: 4;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 5px 9px;
+
+  background: #ffffff;
+
+  border-radius: 6px;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.16);
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  color: #174f2b;
+
+  white-space: nowrap;
+
+  text-transform: uppercase;
+}
+
+.latam-flag {
+  display: inline-flex;
+
+  align-items: center;
+
+  font-size: 11px;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   FLECHAS
+   ========================================================= */
+
+.latam-arrow {
+  position: absolute;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  z-index: 20;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.97);
+
+  color: #16823d;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 31px;
+
+  line-height: 1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.16);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.latam-arrow:hover {
+  box-shadow:
+    0 5px 16px rgba(0, 0, 0, 0.22);
+}
+
+.latam-prev {
+  left: 3px;
+}
+
+.latam-next {
+  right: 3px;
+}
+
+
+/* =========================================================
+   PUNTOS
+   ========================================================= */
+
+.latam-dots {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin-top: 13px;
+}
+
+.latam-dot {
+  width: 7px;
+  height: 7px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: #cccccc;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.latam-dot.active {
+  background: #48a91f;
+
+  transform: scale(1.15);
+}
+
+
+/* =========================================================
+   COLUMNA DERECHA
+   ========================================================= */
+
+.latam-image-column {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.latam-main-image {
+  width: 100%;
+  height: auto;
+
+  display: block;
+
+  border-radius: 8px;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.latam-modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 999999;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+}
+
+.latam-modal.is-open {
+  display: flex;
+}
+
+
+/* Fondo oscuro */
+
+.latam-modal-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.84);
+
+  cursor: pointer;
+}
+
+
+/* Contenedor */
+
+.latam-modal-content {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+  max-width: 750px;
+
+  max-height: 92vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+
+/* Imagen */
+
+.latam-modal-content img {
+  display: block;
+
+  width: auto;
+  max-width: 100%;
+
+  max-height: 78vh;
+
+  object-fit: contain;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.35);
+}
+
+
+/* =========================================================
+   BOTÓN CERRAR
+   ========================================================= */
+
+.latam-modal-close {
+  position: absolute;
+
+  top: -45px;
+  right: 0;
+
+  z-index: 5;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #064d29;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 28px;
+
+  line-height: 1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+
+/* =========================================================
+   PAÍS DENTRO DEL MODAL
+   ========================================================= */
+
+.latam-modal-country {
+  margin-top: 12px;
+
+  padding: 7px 17px;
+
+  background: #ffffff;
+
+  border-radius: 999px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  color: #064d29;
+
+  text-align: center;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+
+/* =========================================================
+   BLOQUEAR SCROLL AL ABRIR MODAL
+   ========================================================= */
+
+body.latam-modal-open {
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .latam-section {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .latam-header {
+    margin-bottom: 25px;
+  }
+
+  .latam-header h2 {
+    font-size: 29px;
+
+    letter-spacing: -1px;
+  }
+
+  .latam-header p {
+    font-size: 13px;
+
+    letter-spacing: 4px;
+  }
+
+  .latam-slider {
+    gap: 9px;
+
+    grid-auto-columns: calc((100% - 9px) / 2);
+  }
+
+  .latam-country {
+    left: 5px;
+    bottom: 5px;
+
+    padding: 4px 7px;
+
+    font-size: 7px;
+  }
+
+  .latam-flag {
+    font-size: 10px;
+  }
+
+  .latam-arrow {
+    width: 35px;
+    height: 35px;
+
+    font-size: 28px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 600px) {
+
+  .latam-section {
+    padding: 50px 28px;
+  }
+
+  .latam-header h2 {
+    font-size: 42px;
+  }
+
+  .latam-header p {
+    font-size: 17px;
+
+    letter-spacing: 5px;
+  }
+
+  .latam-country {
+    font-size: 9px;
+
+    padding: 5px 9px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   4 COLUMNAS × 2 FILAS
+   TODAS LAS IMÁGENES VISIBLES
+   ========================================================= */
+
+@media (min-width: 900px) {
+
+  .latam-section {
+    padding: 65px 35px;
+  }
+
+
+  /* =========================================
+     DOS COLUMNAS
+     ========================================= */
+
+  .latam-container {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+
+    align-items: center;
+
+    gap: 55px;
+  }
+
+
+  /* =========================================
+     HEADER
+     ========================================= */
+
+  .latam-header {
+    margin-bottom: 30px;
+  }
+
+  .latam-header h2 {
+    font-size: 48px;
+  }
+
+  .latam-header p {
+    font-size: 18px;
+
+    letter-spacing: 6px;
+  }
+
+  .mobile-only {
+    display: none;
+  }
+
+
+  /* =========================================
+     GALERÍA
+     ========================================= */
+
+  .latam-slider {
+
+    width: 100%;
+
+    display: grid;
+
+    /*
+     * 4 columnas
+     */
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+
+    /*
+     * 2 filas
+     */
+    grid-template-rows:
+      repeat(2, minmax(0, 1fr));
+
+    /*
+     * Orden normal:
+     * 1 2 3 4
+     * 5 6 7 8
+     */
+    grid-auto-flow: row;
+
+    gap: 10px;
+
+    overflow: visible;
+
+    padding: 0;
+
+    scroll-snap-type: none;
+
+    touch-action: auto;
+  }
+
+
+  .latam-card {
+    width: 100%;
+
+    scroll-snap-align: none;
+  }
+
+
+  /* =========================================
+     OCULTAR CONTROLES EN PC
+     ========================================= */
+
+  .latam-arrow {
+    display: none;
+  }
+
+  .latam-dots {
+    display: none;
+  }
+
+
+  /* =========================================
+     PAÍS
+     ========================================= */
+
+  .latam-country {
+    font-size: 8px;
+
+    padding: 5px 8px;
+  }
+
+}
+
+
+/* =========================================================
+   PC GRANDE
+   ========================================================= */
+
+@media (min-width: 1200px) {
+
+  .latam-container {
+    gap: 70px;
+  }
+
+  .latam-header h2 {
+    font-size: 52px;
+  }
+
+  .latam-slider {
+    gap: 12px;
+  }
+
+  .latam-country {
+    font-size: 9px;
+
+    padding: 5px 9px;
+  }
+
+}
+
+
+/* =========================================================
+   PANTALLAS MUY GRANDES
+   ========================================================= */
+
+@media (min-width: 1500px) {
+
+  .latam-container {
+    max-width: 1350px;
+  }
+
+  .latam-header h2 {
+    font-size: 55px;
+  }
+
+}
+
+/* =========================================================
+   OZOAGRO — FOOTER COMPLETO
+   CSS COMPATIBLE CON EL HTML ACTUAL
+   ========================================================= */
+
+
+/* =========================================================
+   FOOTER GENERAL
+   ========================================================= */
+
+.ozoagro-footer {
+  width: 100%;
+  background: #064d29;
+  color: #ffffff;
+
+  padding: 55px 28px 30px;
+
+  box-sizing: border-box;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ozoagro-footer *,
+.ozoagro-footer *::before,
+.ozoagro-footer *::after {
+  box-sizing: border-box;
+}
+
+.ozoagro-footer-container {
+  width: 100%;
+  max-width: 1000px;
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   TÍTULOS DE SECCIÓN
+   ========================================================= */
+
+.ozoagro-footer .footer-section-title {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  margin: 0 0 30px;
+
+  color: #ffffff;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  line-height: 1.1;
+
+  text-transform: uppercase;
+}
+
+.ozoagro-footer .footer-section-title > span {
+  display: block;
+
+  width: 32px;
+  height: 3px;
+
+  flex: 0 0 32px;
+
+  background: #48a91f;
+}
+
+
+/* =========================================================
+   POLÍTICAS
+   ========================================================= */
+
+.ozoagro-footer .footer-policies {
+  width: 100%;
+
+  margin: 0 0 55px;
+}
+
+
+/* Cada política */
+
+.ozoagro-footer .footer-policy {
+  width: 100%;
+
+  margin: 0;
+
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+}
+
+
+/* Eliminar triángulo nativo */
+
+.ozoagro-footer .footer-policy summary {
+  list-style: none;
+}
+
+.ozoagro-footer .footer-policy summary::-webkit-details-marker {
+  display: none;
+}
+
+
+/* Fila */
+
+.ozoagro-footer .footer-policy summary {
+  width: 100%;
+
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px 0;
+
+  cursor: pointer;
+
+  color: #ffffff;
+
+  font-size: 19px;
+  font-weight: 500;
+
+  line-height: 1.3;
+
+  text-align: left;
+
+  user-select: none;
+}
+
+
+/* Texto de la política */
+
+.ozoagro-footer .footer-policy summary > span:first-child {
+  display: block;
+
+  flex: 1;
+
+  padding-right: 15px;
+
+  text-align: left;
+}
+
+
+/* =========================================================
+   BOTÓN +
+   ========================================================= */
+
+.ozoagro-footer .footer-policy-icon {
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,0.55);
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  font-size: 25px;
+  font-weight: 400;
+
+  line-height: 1;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+
+/* Cuando está abierta */
+
+.ozoagro-footer .footer-policy[open] .footer-policy-icon {
+  transform: rotate(0deg);
+}
+
+
+/* =========================================================
+   CONTENIDO DE POLÍTICAS
+   ========================================================= */
+
+.ozoagro-footer .footer-policy-content {
+  padding: 0 50px 22px 0;
+
+  color: rgba(255,255,255,0.82);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+
+  text-align: left;
+}
+
+.ozoagro-footer .footer-policy-content p {
+  margin: 0 0 12px;
+}
+
+.ozoagro-footer .footer-policy-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ozoagro-footer .footer-policy-content strong {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   CONTACTO
+   ========================================================= */
+
+.ozoagro-footer .footer-contact {
+  width: 100%;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   ELEMENTOS DE CONTACTO
+   ========================================================= */
+
+.ozoagro-footer .footer-contact-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  margin: 0 0 28px;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  text-align: left;
+}
+
+
+/* =========================================================
+   ICONOS
+   ========================================================= */
+
+.ozoagro-footer .footer-contact-icon {
+  width: 44px;
+  height: 44px;
+
+  min-width: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+}
+
+
+/*
+   IMPORTANTE:
+   Esto evita que estilos globales de SVG
+   vuelvan gigante el WhatsApp.
+*/
+
+.ozoagro-footer .footer-contact-icon svg {
+  display: block;
+
+  width: 34px !important;
+  height: 34px !important;
+
+  max-width: 34px !important;
+  max-height: 34px !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  overflow: visible;
+
+  box-sizing: border-box;
+}
+
+
+/* WhatsApp */
+
+.ozoagro-footer .footer-whatsapp svg {
+  width: 37px !important;
+  height: 37px !important;
+
+  max-width: 37px !important;
+  max-height: 37px !important;
+
+  fill: none !important;
+
+  stroke: #ffffff;
+
+  stroke-width: 0;
+}
+
+
+/*
+   El SVG que tienes actualmente utiliza
+   <path>, por lo que necesitamos que el
+   interior sea blanco.
+*/
+
+.ozoagro-footer .footer-whatsapp svg path {
+  fill: #ffffff !important;
+}
+
+
+/* Email */
+
+.ozoagro-footer .footer-contact-icon:not(.footer-whatsapp) svg {
+  fill: none !important;
+
+  stroke: #ffffff !important;
+
+  stroke-width: 1.8 !important;
+}
+
+.ozoagro-footer .footer-contact-icon:not(.footer-whatsapp) svg path,
+.ozoagro-footer .footer-contact-icon:not(.footer-whatsapp) svg rect {
+  fill: none !important;
+
+  stroke: #ffffff !important;
+}
+
+
+/* =========================================================
+   TEXTO CONTACTO
+   ========================================================= */
+
+.ozoagro-footer .footer-contact-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  text-align: left;
+}
+
+.ozoagro-footer .footer-contact-text strong {
+  display: block;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 19px;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+.ozoagro-footer .footer-contact-text span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: rgba(255,255,255,0.78);
+
+  font-size: 14px;
+
+  line-height: 1.4;
+
+  text-align: left;
+}
+
+
+/* =========================================================
+   BLOQUE DE CONFIANZA
+   ========================================================= */
+
+.ozoagro-footer .footer-trust {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 8px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(255,255,255,0.18);
+
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.04);
+
+  text-align: left;
+}
+
+.ozoagro-footer .footer-trust-icon {
+  width: 27px;
+  height: 27px;
+
+  min-width: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #48a91f;
+
+  color: #064d29;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.ozoagro-footer .footer-trust strong {
+  display: block;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 13px;
+
+  line-height: 1.35;
+}
+
+.ozoagro-footer .footer-trust span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: rgba(255,255,255,0.7);
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   SEPARADOR
+   ========================================================= */
+
+.ozoagro-footer .footer-divider {
+  width: 100%;
+
+  height: 1px;
+
+  margin: 35px 0 22px;
+
+  background: rgba(255,255,255,0.18);
+}
+
+
+/* =========================================================
+   COPYRIGHT
+   ========================================================= */
+
+.ozoagro-footer .footer-bottom {
+  width: 100%;
+
+  text-align: center;
+}
+
+.ozoagro-footer .footer-bottom p {
+  margin: 0;
+
+  color: rgba(255,255,255,0.68);
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 599px) {
+
+  .ozoagro-footer {
+    padding: 48px 28px 28px;
+  }
+
+
+  /* Títulos */
+
+  .ozoagro-footer .footer-section-title {
+    font-size: 27px;
+
+    gap: 15px;
+
+    margin-bottom: 28px;
+  }
+
+  .ozoagro-footer .footer-section-title > span {
+    width: 32px;
+    min-width: 32px;
+  }
+
+
+  /* Políticas */
+
+  .ozoagro-footer .footer-policy summary {
+    min-height: 67px;
+
+    font-size: 18px;
+
+    padding: 15px 0;
+  }
+
+  .ozoagro-footer .footer-policy-icon {
+    width: 37px;
+    height: 37px;
+
+    min-width: 37px;
+
+    font-size: 24px;
+  }
+
+  .ozoagro-footer .footer-policy-content {
+    padding: 0 5px 22px 0;
+
+    font-size: 14px;
+
+    line-height: 1.55;
+  }
+
+
+  /* Contacto */
+
+  .ozoagro-footer .footer-contact-item {
+    gap: 15px;
+
+    margin-bottom: 26px;
+  }
+
+  .ozoagro-footer .footer-contact-icon {
+    width: 43px;
+    min-width: 43px;
+  }
+
+  .ozoagro-footer .footer-contact-text strong {
+    font-size: 18px;
+  }
+
+  .ozoagro-footer .footer-contact-text span {
+    font-size: 13px;
+  }
+
+
+  /* Trust */
+
+  .ozoagro-footer .footer-trust {
+    padding: 13px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 600px) and (max-width: 899px) {
+
+  .ozoagro-footer {
+    padding: 55px 35px 30px;
+  }
+
+}
+
+
+/* =========================================================
+   PC
+   ========================================================= */
+
+@media (min-width: 900px) {
+
+  .ozoagro-footer {
+    padding: 65px 40px 35px;
+  }
+
+  .ozoagro-footer-container {
+    max-width: 1050px;
+  }
+
+  .ozoagro-footer .footer-section-title {
+    font-size: 32px;
+  }
+
+  .ozoagro-footer .footer-policy summary {
+    font-size: 20px;
+
+    min-height: 72px;
+  }
+
+  .ozoagro-footer .footer-contact-text strong {
+    font-size: 20px;
+  }
+
+}
+
+
+/* =========================================================
+   OZOAGRO — CTA FINAL
+   ========================================================= */
+
+.ozoagro-final-cta {
+  width: 100%;
+  background: #f7f9f4;
+  padding: 22px 16px 18px;
+  box-sizing: border-box;
+}
+
+.ozoagro-final-cta-inner {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   TARJETA
+   ========================================================= */
+
+.ozoagro-final-cta-card {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+
+  padding: 18px 20px 14px;
+
+  box-sizing: border-box;
+
+  background: #f4f7ee;
+
+  border: 1px solid #dce6d2;
+
+  border-radius: 14px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   TITULO
+   ========================================================= */
+
+.ozoagro-final-cta-card h2 {
+  margin: 0;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 21px;
+  line-height: 1.1;
+
+  font-weight: 900;
+
+  color: #064d29;
+
+  letter-spacing: 0.2px;
+}
+
+
+.ozoagro-final-cta-card p {
+  margin: 4px 0 11px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+
+  color: #3d5946;
+}
+
+
+/* =========================================================
+   BOTÓN PRINCIPAL
+   ========================================================= */
+
+.ozoagro-final-cta-button {
+
+  width: 100%;
+
+  min-height: 56px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  box-sizing: border-box;
+
+  background: #07943f;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  border-radius: 15px;
+
+  padding: 8px 18px;
+
+  box-shadow: 0 5px 10px rgba(0,0,0,0.12);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.ozoagro-final-cta-button:hover {
+  background: #078438;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ICONO CARRITO
+   ========================================================= */
+
+.ozoagro-final-cta-cart {
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+
+.ozoagro-final-cta-cart svg {
+
+  width: 31px;
+  height: 31px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 2;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+
+/* =========================================================
+   TEXTO BOTÓN
+   ========================================================= */
+
+.ozoagro-final-cta-button-text {
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 18px;
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   FLECHA
+   ========================================================= */
+
+.ozoagro-final-cta-arrow {
+
+  font-size: 34px;
+
+  line-height: 1;
+
+  font-weight: 400;
+
+  margin-left: 2px;
+}
+
+
+/* =========================================================
+   WHATSAPP
+   ========================================================= */
+
+.ozoagro-final-cta-whatsapp {
+
+  width: 100%;
+
+  min-height: 38px;
+
+  margin-top: 9px;
+
+  padding: 7px 14px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  border-radius: 9px;
+
+  border: 1px solid #dce6d2;
+
+  background: #edf3e8;
+
+  color: #35533e;
+
+  text-decoration: none;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 11px;
+
+  line-height: 1.2;
+}
+
+
+.ozoagro-final-cta-whatsapp-icon {
+
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+
+.ozoagro-final-cta-whatsapp-icon svg {
+
+  width: 21px;
+  height: 21px;
+
+  fill: #159447;
+}
+
+
+.ozoagro-final-cta-whatsapp strong {
+
+  margin-left: auto;
+
+  font-size: 22px;
+
+  line-height: 1;
+
+  color: #35533e;
+}
+
+
+/* =========================================================
+   TEXTO INFERIOR
+   ========================================================= */
+
+.ozoagro-final-cta-bottom {
+
+  max-width: 720px;
+
+  margin: 10px auto 0;
+
+  padding-top: 8px;
+
+  border-top: 1px solid #d8e2d0;
+
+  text-align: center;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 9px;
+
+  line-height: 1.4;
+
+  font-weight: 600;
+
+  color: #63806b;
+}
+
+
+/* =========================================================
+   PC
+   ========================================================= */
+
+@media (min-width: 900px) {
+
+  .ozoagro-final-cta {
+    padding: 26px 30px 20px;
+  }
+
+  .ozoagro-final-cta-card {
+    padding: 20px 28px 15px;
+  }
+
+  .ozoagro-final-cta-card h2 {
+    font-size: 22px;
+  }
+
+  .ozoagro-final-cta-card p {
+    font-size: 13px;
+  }
+
+  .ozoagro-final-cta-button {
+    min-height: 60px;
+  }
+
+  .ozoagro-final-cta-button-text {
+    font-size: 25px;
+  }
+
+  .ozoagro-final-cta-arrow {
+    font-size: 36px;
+  }
+
+  .ozoagro-final-cta-whatsapp {
+    font-size: 12px;
+  }
+
+}
