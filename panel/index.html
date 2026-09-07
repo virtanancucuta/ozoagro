@@ -50,7 +50,7 @@
     }
     /* ============ MOVIL (<=768px) — aditivo, no toca desktop ============ */
     @media (max-width: 768px) {
-      html, body { overflow-x: hidden; max-width: 100vw; overscroll-behavior-y: contain; }
+      html, body { overflow-x: hidden; max-width: 100vw; }
       main { max-width: 100vw; overflow-x: hidden; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; padding-left: max(1rem, env(safe-area-inset-left)) !important; padding-right: max(1rem, env(safe-area-inset-right)) !important; }
       /* iOS Safari hace zoom si un campo tiene menos de 16px: todos los campos a 16px en movil */
       input, select, textarea { font-size: 16px !important; }
@@ -285,7 +285,8 @@
         if (open && !document.body.classList.contains('modal-open')) {
           scrollY = window.scrollY; document.body.classList.add('modal-open'); document.body.style.top = (-scrollY) + 'px';
         } else if (!open && document.body.classList.contains('modal-open')) {
-          document.body.classList.remove('modal-open'); document.body.style.top = ''; window.scrollTo(0, scrollY);
+          document.body.classList.remove('modal-open'); document.body.style.top = '';
+          var y = scrollY; window.scrollTo(0, y); requestAnimationFrame(function () { window.scrollTo(0, y); }); setTimeout(function () { window.scrollTo(0, y); }, 250);
         }
       }
       new MutationObserver(syncModalOpen).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
