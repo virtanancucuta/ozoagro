@@ -12,6 +12,29 @@
   const params = new URLSearchParams(window.location.search);
   const LITROS = { '1 Unidad': 1, 'Galón (4 L)': 4, '10 Unidades': 10, '20 Unidades': 20 };
 
+  /* ---------- Distribuidor por slug: ozoagro.co/{slug} ---------- */
+  const WA_OZOAGRO = '573145933481';
+  const RESERVADOS = ['panel', 'images', 'videos', 'js', 'css', 'api', 'admin', 'ozoagro', 'login', 'index', 'landing', 'manifest', 'robots', 'sitemap'];
+  const mSlug = location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,28}[a-z0-9])\/?$/i);
+  const SLUG = (mSlug && !RESERVADOS.includes(mSlug[1].toLowerCase())) ? mSlug[1].toLowerCase() : null;
+  let DIST = null;   // {slug, nombre, ciudad, departamento, whatsapp} si el slug existe y está activo
+  function aplicarDistribuidor(d) {
+    DIST = d;
+    const wa = String(d.whatsapp || '').replace(/\D/g, '');
+    if (wa) {
+      document.querySelectorAll('a[href*="wa.me/"]').forEach(a => {
+        const h = a.getAttribute('href');
+        if (h.includes('wa.me/' + WA_OZOAGRO) || /wa\.me\/?(\?|$)/.test(h)) a.setAttribute('href', h.replace(/wa\.me\/\d*/, 'wa.me/' + wa));
+      });
+    }
+    const header = document.querySelector('.site-header');
+    if (header && !document.querySelector('.ozo-asesor')) {
+      const f = document.createElement('div'); f.className = 'ozo-asesor';
+      f.innerHTML = 'Tu asesor OZOAGRO: <b>' + esc(d.nombre) + '</b>' + (d.ciudad ? ' · ' + esc([d.ciudad, d.departamento].filter(Boolean).join(', ')) : '') + (wa ? ' · <a href="https://wa.me/' + wa + '" target="_blank" rel="noopener">WhatsApp</a>' : '');
+      header.insertAdjacentElement('afterend', f);
+    }
+  }
+
   const soloDigitos = (t) => String(t || '').replace(/\D/g, '');
   function normalizarTelefono(t) {
     let d = soloDigitos(t);
@@ -25,13 +48,26 @@
   // Meta Pixel (24936831939337917): eventos estándar de conversión
   const PRECIOS = { 1: 129900, 4: 409900, 10: 1100000, 20: 1998000 };
   function pixel(evento, datos) { try { if (typeof window.fbq === 'function') window.fbq('track', evento, datos || {}); } catch (e) {} }
-  function datosProducto(nombre) { const l = LITROS[nombre] || 1; return { content_name: 'OZOAGRO ' + nombre, content_ids: ['ozoagro-' + l + 'l'], content_type: 'product', value: PRECIOS[l] || 0, currency: 'COP' }; }
+  function datosProducto(nombre) { const l = LITROS[nombre] || 1; return { content_name: 'OZOAGRO ' + nombre, content_ids: ['ozoagro-' + l + 'l'], content_type: 'product', value: PRECIOS[l] || 0, currency: 'COP', distribuidor: (DIST && DIST.slug) || 'ozoagro' }; }
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------- Cargar distribuidor (si hay slug) y luego registrar la visita ---------- */
+  const distListo = (async () => {
+    if (!SLUG) return null;
+    try {
+      const { data, error } = await sb.rpc('distribuidor_publico', { p_slug: SLUG });
+      if (!error && data && data.slug) aplicarDistribuidor(data);
+    } catch (e) { console.log('Distribuidor no cargado:', e); }
+    return DIST;
+  })();
+  const slugActivo = () => (DIST ? DIST.slug : null);
 
   /* ---------- Visita ---------- */
   (async () => {
     try {
+      await distListo;
       await sb.rpc('registrar_visita', {
+        p_distribuidor_slug: slugActivo(),
         p_pagina: '/', p_referrer: document.referrer || null,
         p_utm_source: params.get('utm_source'), p_utm_medium: params.get('utm_medium'), p_utm_campaign: params.get('utm_campaign'),
         p_fbclid: params.get('fbclid'), p_ttclid: params.get('ttclid')
@@ -49,7 +85,8 @@
         try {
           await sb.rpc('registrar_carrito_abandonado', {
             p_nombre: carrito.nombre, p_telefono: normalizarTelefono(carrito.telefono),
-            p_producto_id: null, p_ciudad: carrito.ciudad || null, p_email: carrito.email || null
+            p_producto_id: null, p_ciudad: carrito.ciudad || null, p_email: carrito.email || null,
+            p_distribuidor_slug: slugActivo()
           });
         } catch (e) { console.log('Carrito no registrado:', e); }
       }, 60000);
@@ -101,7 +138,8 @@
         p_departamento: order.departamento || null,
         p_utm_source: params.get('utm_source'),
         p_fbclid: params.get('fbclid'),
-        p_cultivo: null
+        p_cultivo: null,
+        p_distribuidor_slug: slugActivo()
       });
       if (error) throw error;
       if (data && data.error) throw new Error(data.error);
@@ -113,7 +151,7 @@
         '<p>Tu pedido <strong>' + esc(data.codigo || '') + '</strong> quedó registrado.<br>' +
         esc(order.product) + ' · Total <strong>$' + total + '</strong> · Pago contra entrega · Envío gratis.</p>' +
         '<p>Te contactaremos por WhatsApp al <strong>' + esc(order.telefono) + '</strong> para confirmar la entrega.</p>' +
-        '<a class="ozo-exito-wa" href="https://wa.me/573145933481?text=' + encodeURIComponent('Hola, acabo de hacer el pedido ' + (data.codigo || '') + ' en la página de OZOAGRO') + '" target="_blank" rel="noopener">Escribir por WhatsApp</a>' +
+        '<a class="ozo-exito-wa" href="https://wa.me/' + (DIST && DIST.whatsapp ? String(DIST.whatsapp).replace(/\D/g, '') : WA_OZOAGRO) + '?text=' + encodeURIComponent('Hola, acabo de hacer el pedido ' + (data.codigo || '') + ' en la página de OZOAGRO') + '" target="_blank" rel="noopener">Escribir por WhatsApp</a>' +
         '</div>';
       pixel('Purchase', Object.assign(datosProducto(order.product), { value: Number(data.total || producto.precio_venta || 0), num_items: 1, order_id: data.codigo || '' }));
       console.log('Pedido creado:', data);
