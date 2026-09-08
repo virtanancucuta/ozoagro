@@ -1,6 +1,6 @@
 // OZOAGRO — correos transaccionales de pedidos vía Resend
 // Disparada por el trigger trg_pedidos_correos (pg_net) con header x-correos-secret.
-// tipos: nuevo_pedido (cliente + aviso interno al CEO) | despachado (cliente, con guía)
+// tipos: nuevo_pedido (cliente + aviso interno al CEO, o al distribuidor si el pedido es de un distribuidor) | despachado (cliente, con guía)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
   // 2) Datos
   const { data: p, error } = await sb.from("pedidos")
-    .select("id, codigo_publico, canal, estado, subtotal, ciudad_envio, direccion_envio, guia, transportadora, fecha_despachado, created_at, cliente:clientes(nombre, email, telefono, tipo, ciudad, departamento), items:pedido_items(cantidad, precio_unitario, litros, producto:productos(nombre))")
+    .select("id, codigo_publico, canal, estado, subtotal, ciudad_envio, direccion_envio, guia, transportadora, fecha_despachado, created_at, distribuidor_id, distribuidor:distribuidores(nombre, email, whatsapp, ciudad), cliente:clientes(nombre, email, telefono, tipo, ciudad, departamento), items:pedido_items(cantidad, precio_unitario, litros, producto:productos(nombre))")
     .eq("id", pedido_id).single();
   if (error || !p) return json({ ok: false, error: "pedido no encontrado" }, 404);
   const { data: cfg } = await sb.from("config_negocio").select("nombre, email_remitente, email_ceo, whatsapp_agente, correos_activos").limit(1).single();
@@ -57,7 +57,10 @@ Deno.serve(async (req: Request) => {
   const items: any[] = p.items || [];
   const nombre = (cliente.nombre || "").split(" ")[0] || "amigo";
   const esDistribuidor = cliente.tipo === "distribuidor";
-  const wa = cfg?.whatsapp_agente ? `https://wa.me/${String(cfg.whatsapp_agente).replace(/\D/g, "")}` : "https://ozoagro.co";
+  // Pedido de un distribuidor: el WhatsApp del correo es el del distribuidor y el aviso interno va a él (nunca al CEO)
+  const dist: any = p.distribuidor || null;
+  const waNumero = dist?.whatsapp || cfg?.whatsapp_agente;
+  const wa = waNumero ? `https://wa.me/${String(waNumero).replace(/\D/g, "")}` : "https://ozoagro.co";
   const pie = `OZOAGRO Colombia · <a href="https://ozoagro.co" style="color:#15803D">ozoagro.co</a> · Bioinsecticida y biofungicida ecológico a base de ozono.<br>¿Dudas? Escríbenos por WhatsApp: <a href="${wa}" style="color:#15803D">${esc(cfg?.whatsapp_agente || "")}</a>`;
 
   const envios: { to: string; subject: string; html: string; tipo: string }[] = [];
@@ -78,10 +81,11 @@ Deno.serve(async (req: Request) => {
            <p style="margin:24px 0 0"><a href="${wa}" style="display:inline-block;background:#15803D;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:bold">Hablar con un asesor por WhatsApp</a></p>`, pie),
       });
     }
-    if (cfg?.email_ceo) {
+    const destinoInterno = p.distribuidor_id ? (dist?.email || null) : (cfg?.email_ceo || null);
+    if (destinoInterno) {
       envios.push({
-        tipo: "interno_nuevo_pedido", to: cfg.email_ceo,
-        subject: `Nuevo pedido ${p.codigo_publico} · ${esc(cliente.nombre || "Sin nombre")} · ${COP(p.subtotal)} (${p.canal})`,
+        tipo: "interno_nuevo_pedido", to: destinoInterno,
+        subject: `Nuevo pedido ${p.codigo_publico} · ${esc(cliente.nombre || "Sin nombre")} · ${COP(p.subtotal)} (${p.canal}${dist ? " · " + esc(dist.nombre) : ""})`,
         html: layout(`Nuevo pedido por confirmar: ${esc(p.codigo_publico)}`,
           `<p style="font-size:15px;line-height:1.7"><strong>Cliente:</strong> ${esc(cliente.nombre || "-")} (${esc(cliente.tipo || "generico")})<br>
            <strong>Teléfono:</strong> <a href="https://wa.me/${String(cliente.telefono || "").replace(/\D/g, "").replace(/^(3\d{9})$/, "57$1")}" style="color:#15803D">${esc(cliente.telefono || "-")}</a><br>
