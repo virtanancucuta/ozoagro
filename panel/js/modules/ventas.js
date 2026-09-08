@@ -63,11 +63,14 @@ async function renderVentas(container) {
             <span class="w-3 h-3 rounded-full bg-purple-600"></span>
             <span class="font-medium text-purple-800">Agente IA</span>
           </div>
+          ${(typeof esDistribuidor === 'function' && esDistribuidor()) ? `
+          <div class="text-sm text-purple-800"><div class="font-bold">Por desarrollar</div><div class="text-xs text-gray-600 mt-1">Tu asistente de ventas con IA aun no esta activado. Miralo en el modulo Chats IA.</div>
+            <span id="kpi-agente-litros" hidden></span><span id="kpi-agente-venta" hidden></span><span id="kpi-agente-tasa" hidden></span></div>` : `
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div><span class="text-gray-500">Litros:</span> <span id="kpi-agente-litros" class="font-bold">-</span></div>
             <div><span class="text-gray-500">Venta:</span> <span id="kpi-agente-venta" class="font-bold">-</span></div>
             <div class="col-span-2"><span class="text-gray-500">Tasa de cierre:</span> <span id="kpi-agente-tasa" class="font-bold text-purple-700">-</span></div>
-          </div>
+          </div>`}
         </div>
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div class="flex items-center gap-2 mb-2">

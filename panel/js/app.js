@@ -21,14 +21,45 @@ document.addEventListener('DOMContentLoaded', function() {
   setupEventListeners();
 });
 
+// Perfil / rol (multi-tenant): CEO ve todo; distribuidor solo lo suyo (RLS + RPC con tenant)
+window.PERFIL = null;
+window.esDistribuidor = function() { return !!(window.PERFIL && window.PERFIL.rol === 'distribuidor'); };
+async function cargarPerfil() {
+  try {
+    const { data, error } = await supabaseClient.rpc('mi_perfil');
+    window.PERFIL = (!error && data) ? data : { rol: 'ninguno' };
+  } catch (e) { window.PERFIL = { rol: 'ninguno' }; }
+  return window.PERFIL;
+}
+function aplicarRol() {
+  const p = window.PERFIL || {};
+  const sub = document.getElementById('panel-subtitulo');
+  if (sub) sub.textContent = p.rol === 'ceo' ? 'Panel CEO - Andres Gomez' : (p.rol === 'distribuidor' ? 'Distribuidor: ' + (p.nombre || '') : 'Panel');
+  const linkDist = document.querySelector('.sidebar-link[data-module="distribuidores"]');
+  if (linkDist) linkDist.classList.toggle('hidden', p.rol !== 'ceo');
+  document.title = p.rol === 'distribuidor' ? 'Panel ' + (p.nombre || 'Distribuidor') + ' - OZOAGRO' : 'Panel OZOAGRO Colombia';
+}
+async function entrarConPerfil(moduloInicial) {
+  const p = await cargarPerfil();
+  if (p.rol === 'ninguno' || (p.rol === 'distribuidor' && p.activo === false)) {
+    await supabaseClient.auth.signOut(); currentUser = null; window.PERFIL = null; showLogin();
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) { errorEl.textContent = p.rol === 'ninguno' ? 'Este usuario no tiene acceso al panel. Contacta a OZOAGRO.' : 'Tu acceso esta desactivado. Contacta a OZOAGRO.'; errorEl.classList.remove('hidden'); }
+    return false;
+  }
+  aplicarRol();
+  showApp();
+  loadModule(moduloInicial);
+  return true;
+}
+
 // Auth
 async function checkAuth() {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
       currentUser = session.user;
-      showApp();
-      loadModule(currentModule);
+      await entrarConPerfil(currentModule);
     } else {
       showLogin();
     }
@@ -97,7 +128,7 @@ async function handleLogin(e) {
 
     if (error) {
       console.error('Error login:', error.message);
-      errorEl.textContent = 'Credenciales incorrectas';
+      errorEl.textContent = /banned/i.test(error.message || '') ? 'Tu acceso esta desactivado. Contacta a OZOAGRO.' : 'Credenciales incorrectas';
       errorEl.classList.remove('hidden');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Iniciar Sesion';
@@ -106,8 +137,8 @@ async function handleLogin(e) {
 
     console.log('Login exitoso:', data.user.email);
     currentUser = data.user;
-    showApp();
-    loadModule('pedidos');
+    const ok = await entrarConPerfil('pedidos');
+    if (!ok) { submitBtn.disabled = false; submitBtn.textContent = 'Iniciar Sesion'; return; }
   } catch (err) {
     console.error('Error inesperado:', err);
     errorEl.textContent = 'Error de conexion. Intenta de nuevo.';
@@ -129,6 +160,7 @@ async function handleLogout() {
 // Ese error de un modulo VIEJO no debe pisar el modulo que el usuario esta viendo.
 let loadSeq = 0;
 async function loadModule(name) {
+  if (name === 'distribuidores' && !(window.PERFIL && window.PERFIL.rol === 'ceo')) name = 'pedidos';
   currentModule = name;
   const myLoad = ++loadSeq;
   const container = document.getElementById('module-container');

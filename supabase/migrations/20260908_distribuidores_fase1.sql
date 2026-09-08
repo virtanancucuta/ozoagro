@@ -442,3 +442,25 @@ GRANT EXECUTE ON FUNCTION public.crear_pedido_web(text,text,uuid,integer,text,te
   public.distribuidor_publico(text) TO anon, authenticated, service_role;
 
 COMMIT;
+-- La Edge Function (service_role) y postgres no tienen auth.uid(): se tratan como administrador. anon no tiene UPDATE en distribuidores.
+CREATE OR REPLACE FUNCTION public.proteger_distribuidor() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF auth.uid() IS NOT NULL AND NOT public.es_ceo() THEN
+    IF NEW.slug IS DISTINCT FROM OLD.slug OR NEW.activo IS DISTINCT FROM OLD.activo OR NEW.auth_user_id IS DISTINCT FROM OLD.auth_user_id
+       OR NEW.usuario IS DISTINCT FROM OLD.usuario OR NEW.es_test IS DISTINCT FROM OLD.es_test OR NEW.cedula IS DISTINCT FROM OLD.cedula OR NEW.notas IS DISTINCT FROM OLD.notas THEN
+      RAISE EXCEPTION 'solo puede editar sus datos de contacto' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  IF NEW.slug IN (SELECT slug FROM public.slugs_reservados) THEN RAISE EXCEPTION 'slug reservado: %', NEW.slug; END IF;
+  NEW.updated_at := now();
+  RETURN NEW;
+END $$;
+CREATE OR REPLACE FUNCTION public.proteger_tenant() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.distribuidor_id IS DISTINCT FROM OLD.distribuidor_id AND auth.uid() IS NOT NULL AND NOT public.es_ceo() THEN
+    RAISE EXCEPTION 'no puede cambiar el distribuidor de este registro' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;

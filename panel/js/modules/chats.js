@@ -20,7 +20,46 @@ let chatsTab = 'sin_conversion';
 let chatsData = [];
 let chatsBusqueda = '';
 
+// Distribuidor: el Chat IA no esta activado. Pantalla informativa + guia gratuita de WhatsApp Business.
+function renderChatsDistribuidor(container) {
+  const p = window.PERFIL || {};
+  const waAimma = 'https://wa.me/573172625415?text=' + encodeURIComponent('Hola, soy ' + (p.nombre || 'distribuidor OZOAGRO') + ' (ozoagro.co/' + (p.slug || '') + '). Quiero activar el asistente de ventas con IA en mi WhatsApp.');
+  container.innerHTML = `
+    <div class="space-y-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Chats IA</h1>
+        <p class="text-sm text-gray-500">Modulo por desarrollar para tu cuenta.</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow border-l-4 border-purple-500">
+        <div class="text-xs font-bold text-purple-700 uppercase tracking-wide mb-1">Por desarrollar</div>
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Activa tu asistente de ventas con IA</h2>
+        <p class="text-gray-600 mb-4">El mismo asistente que atiende el WhatsApp de OZOAGRO puede responder en tu numero: contesta de inmediato, explica el producto, cotiza con tus precios y deja el pedido listo en este panel. Se activa por cuenta con OZOAGRO / AIMMA.</p>
+        <div class="grid md:grid-cols-2 gap-4 text-sm mb-4">
+          <div class="bg-gray-50 rounded-lg p-4"><div class="font-bold mb-2">Que necesitas</div><ul class="list-disc ml-5 space-y-1 text-gray-700"><li>Un numero de celular que no este registrado en la app de WhatsApp (o aceptar migrar el tuyo).</li><li>Cuenta de Meta Business a tu nombre o al de tu negocio.</li><li>Documentos para la verificacion de Meta (RUT o camara de comercio).</li></ul></div>
+          <div class="bg-gray-50 rounded-lg p-4"><div class="font-bold mb-2">Que incluye</div><ul class="list-disc ml-5 space-y-1 text-gray-700"><li>Conexion de tu numero a la API oficial de WhatsApp.</li><li>Asistente con tu nombre, tu ciudad y tu landing.</li><li>Pedidos y clientes registrados aqui, en tu panel.</li><li>Soporte y ajustes del asistente.</li></ul></div>
+        </div>
+        <a href="${waAimma}" target="_blank" rel="noopener" class="inline-block bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 font-medium">Solicitar mi asistente IA</a>
+        <p class="text-xs text-gray-500 mt-2">Tiene un costo de activacion y una mensualidad. Contacta a tu CEO o a AIMMA para cotizarlo.</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow">
+        <h2 class="text-lg font-bold text-gray-800 mb-1">Mientras tanto: respuestas automaticas gratis con WhatsApp Business</h2>
+        <p class="text-sm text-gray-500 mb-4">Con la app gratuita WhatsApp Business puedes atender mejor sin costo. Paso a paso:</p>
+        <ol class="list-decimal ml-5 space-y-2 text-sm text-gray-700">
+          <li><strong>Instala WhatsApp Business</strong> (Play Store o App Store) y registra el numero que pusiste en tu landing: <span class="font-mono">${escapeHtml(p.whatsapp || '')}</span>.</li>
+          <li><strong>Perfil de empresa:</strong> nombre "OZOAGRO - ${escapeHtml(p.nombre || '')}", categoria Agricultura, direccion o ciudad, y tu enlace <span class="font-mono">https://ozoagro.co/${escapeHtml(p.slug || '')}</span>.</li>
+          <li><strong>Mensaje de bienvenida</strong> (Herramientas para la empresa &gt; Mensaje de bienvenida): "Hola, gracias por escribir a OZOAGRO ${escapeHtml(p.nombre || '')}. Cuentame que cultivo tienes y cuantas hectareas, y te recomiendo la presentacion. Envio gratis y pago contra entrega."</li>
+          <li><strong>Mensaje de ausencia:</strong> "En este momento no puedo responder. Dejame tu cultivo y tu ciudad y te escribo apenas pueda. Tambien puedes pedir en https://ozoagro.co/${escapeHtml(p.slug || '')}".</li>
+          <li><strong>Respuestas rapidas</strong> (escribe / y el atajo): <span class="font-mono">/precios</span> con "1 litro $129.900 · Galon 4 L $409.900 · 10 unidades $1.100.000 · 20 unidades $1.998.000. Envio gratis, pagas al recibir."; <span class="font-mono">/dosis</span> con "5 ml por litro de agua, 1 litro de OZOAGRO por hectarea, cada 12 a 15 dias."; <span class="font-mono">/pedido</span> con "Para tomar tu pedido necesito: nombre, departamento, ciudad, direccion y cuantos litros."</li>
+          <li><strong>Catalogo:</strong> crea los 4 productos con las fotos de la landing (1 litro, Galon 4 L, 10 unidades, 20 unidades), precio y descripcion. Los clientes pueden pedir desde el catalogo.</li>
+          <li><strong>Enlace corto:</strong> en Herramientas para la empresa &gt; Enlace corto, copia tu wa.me y usalo en redes. Tu landing ya lo usa.</li>
+          <li><strong>Etiquetas:</strong> marca las conversaciones como "Nuevo cliente", "Pedido pendiente" y "Pagado" para no perder ninguna venta.</li>
+        </ol>
+      </div>
+    </div>`;
+}
+
 async function renderChats(container) {
+  if (typeof esDistribuidor === 'function' && esDistribuidor()) return renderChatsDistribuidor(container);
   container.innerHTML = `
     <div class="space-y-6">
       <div class="flex justify-between items-center">
