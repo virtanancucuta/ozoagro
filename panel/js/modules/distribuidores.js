@@ -181,7 +181,7 @@ async function distRenderVentas(el) {
   const r = (!error && k && k[0]) || {};
   document.getElementById('dv-kpis').innerHTML = [['Pedidos', r.num_pedidos || 0], ['Litros', r.litros_vendidos || 0], ['Venta', formatMoney(r.venta_total)], ['Rentabilidad', formatMoney(r.rentabilidad)]]
     .map(([t, v]) => `<div class="bg-white rounded-xl p-4 shadow"><div class="text-sm text-gray-500">${t}</div><div class="text-2xl font-bold text-primary">${v}</div></div>`).join('');
-  let q = supabaseClient.from('pedidos').select('codigo_publico, created_at, estado, canal, subtotal, cliente:clientes(nombre, telefono)').eq('distribuidor_id', distSel).order('created_at', { ascending: false }).limit(300);
+  let q = supabaseClient.fromTodos('pedidos').select('codigo_publico, created_at, estado, canal, subtotal, cliente:clientes(nombre, telefono)').eq('distribuidor_id', distSel).order('created_at', { ascending: false }).limit(300);
   if (ini) q = q.gte('created_at', ini); if (fin) q = q.lte('created_at', fin + 'T23:59:59');
   const { data: peds } = await q;
   document.getElementById('dv-tabla').innerHTML = (peds && peds.length) ? peds.map(p => `<tr class="border-t"><td class="p-3 font-mono text-xs">${escapeHtml(p.codigo_publico)}</td><td class="p-3">${formatDate(p.created_at)}</td><td class="p-3">${escapeHtml(p.cliente?.nombre || '-')}<div class="text-xs text-gray-500">${escapeHtml(p.cliente?.telefono || '')}</div></td><td class="p-3">${escapeHtml(p.canal)}</td><td class="p-3">${escapeHtml(p.estado)}</td><td class="p-3 text-right font-medium">${formatMoney(p.subtotal)}</td></tr>`).join('')

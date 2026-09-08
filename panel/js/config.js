@@ -4,6 +4,20 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Multi-tenant: el CEO ve TODO por RLS, pero sus modulos (Pedidos, CRM, Gastos, Inventario) deben mostrar solo lo de OZOAGRO
+// (distribuidor_id NULL). Los pedidos/clientes de distribuidores se ven en el modulo Distribuidores, que usa fromTodos().
+(function () {
+  const TENANT = ['pedidos', 'clientes', 'gastos', 'inventario', 'visitas', 'checkouts_abandonados'];
+  const origFrom = supabaseClient.from.bind(supabaseClient);
+  supabaseClient.fromTodos = origFrom;
+  supabaseClient.from = function (tabla) {
+    const b = origFrom(tabla);
+    if (!(window.PERFIL && window.PERFIL.rol === 'ceo') || !TENANT.includes(tabla)) return b;
+    ['select', 'update', 'delete'].forEach(m => { const o = b[m].bind(b); b[m] = function () { return o.apply(this, arguments).is('distribuidor_id', null); }; });
+    return b;
+  };
+})();
+
 // Helpers
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value || 0);
