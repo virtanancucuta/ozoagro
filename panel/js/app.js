@@ -113,7 +113,9 @@ async function handleLogin(e) {
   e.preventDefault();
   console.log('Login intentado...');
 
-  const email = document.getElementById('login-email').value;
+  // Distribuidores entran con su usuario (sin @): el correo interno es usuario@distribuidores.ozoagro.co
+  let email = document.getElementById('login-email').value.trim().toLowerCase();
+  if (email && !email.includes('@')) email = email.replace(/\s+/g, '') + '@distribuidores.ozoagro.co';
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
   const submitBtn = e.target.querySelector('button[type="submit"]');
