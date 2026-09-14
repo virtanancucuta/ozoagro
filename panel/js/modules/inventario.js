@@ -2,12 +2,18 @@
 async function renderInventario(container) {
   container.innerHTML = `
     <div class="space-y-6">
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center flex-wrap gap-2">
         <h1 class="text-2xl font-bold text-gray-800">Inventario</h1>
-        <button onclick="showAgregarInventario()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Agregar Inventario
-        </button>
+        <div class="flex gap-2">
+          <button onclick="showAgregarInventario('entrada')" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Agregar Inventario
+          </button>
+          <button onclick="showAgregarInventario('salida')" class="border border-red-600 text-red-700 px-4 py-2 rounded-lg hover:bg-red-50 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            Registrar salida
+          </button>
+        </div>
       </div>
 
       <!-- Productos -->
@@ -33,7 +39,7 @@ async function renderInventario(container) {
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unidades</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Costo Unitario</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nota / observaciones</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Acciones</th>
             </tr>
           </thead>
           <tbody id="inventario-tbody" class="divide-y"></tbody>
@@ -240,17 +246,19 @@ async function loadInventarioData() {
   const BADGE = { entrada: 'bg-green-100 text-green-700', ajuste: 'bg-yellow-100 text-yellow-700', salida: 'bg-red-100 text-red-700' };
   tbody.innerHTML = movimientos.map(m => `
     <tr class="hover:bg-gray-50">
-      <td class="px-4 py-3 text-sm">${formatDateTime(m.fecha)}</td>
+      <td class="px-4 py-3 text-sm">${formatDateTime(m.fecha)}<button onclick="editarMovimiento('${m.id}')" class="md:hidden block text-primary underline text-xs mt-1">Editar</button></td>
       <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full ${BADGE[m.tipo] || 'bg-gray-100 text-gray-700'}">${m.tipo}</span></td>
       <td class="px-4 py-3 text-right font-medium ${m.tipo === 'salida' ? 'text-red-600' : ''}">${m.tipo === 'salida' ? '-' : ''}${m.unidades}</td>
       <td class="px-4 py-3 text-right">${m.tipo === 'salida' ? '-' : formatMoney(m.costo_unitario)}</td>
       <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(m.nota || '-')}</td>
-      <td class="px-4 py-3 text-right"><button onclick="editarMovimiento('${m.id}')" class="text-primary hover:underline text-sm">Editar</button></td>
+      <td class="px-4 py-3 text-right hidden md:table-cell"><button onclick="editarMovimiento('${m.id}')" class="text-primary hover:underline text-sm">Editar</button></td>
     </tr>
   `).join('');
 }
 
-window.showAgregarInventario = function() {
+window.showAgregarInventario = function(tipo) {
+  if (tipo) { document.getElementById('inv-tipo').value = tipo; ajustarCamposTipo('inv'); }
+  document.querySelector('#modal-agregar-inventario h2').textContent = tipo === 'salida' ? 'Registrar salida' : 'Agregar Inventario';
   document.getElementById('modal-agregar-inventario').classList.remove('hidden');
 };
 
