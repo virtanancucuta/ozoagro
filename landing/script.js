@@ -142,7 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.remove("modal-open");
   }
 
-  [document.getElementById("mainOrderBtn"), document.getElementById("stickyOrderBtn")]
+  // 2026-09-14: el CTA final ("REALIZAR PEDIDO" antes de Políticas) tenía id duplicado y quedaba sin handler.
+  [document.getElementById("mainOrderBtn"), document.getElementById("mainOrderBtnFinal"), document.getElementById("stickyOrderBtn")]
     .filter(Boolean)
     .forEach(button => button.addEventListener("click", openModal));
   closeBtn?.addEventListener("click", closeModal);

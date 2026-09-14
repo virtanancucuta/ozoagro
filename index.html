@@ -47,7 +47,7 @@
   src="https://www.facebook.com/tr?id=24936831939337917&ev=PageView&noscript=1"
   /></noscript>
   <!-- End Meta Pixel Code -->
-  <script src="landing/js/lucide.min.js" defer></script>
+  <script src="landing/js/iconos.js?v=20260914a" defer></script>
   <style id="ozo-extras">
     .ozo-asesor{background:#0b6b33;color:#fff;text-align:center;font-size:14px;padding:8px 12px;font-family:Arial,Helvetica,sans-serif}
     .ozo-asesor a{color:#bbf7d0;font-weight:700;text-decoration:none}
@@ -123,10 +123,10 @@
           <div class="gallery-rail" aria-label="Galería de imágenes">
             <button class="gallery-arrow rail-arrow" id="galleryPrev" type="button" aria-label="Imagen anterior"><i data-lucide="chevron-up"></i></button>
             <div class="gallery-thumbs" id="galleryThumbs">
-              <button class="thumb active" type="button" data-image="landing/images/ozo1.webp" aria-label="Mostrar imagen 1"><img loading="lazy" decoding="async" src="landing/images/ozo1.webp" alt=""></button>
-              <button class="thumb" type="button" data-image="landing/images/ozo2.webp" aria-label="Mostrar imagen 2"><img loading="lazy" decoding="async" src="landing/images/ozo2.webp" alt=""></button>
-              <button class="thumb" type="button" data-image="landing/images/ozo3.webp" aria-label="Mostrar imagen 3"><img loading="lazy" decoding="async" src="landing/images/ozo3.webp" alt=""></button>
-              <button class="thumb" type="button" data-image="landing/images/ozo4.webp" aria-label="Mostrar imagen 4"><img loading="lazy" decoding="async" src="landing/images/ozo4.webp" alt=""></button>
+              <button class="thumb active" type="button" data-image="landing/images/ozo1.webp" aria-label="Mostrar imagen 1"><img loading="lazy" decoding="async" src="landing/images/ozo1-mini.webp" alt=""></button>
+              <button class="thumb" type="button" data-image="landing/images/ozo2.webp" aria-label="Mostrar imagen 2"><img loading="lazy" decoding="async" src="landing/images/ozo2-mini.webp" alt=""></button>
+              <button class="thumb" type="button" data-image="landing/images/ozo3.webp" aria-label="Mostrar imagen 3"><img loading="lazy" decoding="async" src="landing/images/ozo3-mini.webp" alt=""></button>
+              <button class="thumb" type="button" data-image="landing/images/ozo4.webp" aria-label="Mostrar imagen 4"><img loading="lazy" decoding="async" src="landing/images/ozo4-mini.webp" alt=""></button>
               <button class="thumb" type="button" data-image="landing/images/p1.webp" aria-label="Mostrar imagen 5"><img loading="lazy" decoding="async" src="landing/images/p1.webp" alt=""></button>
               <button class="thumb" type="button" data-image="landing/images/p2.webp" aria-label="Mostrar imagen 6"><img loading="lazy" decoding="async" src="landing/images/p2.webp" alt=""></button>
               <button class="thumb" type="button" data-image="landing/images/p3.webp" aria-label="Mostrar imagen 7"><img loading="lazy" decoding="async" src="landing/images/p3.webp" alt=""></button>
@@ -245,17 +245,21 @@
 
         <!-- COLUMNA DERECHA — VIDEO 4:5 -->
         <div class="content-media-card content-video-card">
+          <!-- 2026-09-14 (rapidez): el MP4 no se descarga al abrir la página. conexion.js pone el src cuando el video
+               se acerca a la pantalla (escritorio: ozoagro.mp4; celular: ozoagro-movil.mp4, 480p) y arranca solo. -->
           <video
             class="content-video"
+            id="heroVideo"
             poster="landing/images/video-poster.webp"
+            data-src="landing/videos/ozoagro.mp4"
+            data-src-movil="videos/ozoagro-movil.mp4"
             autoplay
             muted
             loop
             playsinline
-            preload="metadata"
+            preload="none"
             controls
           >
-            <source src="landing/videos/ozoagro.mp4" type="video/mp4">
             Tu navegador no puede reproducir este video.
           </video>
         </div>
@@ -1365,57 +1369,6 @@
       </article>
 
 
-      <!-- RESEÑA 5 -->
-      <article class="review-card">
-
-        <div class="review-product">
-
-          <img src="landing/images/p5.webp" alt="Productor que usa OZOAGRO" loading="lazy" decoding="async">
-
-        </div>
-
-        <div class="review-stars">
-          ★★★★★
-        </div>
-
-        <h3>Diego Pérez</h3>
-
-        <div class="review-meta">
-          📍 Santander · Cultivo agrícola
-        </div>
-
-        <p class="review-text">
-          “Lo que más me gusta es que la preparación es rápida y no requiere un proceso complicado.”
-        </p>
-
-      </article>
-
-
-      <!-- RESEÑA 6 -->
-      <article class="review-card">
-
-        <div class="review-product">
-
-          <img src="landing/images/p6.webp" alt="Productor que usa OZOAGRO" loading="lazy" decoding="async">
-
-        </div>
-
-        <div class="review-stars">
-          ★★★★★
-        </div>
-
-        <h3>Wilson Rodríguez</h3>
-
-        <div class="review-meta">
-          📍 Norte de Santander · Cultivo agrícola
-        </div>
-
-        <p class="review-text">
-          “Una opción sencilla de incorporar al trabajo diario del cultivo. La aplicación resulta muy práctica.”
-        </p>
-
-      </article>
-
       <!-- RESEÑA · Hernán Cárdenas (2026-09-14, foto de la sección Latinoamérica) -->
       <article class="review-card">
 
@@ -1973,10 +1926,10 @@
       </p>
 
 
-      <!-- BOTÓN PRINCIPAL -->
+      <!-- BOTÓN PRINCIPAL (2026-09-14: tenía el mismo id que el del hero, por eso no abría el formulario) -->
 
 
-    <button class="main-cta" type="button" id="mainOrderBtn">
+    <button class="main-cta" type="button" id="mainOrderBtnFinal">
             <span class="cta-cart" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shopping-cart" aria-hidden="true" class="lucide lucide-shopping-cart"><path d="m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18"></path><path d="M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25"></path><circle cx="18" cy="20" r="2"></circle><circle cx="8" cy="20" r="2"></circle></svg></span>
             <span>REALIZAR PEDIDO</span>
             <span class="cta-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span>
@@ -2370,8 +2323,8 @@
   </div>
 
 </footer>
-  <script src="landing/script.js?v=20260914a"></script>
+  <script src="landing/script.js?v=20260914b"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="landing/js/conexion.js?v=20260914a" defer></script>
+  <script src="landing/js/conexion.js?v=20260914b" defer></script>
 </body>
 </html>

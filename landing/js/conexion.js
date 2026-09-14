@@ -216,6 +216,25 @@
 })();
 
 
+// 2026-09-14 (rapidez) · Video del hero: sin src en el HTML; se asigna (escritorio o 480p en celular) cuando está a
+// menos de 300 px de la pantalla. Con autoplay+muted el navegador lo arranca solo en cuanto carga.
+(function () {
+  var v = document.getElementById('heroVideo');
+  if (!v || !v.dataset.src) return;
+  function cargar() {
+    if (v.getAttribute('src')) return;
+    var movil = window.innerWidth <= 768 && v.dataset.srcMovil;
+    v.src = movil ? v.dataset.srcMovil : v.dataset.src;
+    v.load();
+    var p = v.play(); if (p && p.catch) p.catch(function () {});
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es, obs) {
+      es.forEach(function (e) { if (e.isIntersecting) { cargar(); obs.disconnect(); } });
+    }, { rootMargin: '300px 0px' }).observe(v);
+  } else { cargar(); }
+})();
+
 // 2026-09-14 · Video del CEO en FAQ: arranca solo en silencio (autoplay exige muted); el botón activa/silencia el audio.
 (function () {
   var v = document.getElementById('faqVideo'), b = document.getElementById('faqVideoAudio');
