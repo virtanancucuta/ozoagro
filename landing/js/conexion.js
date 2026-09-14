@@ -214,3 +214,37 @@
     });
   }
 })();
+
+
+// 2026-09-14 · Video del CEO en FAQ: arranca solo en silencio (autoplay exige muted); el botón activa/silencia el audio.
+(function () {
+  var v = document.getElementById('faqVideo'), b = document.getElementById('faqVideoAudio');
+  if (!v || !b) return;
+  var txt = b.querySelector('.faq-video-audio__txt'), ico = b.querySelector('.faq-video-audio__icon');
+  function pintar() {
+    var con = !v.muted;
+    b.setAttribute('aria-pressed', con ? 'true' : 'false');
+    if (txt) txt.textContent = con ? 'Silenciar' : 'Activa audio';
+    if (ico) ico.textContent = con ? '🔈' : '🔊';
+  }
+  b.addEventListener('click', function () {
+    v.muted = !v.muted;
+    if (!v.muted) { v.volume = 1; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+    pintar();
+  });
+  // Arranca solo (en silencio) al entrar en pantalla y se pausa al salir; si sale con audio, se silencia para no molestar.
+  // Rendimiento: el MP4 no se pide al cargar la página (preload=none, sin src). Se asigna el src cuando la sección
+  // está a menos de 600 px de la pantalla y se reproduce al entrar; al salir se pausa.
+  function cargar() { if (!v.getAttribute('src') && v.dataset.src) { v.src = v.dataset.src; v.load(); } }
+  function reproducir() { cargar(); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) cargar(); }); }, { rootMargin: '600px 0px' }).observe(v);
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { reproducir(); }
+        else { v.pause(); if (!v.muted) { v.muted = true; pintar(); } }
+      });
+    }, { threshold: 0.2 }).observe(v);
+  } else { reproducir(); }
+  pintar();
+})();

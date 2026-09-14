@@ -1033,6 +1033,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!videoSrc || !thumbnail) return;
 
+      /*
+       * 2026-09-14: si la tarjeta trae data-poster, la miniatura es una
+       * imagen (webp) y NO se descarga el video al abrir la página
+       * (antes: 8 videos = 146 MB en la carga). El video solo se pide
+       * al hacer clic (modal).
+       */
+      const poster = card.getAttribute("data-poster");
+      if (poster) {
+        thumbnail.preload = "none";
+        thumbnail.removeAttribute("src");
+        thumbnail.poster = poster;
+        return;
+      }
+
 
       /*
        * Cargar el video utilizado como miniatura

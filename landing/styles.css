@@ -5687,3 +5687,20 @@ body.latam-modal-open {
   }
 
 }
+
+/* =========================================================
+   2026-09-14 · VIDEO DEL CEO en la sección FAQ (reemplaza la foto)
+   ========================================================= */
+.faq-video-wrap { position: relative; width: 100%; background: #000; }
+.faq-image-wrapper video { display: block; width: 100%; height: auto; max-width: 100%; }
+.faq-video-audio {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border: 0; border-radius: 999px; cursor: pointer;
+  background: rgba(255,255,255,0.92); color: #0f3d22;
+  font-weight: 700; font-size: 15px; letter-spacing: 0.02em;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.faq-video-audio:hover { transform: translateX(-50%) scale(1.04); background: #ffffff; }
+.faq-video-audio[aria-pressed="true"] { background: #15803d; color: #fff; }
