@@ -134,7 +134,7 @@
             <button class="gallery-arrow rail-arrow" id="galleryNext" type="button" aria-label="Imagen siguiente"><i data-lucide="chevron-down"></i></button>
           </div>
           <div class="gallery-main">
-            <img fetchpriority="high" decoding="async" id="mainProductImage" src="landing/images/ozo1.webp" alt="Aceite OZOAGRO — protección natural para tus cultivos">
+            <img fetchpriority="high" decoding="async" id="mainProductImage" src="landing/images/ozo1.webp" srcset="images/ozo1-m.webp 760w, images/ozo1.webp 1080w" sizes="(max-width: 768px) 100vw, 575px" alt="Aceite OZOAGRO — protección natural para tus cultivos">
           </div>
         </div>
         <div class="gallery-dots" id="galleryDots" aria-hidden="true"></div>
@@ -160,32 +160,32 @@
           </div>
 
           <div class="presentation-list" id="presentationList">
-            <button class="presentation-card" type="button" data-product="1 Unidad" data-tone="light" data-price="$129.900" data-image="landing/images/1l.png">
+            <button class="presentation-card" type="button" data-product="1 Unidad" data-tone="light" data-price="$129.900" data-image="landing/images/1l.webp">
               <span class="card-copy"><b>1 UNIDAD</b></span>
-              <span class="card-product-image"><img src="landing/images/1l.png" alt="1 litro OZOAGRO"></span>
+              <span class="card-product-image"><img src="landing/images/1l.webp" alt="1 litro OZOAGRO"></span>
               <strong class="card-price">$129.900</strong>
               <span class="card-detail">1 Litro</span>
             </button>
 
-            <button class="presentation-card popular selected" type="button" data-product="Galón (4 L)" data-tone="mint" data-price="$409.900" data-image="landing/images/4l.png">
+            <button class="presentation-card popular selected" type="button" data-product="Galón (4 L)" data-tone="mint" data-price="$409.900" data-image="landing/images/4l.webp">
               <span class="popular-label">MÁS POPULAR</span>
               <span class="selection-check" aria-hidden="true">✓</span>
               <span class="card-copy"><b>GALÓN (4 L)</b></span>
-              <span class="card-product-image"><img src="landing/images/4l.png" alt="Galón OZOAGRO de 4 litros"></span>
+              <span class="card-product-image"><img src="landing/images/4l.webp" alt="Galón OZOAGRO de 4 litros"></span>
               <strong class="card-price">$409.900</strong>
               <span class="card-detail">4 Litros</span>
             </button>
 
-            <button class="presentation-card" type="button" data-product="10 Unidades" data-tone="green" data-price="$1.100.000" data-image="landing/images/10l.png">
+            <button class="presentation-card" type="button" data-product="10 Unidades" data-tone="green" data-price="$1.100.000" data-image="landing/images/10l.webp">
               <span class="card-copy"><b>10 UNIDADES</b></span>
-              <span class="card-product-image"><img src="landing/images/10l.png" alt="10 unidades OZOAGRO"></span>
+              <span class="card-product-image"><img src="landing/images/10l.webp" alt="10 unidades OZOAGRO"></span>
               <strong class="card-price">$1.100.000</strong>
               <span class="card-detail">10 Litros</span>
             </button>
 
-            <button class="presentation-card" type="button" data-product="20 Unidades" data-tone="deep" data-price="$1.998.000" data-image="landing/images/20l.png">
+            <button class="presentation-card" type="button" data-product="20 Unidades" data-tone="deep" data-price="$1.998.000" data-image="landing/images/20l.webp">
               <span class="card-copy"><b>20 UNIDADES</b></span>
-              <span class="card-product-image"><img src="landing/images/20l.png" alt="20 unidades OZOAGRO"></span>
+              <span class="card-product-image"><img src="landing/images/20l.webp" alt="20 unidades OZOAGRO"></span>
               <strong class="card-price">$1.998.000</strong>
               <span class="card-detail">20 Litros</span>
             </button>
@@ -1995,8 +1995,8 @@
     <div class="cod-dialog" role="dialog" aria-modal="true" aria-labelledby="codTitle">
       <button class="cod-close" type="button" id="closeCodModal" aria-label="Cerrar">×</button>
       <div class="cod-header"><span>PEDIDO CONTRA ENTREGA</span><h2 id="codTitle">Completa tus datos</h2><p>Selecciona tu presentación y recibe tu pedido en la dirección indicada.</p></div>
-      <div class="selected-product-box"><div class="selected-product-image"><img id="modalProductImage" src="landing/images/4l.png" alt="Producto seleccionado"></div><div><span>PRODUCTO SELECCIONADO</span><strong id="modalProductName">Galón (4 L)</strong><b id="modalProductPrice">$409.900</b></div></div>
-      <div class="variant-block"><label for="modalVariant">Elige tu presentación</label><select id="modalVariant"><option value="1 Unidad" data-price="$129.900" data-image="landing/images/1l.png">1 Unidad — $129.900</option><option value="Galón (4 L)" data-price="$409.900" data-image="landing/images/4l.png" selected>Galón (4 L) — $409.900</option><option value="10 Unidades" data-price="$1.100.000" data-image="landing/images/10l.png">10 Unidades — $1.100.000</option><option value="20 Unidades" data-price="$1.998.000" data-image="landing/images/20l.png">20 Unidades — $1.998.000</option></select></div>
+      <div class="selected-product-box"><div class="selected-product-image"><img id="modalProductImage" src="landing/images/4l.webp" alt="Producto seleccionado"></div><div><span>PRODUCTO SELECCIONADO</span><strong id="modalProductName">Galón (4 L)</strong><b id="modalProductPrice">$409.900</b></div></div>
+      <div class="variant-block"><label for="modalVariant">Elige tu presentación</label><select id="modalVariant"><option value="1 Unidad" data-price="$129.900" data-image="landing/images/1l.webp">1 Unidad — $129.900</option><option value="Galón (4 L)" data-price="$409.900" data-image="landing/images/4l.webp" selected>Galón (4 L) — $409.900</option><option value="10 Unidades" data-price="$1.100.000" data-image="landing/images/10l.webp">10 Unidades — $1.100.000</option><option value="20 Unidades" data-price="$1.998.000" data-image="landing/images/20l.webp">20 Unidades — $1.998.000</option></select></div>
       <form id="orderForm" class="cod-form">
         <div class="form-section-title">Tus datos</div>
         <div class="form-row"><div class="field"><label for="nombre">Nombre *</label><input id="nombre" name="nombre" autocomplete="given-name" required></div><div class="field"><label for="apellido">Apellido *</label><input id="apellido" name="apellido" autocomplete="family-name" required></div></div>
@@ -2323,7 +2323,7 @@
   </div>
 
 </footer>
-  <script src="landing/script.js?v=20260914b"></script>
+  <script src="landing/script.js?v=20260914c"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="landing/js/conexion.js?v=20260914b" defer></script>
 </body>
