@@ -40,9 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxStart = Math.max(thumbs.length - count, 0);
     const start = Math.min(Math.max(currentIndex - Math.floor(count / 2), 0), maxStart);
 
-    mainImage.src = thumbs[currentIndex].dataset.image;
     // 2026-09-14 (rapidez): variante de 760 px para celular/escritorio 1x; la de 1080 px queda para pantallas retina.
+    // srcset ANTES que src para que el navegador no pida la foto grande y luego la variante.
     mainImage.srcset = thumbs[currentIndex].dataset.image.replace(/\.webp$/, "-m.webp") + " 760w, " + thumbs[currentIndex].dataset.image + " 1080w";
+    mainImage.src = thumbs[currentIndex].dataset.image;
     thumbs.forEach((thumb, i) => {
       const visible = i >= start && i < start + count;
       thumb.classList.toggle("is-visible", visible);
