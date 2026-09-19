@@ -70,6 +70,13 @@ async function checkAuth() {
 }
 
 function showLogin() {
+  // BUG 2026-09-19: al cerrar sesion el boton quedaba deshabilitado y en "Ingresando..." (se deshabilita al entrar y
+  // nunca se restauraba) -> el siguiente login en la misma pestana parecia "atascado". Se restaura el formulario aqui.
+  const formLogin = document.getElementById('login-form') || document.querySelector('form');
+  const btnLogin = formLogin ? formLogin.querySelector('button[type="submit"]') : null;
+  if (btnLogin) { btnLogin.disabled = false; btnLogin.textContent = 'Iniciar Sesion'; }
+  const passLogin = document.getElementById('login-password'); if (passLogin) passLogin.value = '';
+  const errLogin = document.getElementById('login-error'); if (errLogin) errLogin.classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('app-screen').classList.add('hidden');
 }
@@ -140,7 +147,8 @@ async function handleLogin(e) {
     console.log('Login exitoso:', data.user.email);
     currentUser = data.user;
     const ok = await entrarConPerfil('pedidos');
-    if (!ok) { submitBtn.disabled = false; submitBtn.textContent = 'Iniciar Sesion'; return; }
+    submitBtn.disabled = false; submitBtn.textContent = 'Iniciar Sesion'; // el formulario queda listo para el proximo login
+    if (!ok) return;
   } catch (err) {
     console.error('Error inesperado:', err);
     errorEl.textContent = 'Error de conexion. Intenta de nuevo.';
