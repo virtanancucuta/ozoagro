@@ -76,6 +76,14 @@ async function renderPedidos(container) {
       <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold mb-4">Crear Pedido Tradicional</h2>
         <form id="form-crear-pedido" class="space-y-4">
+          ${window.PERFIL && window.PERFIL.rol === 'ceo' ? `
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <label class="block text-sm font-medium text-orange-800 mb-1">Asignar a distribuidor (opcional)</label>
+            <select id="pedido-distribuidor" class="w-full px-3 py-2 border border-orange-300 rounded-lg bg-white">
+              <option value="">OZOAGRO Central (sin distribuidor)</option>
+            </select>
+            <p class="text-xs text-orange-600 mt-1">Si el pedido llego por WhatsApp de un distribuidor, seleccionalo aqui.</p>
+          </div>` : ''}
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium mb-1">Buscar cliente (telefono/cedula)</label>
@@ -351,8 +359,15 @@ window.setPedidosCanalFiltro = async function(canal) {
   await loadPedidos();
 };
 
-window.showCrearPedido = function() {
+window.showCrearPedido = async function() {
   document.getElementById('modal-crear-pedido').classList.remove('hidden');
+  // Cargar distribuidores activos para el selector (solo CEO)
+  const selDist = document.getElementById('pedido-distribuidor');
+  if (selDist && window.PERFIL && window.PERFIL.rol === 'ceo') {
+    const { data } = await supabaseClient.fromTodos('distribuidores').select('id, nombre, slug').eq('activo', true).order('nombre');
+    selDist.innerHTML = '<option value="">OZOAGRO Central (sin distribuidor)</option>' +
+      (data || []).map(d => `<option value="${d.id}">${escapeHtml(d.nombre)} (${escapeHtml(d.slug)})</option>`).join('');
+  }
 };
 
 window.closeModal = function(id) {
@@ -450,11 +465,15 @@ window.selectCliente = function(id, nombre) {
 async function handleCrearPedido(e) {
   e.preventDefault();
 
+  // Distribuidor seleccionado (solo CEO puede asignar a otro)
+  const selDist = document.getElementById('pedido-distribuidor');
+  const distribuidorId = (selDist && selDist.value) ? selDist.value : null;
+
   let clienteId = document.getElementById('cliente-id-selected').value;
 
   // Create new client if needed
   if (!clienteId && document.getElementById('nc-nombre').value) {
-    const { data: newCliente, error } = await supabaseClient.from('clientes').insert({
+    const clienteData = {
       nombre: document.getElementById('nc-nombre').value,
       cedula: document.getElementById('nc-cedula').value || null,
       telefono: document.getElementById('nc-telefono').value,
@@ -462,7 +481,9 @@ async function handleCrearPedido(e) {
       ciudad: document.getElementById('nc-ciudad').value || null,
       tipo: document.getElementById('nc-tipo').value,
       origen: 'tradicional'
-    }).select().single();
+    };
+    if (distribuidorId) clienteData.distribuidor_id = distribuidorId;
+    const { data: newCliente, error } = await supabaseClient.from('clientes').insert(clienteData).select().single();
 
     if (error) {
       showToast('Error creando cliente: ' + error.message, 'error');
@@ -477,13 +498,15 @@ async function handleCrearPedido(e) {
   }
 
   // Create pedido
-  const { data: pedido, error: pedidoError } = await supabaseClient.from('pedidos').insert({
+  const pedidoData = {
     cliente_id: clienteId,
     canal: 'tradicional',
     estado: 'por_confirmar',
     ciudad_envio: document.getElementById('pedido-ciudad').value || null,
     direccion_envio: document.getElementById('pedido-direccion').value || null
-  }).select().single();
+  };
+  if (distribuidorId) pedidoData.distribuidor_id = distribuidorId;
+  const { data: pedido, error: pedidoError } = await supabaseClient.from('pedidos').insert(pedidoData).select().single();
 
   if (pedidoError) {
     showToast('Error creando pedido: ' + pedidoError.message, 'error');
