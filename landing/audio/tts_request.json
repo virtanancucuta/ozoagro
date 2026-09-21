@@ -1,0 +1,8 @@
+{
+  "text": "Te gustaria tener tu propio negocio con Ozoagro? Tendras acceso a un producto de calidad, con mas de 10 anios de experiencia en el mercado agricola colombiano. Recibiras tu propio panel empresarial totalmente gratis, donde podras administrar tus ventas, tu inventario y ver tu rentabilidad en tiempo real. Tendras un CRM de clientes y podras ver tu balance financiero en cualquier momento. Y lo mejor: obtendras tu propia pagina web personalizada para vender online. Escribenos ahora y empieza a ser parte de Ozoagro.",
+  "model_id": "eleven_multilingual_v2",
+  "voice_settings": {
+    "stability": 0.5,
+    "similarity_boost": 0.75
+  }
+}

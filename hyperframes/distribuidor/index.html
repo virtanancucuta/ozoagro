@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OZOAGRO Distribuidor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #07843d;
+      --green-dark: #064525;
+      --green-deep: #063f23;
+      --green-2: #3b9b25;
+      --green-soft: #edf7ef;
+      --yellow: #f2d000;
+      --white: #fff;
+    }
+
+    [data-composition-id="ozoagro-distribuidor"] {
+      width: 1080px;
+      height: 1920px;
+      background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-dark) 100%);
+      position: relative;
+      overflow: hidden;
+      font-family: 'Oswald', sans-serif;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 60px;
+      text-align: center;
+    }
+
+    .scene-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+    }
+
+    /* Decorative circles */
+    .deco-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+    }
+    .deco-circle-1 { width: 600px; height: 600px; top: -200px; right: -200px; }
+    .deco-circle-2 { width: 400px; height: 400px; bottom: -100px; left: -100px; }
+
+    /* Scene 1 - Intro */
+    .s1-badge {
+      display: inline-flex;
+      padding: 16px 32px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 50px;
+      color: var(--yellow);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+
+    .s1-title {
+      color: var(--white);
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1.1;
+      max-width: 900px;
+    }
+
+    /* Scene 2 - Producto */
+    .s2-icon {
+      width: 120px;
+      height: 120px;
+      background: var(--yellow);
+      border-radius: 30px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .s2-icon svg {
+      width: 60px;
+      height: 60px;
+      color: var(--green-deep);
+    }
+
+    .s2-title {
+      color: var(--white);
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.15;
+      max-width: 850px;
+    }
+
+    .s2-highlight {
+      color: var(--yellow);
+    }
+
+    .s2-years {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255,255,255,0.1);
+      padding: 24px 48px;
+      border-radius: 20px;
+    }
+
+    .s2-years-num {
+      font-size: 96px;
+      font-weight: 700;
+      color: var(--yellow);
+      line-height: 1;
+    }
+
+    .s2-years-text {
+      font-size: 32px;
+      color: var(--white);
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    /* Scene 3 - Panel */
+    .s3-title {
+      color: var(--white);
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.15;
+      max-width: 900px;
+    }
+
+    .s3-panel {
+      width: 900px;
+      background: var(--white);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+    }
+
+    .s3-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 24px;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .s3-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .s3-dot-r { background: #ef4444; }
+    .s3-dot-y { background: #f59e0b; }
+    .s3-dot-g { background: #22c55e; }
+
+    .s3-panel-body {
+      display: flex;
+      min-height: 400px;
+    }
+
+    .s3-sidebar {
+      width: 70px;
+      background: var(--green-dark);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .s3-menu-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .s3-menu-item.active {
+      background: rgba(255,255,255,0.15);
+      color: var(--yellow);
+    }
+
+    .s3-menu-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .s3-content {
+      flex: 1;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+    }
+
+    .s3-stat {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 4px solid;
+    }
+
+    .s3-stat-green { border-color: #22c55e; }
+    .s3-stat-blue { border-color: #3b82f6; }
+    .s3-stat-orange { border-color: #f59e0b; }
+
+    .s3-stat-label {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 600;
+      font-family: Arial, sans-serif;
+    }
+
+    .s3-stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #111827;
+      margin-top: 4px;
+    }
+
+    .s3-chart {
+      grid-column: 1 / -1;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    .s3-bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--green-dark), var(--green-2));
+      border-radius: 6px 6px 0 0;
+      min-height: 30px;
+    }
+
+    /* Scene 4 - CRM */
+    .s4-title {
+      color: var(--white);
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.15;
+      max-width: 900px;
+    }
+
+    .s4-features {
+      display: flex;
+      gap: 30px;
+    }
+
+    .s4-feature {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      width: 280px;
+    }
+
+    .s4-feature-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--yellow);
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 20px;
+    }
+
+    .s4-feature-icon svg {
+      width: 40px;
+      height: 40px;
+      color: var(--green-deep);
+    }
+
+    .s4-feature-text {
+      color: var(--white);
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    /* Scene 5 - Landing CTA */
+    .s5-title {
+      color: var(--white);
+      font-size: 52px;
+      font-weight: 700;
+      line-height: 1.15;
+      max-width: 900px;
+    }
+
+    .s5-phone {
+      width: 340px;
+      height: 700px;
+      background: #1a1a1a;
+      border-radius: 50px;
+      padding: 12px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    }
+
+    .s5-phone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--green-soft);
+      border-radius: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .s5-phone-header {
+      height: 60px;
+      background: var(--green-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .s5-phone-logo {
+      color: var(--white);
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .s5-phone-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .s5-phone-hero {
+      height: 200px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-2) 100%);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .s5-phone-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .s5-phone-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .s5-phone-card-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .s5-phone-card-name {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .s5-cta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--yellow);
+      padding: 28px 48px;
+      border-radius: 999px;
+      margin-top: 20px;
+    }
+
+    .s5-cta-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--green-deep);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+
+    .s5-cta-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--white);
+    }
+
+    .s5-cta-text {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+  </style>
+</head>
+<body>
+  <div data-composition-id="ozoagro-distribuidor" data-start="0" data-duration="33" data-width="1080" data-height="1920">
+
+    <!-- Decorative -->
+    <div class="deco-circle deco-circle-1"></div>
+    <div class="deco-circle-2"></div>
+
+    <!-- Audio -->
+    <audio id="audio-voz" data-start="0" data-duration="33" data-track-index="10" data-volume="1">
+      <source src="audio.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Scene 1: Intro (0-5s) -->
+    <div id="scene-1" class="scene" data-start="0" data-duration="5" data-track-index="1">
+      <div class="scene-content">
+        <div id="s1-badge" class="s1-badge">OPORTUNIDAD DE NEGOCIO</div>
+        <h1 id="s1-title" class="s1-title">TE GUSTARIA TENER TU PROPIO NEGOCIO CON OZOAGRO?</h1>
+      </div>
+    </div>
+
+    <!-- Scene 2: Producto (5-12s) -->
+    <div id="scene-2" class="scene" data-start="5" data-duration="7" data-track-index="1">
+      <div class="scene-content">
+        <div id="s2-icon" class="s2-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h2 id="s2-title" class="s2-title">PRODUCTO DE <span class="s2-highlight">CALIDAD</span> Y GARANTIA</h2>
+        <div id="s2-years" class="s2-years">
+          <span class="s2-years-num">10+</span>
+          <span class="s2-years-text">ANIOS DE<br>EXPERIENCIA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 3: Panel (12-22s) -->
+    <div id="scene-3" class="scene" data-start="12" data-duration="10" data-track-index="1">
+      <div class="scene-content">
+        <h2 id="s3-title" class="s3-title">TU PANEL EMPRESARIAL GRATIS</h2>
+        <div id="s3-panel" class="s3-panel">
+          <div class="s3-panel-header">
+            <span class="s3-dot s3-dot-r"></span>
+            <span class="s3-dot s3-dot-y"></span>
+            <span class="s3-dot s3-dot-g"></span>
+          </div>
+          <div class="s3-panel-body">
+            <div class="s3-sidebar">
+              <div class="s3-menu-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              </div>
+              <div class="s3-menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </div>
+              <div class="s3-menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+              </div>
+            </div>
+            <div class="s3-content">
+              <div id="s3-stat-1" class="s3-stat s3-stat-green">
+                <div class="s3-stat-label">Ventas</div>
+                <div class="s3-stat-value">$2.4M</div>
+              </div>
+              <div id="s3-stat-2" class="s3-stat s3-stat-blue">
+                <div class="s3-stat-label">Pedidos</div>
+                <div class="s3-stat-value">127</div>
+              </div>
+              <div id="s3-stat-3" class="s3-stat s3-stat-orange">
+                <div class="s3-stat-label">Clientes</div>
+                <div class="s3-stat-value">48</div>
+              </div>
+              <div class="s3-chart">
+                <div id="bar-1" class="s3-bar" style="height:40%"></div>
+                <div id="bar-2" class="s3-bar" style="height:65%"></div>
+                <div id="bar-3" class="s3-bar" style="height:55%"></div>
+                <div id="bar-4" class="s3-bar" style="height:80%"></div>
+                <div id="bar-5" class="s3-bar" style="height:70%"></div>
+                <div id="bar-6" class="s3-bar" style="height:90%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 4: CRM (22-27s) -->
+    <div id="scene-4" class="scene" data-start="22" data-duration="5" data-track-index="1">
+      <div class="scene-content">
+        <h2 id="s4-title" class="s4-title">CRM DE CLIENTES Y BALANCE FINANCIERO</h2>
+        <div id="s4-features" class="s4-features">
+          <div id="s4-f1" class="s4-feature">
+            <div class="s4-feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="s4-feature-text">CRM Clientes</div>
+          </div>
+          <div id="s4-f2" class="s4-feature">
+            <div class="s4-feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            </div>
+            <div class="s4-feature-text">Balance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 5: Landing CTA (27-33s) -->
+    <div id="scene-5" class="scene" data-start="27" data-duration="6" data-track-index="1">
+      <div class="scene-content">
+        <h2 id="s5-title" class="s5-title">TU PROPIA PAGINA WEB PARA VENDER</h2>
+        <div id="s5-phone" class="s5-phone">
+          <div class="s5-phone-screen">
+            <div class="s5-phone-header">
+              <span class="s5-phone-logo">OZOAGRO</span>
+            </div>
+            <div class="s5-phone-content">
+              <div class="s5-phone-hero">Tu Tienda Online</div>
+              <div class="s5-phone-cards">
+                <div class="s5-phone-card">
+                  <div class="s5-phone-card-price">$129.900</div>
+                  <div class="s5-phone-card-name">1 Litro</div>
+                </div>
+                <div class="s5-phone-card">
+                  <div class="s5-phone-card-price">$409.900</div>
+                  <div class="s5-phone-card-name">Galon</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="s5-cta" class="s5-cta">
+          <div class="s5-cta-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          </div>
+          <span class="s5-cta-text">ESCRIBENOS AHORA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene 1: Intro (0-5s)
+    tl.from("#s1-badge", { y: 40, opacity: 0, duration: 0.6, ease: "power3.out" }, 0.2);
+    tl.from("#s1-title", { y: 60, opacity: 0, duration: 0.8, ease: "power2.out" }, 0.5);
+
+    // Scene 2: Producto (5-12s)
+    tl.from("#s2-icon", { scale: 0, rotation: -180, opacity: 0, duration: 0.7, ease: "back.out(1.7)" }, 5.2);
+    tl.from("#s2-title", { y: 50, opacity: 0, duration: 0.6, ease: "power3.out" }, 5.6);
+    tl.from("#s2-years", { x: -60, opacity: 0, duration: 0.5, ease: "power2.out" }, 6.2);
+
+    // Scene 3: Panel (12-22s)
+    tl.from("#s3-title", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 12.2);
+    tl.from("#s3-panel", { y: 80, opacity: 0, duration: 0.7, ease: "power2.out" }, 12.6);
+    tl.from("#s3-stat-1", { x: -30, opacity: 0, duration: 0.4, ease: "power2.out" }, 13.4);
+    tl.from("#s3-stat-2", { y: -30, opacity: 0, duration: 0.4, ease: "power2.out" }, 13.6);
+    tl.from("#s3-stat-3", { x: 30, opacity: 0, duration: 0.4, ease: "power2.out" }, 13.8);
+
+    // Animate bars
+    tl.from("#bar-1", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.2);
+    tl.from("#bar-2", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.35);
+    tl.from("#bar-3", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.5);
+    tl.from("#bar-4", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.65);
+    tl.from("#bar-5", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.8);
+    tl.from("#bar-6", { scaleY: 0, transformOrigin: "bottom", duration: 0.4, ease: "power2.out" }, 14.95);
+
+    // Scene 4: CRM (22-27s)
+    tl.from("#s4-title", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 22.2);
+    tl.from("#s4-f1", { x: -50, opacity: 0, duration: 0.5, ease: "power2.out" }, 22.6);
+    tl.from("#s4-f2", { x: 50, opacity: 0, duration: 0.5, ease: "power2.out" }, 22.8);
+
+    // Scene 5: Landing CTA (27-33s)
+    tl.from("#s5-title", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 27.2);
+    tl.from("#s5-phone", { y: 100, opacity: 0, duration: 0.7, ease: "power2.out" }, 27.5);
+    tl.from("#s5-cta", { scale: 0.8, opacity: 0, duration: 0.5, ease: "back.out(1.7)" }, 28.5);
+
+    // Final fade
+    tl.to("#s5-title, #s5-phone, #s5-cta", { opacity: 0, duration: 0.5, ease: "power2.in" }, 32);
+
+    window.__timelines["ozoagro-distribuidor"] = tl;
+  </script>
+</body>
+</html>
