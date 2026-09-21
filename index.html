@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="landing/styles.css?v=20260914a">
+  <link rel="stylesheet" href="landing/styles.css?v=20260921b">
 <link rel="apple-touch-icon" sizes="57x57" href="landing/images/apple-icon-57x57.png">
 <link rel="apple-touch-icon" sizes="60x60" href="landing/images/apple-icon-60x60.png">
 <link rel="apple-touch-icon" sizes="72x72" href="landing/images/apple-icon-72x72.png">
@@ -47,7 +47,7 @@
   src="https://www.facebook.com/tr?id=24936831939337917&ev=PageView&noscript=1"
   /></noscript>
   <!-- End Meta Pixel Code -->
-  <script src="landing/js/iconos.js?v=20260914a" defer></script>
+  <script src="landing/js/iconos.js?v=20260921b" defer></script>
   <style id="ozo-extras">
     .ozo-asesor{background:#0b6b33;color:#fff;text-align:center;font-size:14px;padding:8px 12px;font-family:Arial,Helvetica,sans-serif}
     .ozo-asesor a{color:#bbf7d0;font-weight:700;text-decoration:none}
@@ -1979,6 +1979,56 @@
 
 </section>
 
+<!-- =========================================================
+     SECCIÓN — ¿QUIERES SER DISTRIBUIDOR?
+     Video interactivo con voz de Marcela (HyperFrames)
+     ========================================================= -->
+<section class="distributor-video-section" id="distribuidorVideo">
+  <div class="distributor-video-container">
+    <div class="distributor-video-header">
+      <div class="distributor-video-badge">
+        <i data-lucide="handshake" aria-hidden="true"></i>
+        <span>OPORTUNIDAD DE NEGOCIO</span>
+      </div>
+      <h2 class="distributor-video-title">
+        ¿QUIERES SER <span>DISTRIBUIDOR?</span>
+      </h2>
+      <p class="distributor-video-subtitle">
+        Conoce los beneficios de ser parte de OZOAGRO
+      </p>
+    </div>
+
+    <div class="distributor-video-player">
+      <video
+        id="distribuidorVideoEl"
+        class="distributor-video"
+        poster="landing/images/dist-poster.webp"
+        preload="none"
+        playsinline
+      >
+        <source src="landing/videos/distribuidor.mp4" type="video/mp4">
+      </video>
+      <button type="button" class="distributor-play-btn" id="distribuidorPlayBtn" aria-label="Reproducir video">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="11" fill="rgba(22,130,61,0.95)"/>
+          <path d="M10 8l6 4-6 4V8z" fill="#fff"/>
+        </svg>
+      </button>
+      <button type="button" class="distributor-replay-btn" id="distribuidorReplayBtn" aria-label="Volver a reproducir" hidden>
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+        <span>Volver a ver</span>
+      </button>
+    </div>
+
+    <a href="https://wa.me/573145933481?text=Hola,%20quiero%20ser%20distribuidor%20de%20OZOAGRO" class="distributor-video-cta" target="_blank" rel="noopener">
+      <span class="distributor-cta-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 3.5A11.85 11.85 0 0 0 12.08 0C5.53 0 .2 5.32.2 11.87c0 2.09.55 4.13 1.59 5.93L.1 24l6.34-1.66a11.85 11.85 0 0 0 5.64 1.43h.01c6.55 0 11.88-5.33 11.88-11.88 0-3.17-1.23-6.15-3.47-8.39zM12.09 21.77h-.01a9.86 9.86 0 0 1-5.02-1.37l-.36-.21-3.76.99 1-3.67-.24-.38a9.84 9.84 0 0 1-1.51-5.26c0-5.44 4.43-9.87 9.88-9.87 2.64 0 5.12 1.03 6.98 2.9a9.8 9.8 0 0 1 2.89 6.98c0 5.44-4.43 9.89-9.85 9.89zm5.41-7.39c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg>
+      </span>
+      <span>QUIERO SER DISTRIBUIDOR</span>
+      <strong><i data-lucide="arrow-right"></i></strong>
+    </a>
+  </div>
+</section>
 
 
   </main>
@@ -2191,6 +2241,132 @@
 
       </details>
 
+    </section>
+
+
+    <!-- =====================================================
+         ¿QUIERES SER DISTRIBUIDOR?
+         ===================================================== -->
+
+    <section class="distributor-cta">
+      <div class="distributor-cta-inner">
+
+        <div class="distributor-header">
+          <span class="distributor-badge">OPORTUNIDAD DE NEGOCIO</span>
+          <h2 class="distributor-title">¿QUIERES SER<br>DISTRIBUIDOR DE OZOAGRO?</h2>
+          <p class="distributor-subtitle">
+            Únete a nuestra red de distribuidores y emprende con un producto de calidad respaldado por más de 10 años de experiencia.
+          </p>
+        </div>
+
+        <div class="distributor-benefits">
+
+          <div class="distributor-benefit">
+            <div class="distributor-benefit-icon">
+              <i data-lucide="badge-check"></i>
+            </div>
+            <div class="distributor-benefit-text">
+              <b>Producto de Calidad</b>
+              <span>Garantía y respaldo de más de 10 años en el mercado agrícola colombiano</span>
+            </div>
+          </div>
+
+          <div class="distributor-benefit">
+            <div class="distributor-benefit-icon">
+              <i data-lucide="monitor-smartphone"></i>
+            </div>
+            <div class="distributor-benefit-text">
+              <b>Panel Empresarial Gratis</b>
+              <span>Administra tu negocio con herramientas profesionales sin costo adicional</span>
+            </div>
+          </div>
+
+          <div class="distributor-benefit">
+            <div class="distributor-benefit-icon">
+              <i data-lucide="globe"></i>
+            </div>
+            <div class="distributor-benefit-text">
+              <b>Tu Propia Página Web</b>
+              <span>Vende online con tu tienda personalizada lista para recibir pedidos</span>
+            </div>
+          </div>
+
+          <div class="distributor-benefit">
+            <div class="distributor-benefit-icon">
+              <i data-lucide="chart-line"></i>
+            </div>
+            <div class="distributor-benefit-text">
+              <b>Control Total de tu Negocio</b>
+              <span>Ventas, rentabilidad, gastos y balance en tiempo real</span>
+            </div>
+          </div>
+
+          <div class="distributor-benefit">
+            <div class="distributor-benefit-icon">
+              <i data-lucide="users"></i>
+            </div>
+            <div class="distributor-benefit-text">
+              <b>CRM de Clientes</b>
+              <span>Gestiona tu cartera de clientes y haz seguimiento a cada oportunidad</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="distributor-panel-preview">
+          <div class="distributor-panel-mockup">
+            <div class="mockup-header">
+              <span class="mockup-dot"></span>
+              <span class="mockup-dot"></span>
+              <span class="mockup-dot"></span>
+              <span class="mockup-title">Panel OZOAGRO</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-sidebar">
+                <div class="mockup-menu-item active"><i data-lucide="home"></i></div>
+                <div class="mockup-menu-item"><i data-lucide="shopping-bag"></i></div>
+                <div class="mockup-menu-item"><i data-lucide="package"></i></div>
+                <div class="mockup-menu-item"><i data-lucide="users"></i></div>
+                <div class="mockup-menu-item"><i data-lucide="bar-chart-2"></i></div>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-stat green">
+                  <span class="mockup-stat-label">Ventas</span>
+                  <span class="mockup-stat-value">$2.4M</span>
+                </div>
+                <div class="mockup-stat blue">
+                  <span class="mockup-stat-label">Pedidos</span>
+                  <span class="mockup-stat-value">127</span>
+                </div>
+                <div class="mockup-stat yellow">
+                  <span class="mockup-stat-label">Clientes</span>
+                  <span class="mockup-stat-value">48</span>
+                </div>
+                <div class="mockup-chart">
+                  <div class="chart-bar" style="height:40%"></div>
+                  <div class="chart-bar" style="height:65%"></div>
+                  <div class="chart-bar" style="height:55%"></div>
+                  <div class="chart-bar" style="height:80%"></div>
+                  <div class="chart-bar" style="height:70%"></div>
+                  <div class="chart-bar" style="height:90%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="https://wa.me/573145933481?text=Hola%2C%20quiero%20ser%20distribuidor%20de%20OZOAGRO"
+          class="distributor-cta-btn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i data-lucide="message-circle"></i>
+          <span>Quiero ser distribuidor</span>
+          <i data-lucide="arrow-right"></i>
+        </a>
+
+      </div>
     </section>
 
 
