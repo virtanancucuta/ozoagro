@@ -24,6 +24,7 @@ async function renderVentas(container) {
             <option value="web">Web/Landing</option>
             <option value="tradicional">Tradicional</option>
             <option value="agente">Agente IA</option>
+            ${window.PERFIL && window.PERFIL.rol === 'ceo' ? '<option value="distribuidores">Distribuidores</option>' : ''}
           </select>
         </div>
       </div>
@@ -166,6 +167,7 @@ window.onPresetChange = function() {
 window.loadVentasData = async function() {
   const preset = document.getElementById('ventas-preset').value;
   const canal = document.getElementById('ventas-canal').value;
+  const esDistFilter = canal === 'distribuidores';
 
   let range;
   if (preset === 'custom') {
@@ -178,12 +180,36 @@ window.loadVentasData = async function() {
     range = getDateRange(preset);
   }
 
-  // Get resumen via RPC (general o filtrado por canal)
-  const { data: resumen } = await supabaseClient.rpc('ventas_resumen', {
-    p_fecha_ini: range.start,
-    p_fecha_fin: range.end,
-    p_canal: canal || null
-  });
+  // Get resumen via RPC
+  // Para distribuidores: consultar con p_distribuidor_id especial o hacer query manual
+  let resumen;
+  if (esDistFilter) {
+    // Sumar ventas de TODOS los distribuidores (p_distribuidor_id no puede ser 'todos', hacemos query manual)
+    const { data: pedidos } = await supabaseClient.fromTodos('pedidos')
+      .select('subtotal, costo_total, rentabilidad, items:pedido_items(litros, cantidad)')
+      .in('estado', ['despachado', 'cerrado'])
+      .eq('es_test', false)
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha_despachado', range.start)
+      .lte('fecha_despachado', range.end + 'T23:59:59');
+
+    if (pedidos && pedidos.length > 0) {
+      const litros = pedidos.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0);
+      const venta = pedidos.reduce((s, p) => s + (p.subtotal || 0), 0);
+      const costo = pedidos.reduce((s, p) => s + (p.costo_total || 0), 0);
+      const rent = pedidos.reduce((s, p) => s + (p.rentabilidad || 0), 0);
+      resumen = [{ litros_vendidos: litros, venta_total: venta, costo_total: costo, rentabilidad: rent, rentabilidad_pct: venta > 0 ? Math.round(rent / venta * 100) : 0, valor_promedio_litro: litros > 0 ? Math.round(venta / litros) : 0 }];
+    } else {
+      resumen = [{ litros_vendidos: 0, venta_total: 0, costo_total: 0, rentabilidad: 0, rentabilidad_pct: 0, valor_promedio_litro: 0 }];
+    }
+  } else {
+    const { data } = await supabaseClient.rpc('ventas_resumen', {
+      p_fecha_ini: range.start,
+      p_fecha_fin: range.end,
+      p_canal: canal || null
+    });
+    resumen = data;
+  }
 
   if (resumen && resumen[0]) {
     const r = resumen[0];
@@ -209,15 +235,18 @@ window.loadVentasData = async function() {
   }
 
   // Get pedidos detail
-  let query = supabaseClient
-    .from('pedidos')
+  let query = (esDistFilter ? supabaseClient.fromTodos('pedidos') : supabaseClient.from('pedidos'))
     .select('*, cliente:clientes(nombre), items:pedido_items(litros, cantidad)')
     .in('estado', ['despachado', 'cerrado'])
     .eq('es_test', false)
     .or(`and(fecha_despachado.gte.${range.start},fecha_despachado.lte.${range.end}T23:59:59),and(fecha_despachado.is.null,created_at.gte.${range.start},created_at.lte.${range.end}T23:59:59)`)
     .order('fecha_despachado', { ascending: false, nullsFirst: false });
 
-  if (canal) query = query.eq('canal', canal);
+  if (esDistFilter) {
+    query = query.not('distribuidor_id', 'is', null);
+  } else if (canal) {
+    query = query.eq('canal', canal);
+  }
 
   const { data: pedidos } = await query;
 

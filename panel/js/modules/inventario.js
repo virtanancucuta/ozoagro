@@ -92,11 +92,16 @@ async function renderInventario(container) {
             <input type="text" id="edit-prod-nombre" class="w-full px-3 py-2 border rounded-lg bg-gray-50" readonly>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Precio Venta</label>
+            <label class="block text-sm font-medium mb-1">Precio Venta (publico)</label>
             <input type="number" id="edit-prod-precio" required class="w-full px-3 py-2 border rounded-lg" min="0" step="1000">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Costo Unitario</label>
+            <label class="block text-sm font-medium mb-1">Precio Mayorista (costo del distribuidor)</label>
+            <input type="number" id="edit-prod-mayorista" class="w-full px-3 py-2 border rounded-lg" min="0" step="1000" placeholder="Dejar vacio = usa precio venta">
+            <p class="text-xs text-gray-500 mt-1">Este es el precio al que OZOAGRO le vende al distribuidor. El distribuidor lo paga como su costo.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Costo Unitario (de OZOAGRO)</label>
             <input type="number" id="edit-prod-costo" required class="w-full px-3 py-2 border rounded-lg" min="0" step="1000">
           </div>
           <div class="flex justify-end gap-3">
@@ -201,6 +206,7 @@ async function loadInventarioData() {
       </div>
       <div class="text-right shrink-0">
         <div class="font-semibold">${formatMoney(p.precio_venta)}</div>
+        ${p.precio_mayorista ? `<div class="text-xs text-purple-600">mayorista ${formatMoney(p.precio_mayorista)}</div>` : ''}
         <div class="text-xs text-gray-500">costo ${formatMoney(p.costo_unitario)}</div>
       </div>
       <button onclick="editarProducto('${p.id}')" class="text-primary hover:underline text-sm shrink-0">Editar</button>
@@ -288,6 +294,7 @@ window.editarProducto = async function(id) {
   document.getElementById('edit-prod-id').value = id;
   document.getElementById('edit-prod-nombre').value = producto.nombre;
   document.getElementById('edit-prod-precio').value = producto.precio_venta;
+  document.getElementById('edit-prod-mayorista').value = producto.precio_mayorista || '';
   document.getElementById('edit-prod-costo').value = producto.costo_unitario;
   document.getElementById('modal-editar-producto').classList.remove('hidden');
 };
@@ -296,6 +303,8 @@ async function handleEditarProducto(e) {
   e.preventDefault();
   const id = document.getElementById('edit-prod-id').value;
   const nuevoPrecio = parseFloat(document.getElementById('edit-prod-precio').value);
+  const mayoristaTxt = document.getElementById('edit-prod-mayorista').value.trim();
+  const nuevoMayorista = mayoristaTxt === '' ? null : parseFloat(mayoristaTxt);
   const nuevoCosto = parseFloat(document.getElementById('edit-prod-costo').value);
 
   // Get current costo for history
@@ -304,6 +313,7 @@ async function handleEditarProducto(e) {
   // Update producto
   const { error } = await supabaseClient.from('productos').update({
     precio_venta: nuevoPrecio,
+    precio_mayorista: nuevoMayorista,
     costo_unitario: nuevoCosto,
     updated_at: new Date().toISOString()
   }).eq('id', id);

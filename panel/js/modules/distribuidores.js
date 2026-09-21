@@ -4,6 +4,8 @@
 let distTab = 'crear';
 let distLista = [];
 let distSel = '';
+let distBusqueda = '';
+let distOrden = 'reciente'; // reciente, mas_dias, menos_dias
 
 function distSlugify(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
@@ -61,8 +63,43 @@ async function distRenderTab() {
   if (distTab === 'crm') return distRenderCrm(el);
 }
 
+function distListaFiltrada() {
+  let lista = [...distLista];
+  // Filtrar por búsqueda
+  if (distBusqueda.trim()) {
+    const q = distBusqueda.toLowerCase().trim();
+    lista = lista.filter(d =>
+      (d.nombre || '').toLowerCase().includes(q) ||
+      (d.cedula || '').toLowerCase().includes(q) ||
+      (d.slug || '').toLowerCase().includes(q)
+    );
+  }
+  // Ordenar
+  if (distOrden === 'mas_dias') {
+    lista.sort((a, b) => {
+      const diasA = a.ultima_venta ? Math.floor((Date.now() - new Date(a.ultima_venta)) / 86400000) : 9999;
+      const diasB = b.ultima_venta ? Math.floor((Date.now() - new Date(b.ultima_venta)) / 86400000) : 9999;
+      return diasB - diasA;
+    });
+  } else if (distOrden === 'menos_dias') {
+    lista.sort((a, b) => {
+      const diasA = a.ultima_venta ? Math.floor((Date.now() - new Date(a.ultima_venta)) / 86400000) : 9999;
+      const diasB = b.ultima_venta ? Math.floor((Date.now() - new Date(b.ultima_venta)) / 86400000) : 9999;
+      return diasA - diasB;
+    });
+  }
+  // Default: reciente (por created_at, ya viene ordenado de la RPC)
+  return lista;
+}
+
+function distDiasSinVenta(d) {
+  if (!d.ultima_venta) return null;
+  return Math.floor((Date.now() - new Date(d.ultima_venta)) / 86400000);
+}
+
 /* ---------------- CREAR + LISTA ---------------- */
 function distRenderCrear(el) {
+  const listaFiltrada = distListaFiltrada();
   el.innerHTML = `
     <div class="grid lg:grid-cols-5 gap-6">
       <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow">
@@ -90,22 +127,35 @@ function distRenderCrear(el) {
         </form>
       </div>
       <div class="lg:col-span-3 bg-white rounded-xl shadow overflow-hidden">
-        <div class="p-4 border-b flex justify-between items-center"><h2 class="font-bold">Distribuidores (${distLista.length})</h2><button onclick="distRecargar()" class="text-sm text-primary underline">Actualizar</button></div>
+        <div class="p-4 border-b space-y-3">
+          <div class="flex justify-between items-center"><h2 class="font-bold">Distribuidores (${distLista.length})</h2><button onclick="distRecargar()" class="text-sm text-primary underline">Actualizar</button></div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <input type="text" id="dist-buscar" placeholder="Buscar nombre o cedula..." value="${escapeHtml(distBusqueda)}" oninput="distBusqueda=this.value;distRenderCrear(document.getElementById('dist-tab-content'))" class="flex-1 min-w-[180px] px-3 py-2 border rounded-lg text-sm">
+            <select id="dist-orden" onchange="distOrden=this.value;distRenderCrear(document.getElementById('dist-tab-content'))" class="px-3 py-2 border rounded-lg text-sm">
+              <option value="reciente" ${distOrden === 'reciente' ? 'selected' : ''}>Mas reciente</option>
+              <option value="mas_dias" ${distOrden === 'mas_dias' ? 'selected' : ''}>Mas dias sin venta</option>
+              <option value="menos_dias" ${distOrden === 'menos_dias' ? 'selected' : ''}>Menos dias sin venta</option>
+            </select>
+          </div>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
-          <thead class="bg-gray-50"><tr><th class="text-left p-3">Distribuidor</th><th class="text-left p-3">Landing</th><th class="text-left p-3">Usuario</th><th class="text-right p-3">Pedidos</th><th class="text-right p-3">Ventas</th><th class="text-left p-3">Estado</th><th class="p-3">Acciones</th></tr></thead>
-          <tbody>${distLista.length ? distLista.map(d => `
+          <thead class="bg-gray-50"><tr><th class="text-left p-3">Distribuidor</th><th class="text-left p-3">Landing</th><th class="text-left p-3">Usuario</th><th class="text-right p-3">Pedidos</th><th class="text-right p-3">Ventas</th><th class="text-right p-3">Dias s/venta</th><th class="text-left p-3">Estado</th><th class="p-3">Acciones</th></tr></thead>
+          <tbody>${listaFiltrada.length ? listaFiltrada.map(d => {
+            const dias = distDiasSinVenta(d);
+            return `
             <tr class="border-t ${d.activo ? '' : 'opacity-60'}">
               <td class="p-3"><div class="font-medium">${escapeHtml(d.nombre)}</div><div class="text-xs text-gray-500">${escapeHtml([d.ciudad, d.departamento].filter(Boolean).join(', '))} · WA ${escapeHtml(d.whatsapp || '-')}${d.es_test ? ' · <span class="text-orange-600">prueba</span>' : ''}</div></td>
               <td class="p-3"><a href="https://ozoagro.co/${escapeHtml(d.slug)}" target="_blank" class="text-primary underline">/${escapeHtml(d.slug)}</a> <button onclick="distCopiar('https://ozoagro.co/${escapeHtml(d.slug)}')" class="text-xs text-gray-500 underline ml-1">copiar</button></td>
               <td class="p-3 font-mono text-xs">${escapeHtml(d.usuario || '-')}</td>
               <td class="p-3 text-right">${d.pedidos_total}${d.pedidos_por_confirmar ? ` <span class="text-xs text-orange-600">(${d.pedidos_por_confirmar} por conf.)</span>` : ''}</td>
               <td class="p-3 text-right font-medium">${formatMoney(d.ventas_cerradas)}</td>
+              <td class="p-3 text-right ${dias !== null && dias > 30 ? 'text-red-600 font-medium' : dias !== null && dias > 15 ? 'text-orange-600' : ''}">${dias !== null ? dias + ' d' : '-'}</td>
               <td class="p-3">${d.activo ? '<span class="text-green-700 bg-green-50 px-2 py-0.5 rounded text-xs">Activo</span>' : '<span class="text-red-700 bg-red-50 px-2 py-0.5 rounded text-xs">Inactivo</span>'}</td>
               <td class="p-3 whitespace-nowrap"><div class="flex gap-1 justify-center">
                 <button onclick="distResetClave('${d.id}','${escapeHtml(d.nombre)}')" class="px-2 py-1 border rounded text-xs hover:bg-gray-50">Clave</button>
                 <button onclick="distActivo('${d.id}', ${d.activo ? 'false' : 'true'})" class="px-2 py-1 border rounded text-xs hover:bg-gray-50">${d.activo ? 'Desactivar' : 'Activar'}</button>
               </div></td>
-            </tr>`).join('') : '<tr><td colspan="7" class="p-6 text-center text-gray-500">Aun no hay distribuidores</td></tr>'}
+            </tr>`;}).join('') : '<tr><td colspan="8" class="p-6 text-center text-gray-500">' + (distBusqueda ? 'Sin resultados para "' + escapeHtml(distBusqueda) + '"' : 'Aun no hay distribuidores') + '</td></tr>'}
           </tbody></table></div>
       </div>
     </div>`;

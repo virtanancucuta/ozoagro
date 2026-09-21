@@ -23,6 +23,7 @@ async function renderBalance(container) {
             <option value="web">Web</option>
             <option value="tradicional">Tradicional</option>
             <option value="agente">Agente</option>
+            ${window.PERFIL && window.PERFIL.rol === 'ceo' ? '<option value="distribuidores">Distribuidores</option>' : ''}
           </select>
         </div>
       </div>
@@ -90,13 +91,39 @@ window.loadBalanceData = async function() {
   const fechaIni = document.getElementById('balance-fecha-ini').value;
   const fechaFin = document.getElementById('balance-fecha-fin').value;
   const canal = document.getElementById('balance-canal').value;
+  const esDistFilter = canal === 'distribuidores';
 
-  // Get balance via RPC
-  const { data: balance } = await supabaseClient.rpc('balance_resumen', {
-    p_fecha_ini: fechaIni,
-    p_fecha_fin: fechaFin,
-    p_canal: canal || null
-  });
+  // Get balance via RPC o manual para distribuidores
+  let balance;
+  if (esDistFilter) {
+    // Calcular balance de todos los distribuidores manualmente
+    const { data: pedidos } = await supabaseClient.fromTodos('pedidos')
+      .select('subtotal, rentabilidad, items:pedido_items(litros, cantidad)')
+      .in('estado', ['despachado', 'cerrado'])
+      .eq('es_test', false)
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha_despachado', fechaIni)
+      .lte('fecha_despachado', fechaFin + 'T23:59:59');
+
+    const { data: gastos } = await supabaseClient.fromTodos('gastos')
+      .select('valor')
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha', fechaIni)
+      .lte('fecha', fechaFin);
+
+    const litros = pedidos ? pedidos.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0) : 0;
+    const venta = pedidos ? pedidos.reduce((s, p) => s + (p.subtotal || 0), 0) : 0;
+    const rent = pedidos ? pedidos.reduce((s, p) => s + (p.rentabilidad || 0), 0) : 0;
+    const gastosTotal = gastos ? gastos.reduce((s, g) => s + (g.valor || 0), 0) : 0;
+    balance = [{ litros_vendidos: litros, venta_total: venta, rentabilidad: rent, gastos_total: gastosTotal, utilidad: venta - gastosTotal }];
+  } else {
+    const { data } = await supabaseClient.rpc('balance_resumen', {
+      p_fecha_ini: fechaIni,
+      p_fecha_fin: fechaFin,
+      p_canal: canal || null
+    });
+    balance = data;
+  }
 
   if (balance && balance[0]) {
     const b = balance[0];
@@ -129,11 +156,35 @@ window.loadBalanceData = async function() {
     end: prevEnd.toISOString().split('T')[0]
   };
 
-  const { data: prevBalance } = await supabaseClient.rpc('balance_resumen', {
-    p_fecha_ini: prevRange.start,
-    p_fecha_fin: prevRange.end,
-    p_canal: canal || null
-  });
+  let prevBalance;
+  if (esDistFilter) {
+    // Calcular periodo anterior para distribuidores manualmente
+    const { data: pedidosPrev } = await supabaseClient.fromTodos('pedidos')
+      .select('subtotal, rentabilidad, items:pedido_items(litros, cantidad)')
+      .in('estado', ['despachado', 'cerrado'])
+      .eq('es_test', false)
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha_despachado', prevRange.start)
+      .lte('fecha_despachado', prevRange.end + 'T23:59:59');
+
+    const { data: gastosPrev } = await supabaseClient.fromTodos('gastos')
+      .select('valor')
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha', prevRange.start)
+      .lte('fecha', prevRange.end);
+
+    const litrosPrev = pedidosPrev ? pedidosPrev.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0) : 0;
+    const ventaPrev = pedidosPrev ? pedidosPrev.reduce((s, p) => s + (p.subtotal || 0), 0) : 0;
+    const gastosTotalPrev = gastosPrev ? gastosPrev.reduce((s, g) => s + (g.valor || 0), 0) : 0;
+    prevBalance = [{ litros_vendidos: litrosPrev, venta_total: ventaPrev, utilidad: ventaPrev - gastosTotalPrev }];
+  } else {
+    const { data } = await supabaseClient.rpc('balance_resumen', {
+      p_fecha_ini: prevRange.start,
+      p_fecha_fin: prevRange.end,
+      p_canal: canal || null
+    });
+    prevBalance = data;
+  }
 
   // Show comparison
   const compContainer = document.getElementById('comparativo');
@@ -170,29 +221,45 @@ window.loadBalanceData = async function() {
 
   // Ventas por canal
   const ventasCanalContainer = document.getElementById('ventas-por-canal');
-  const canales = ['web', 'tradicional', 'agente'];
-  let canalHtml = '';
 
-  for (const c of canales) {
-    const { data: canalData } = await supabaseClient.rpc('balance_resumen', {
-      p_fecha_ini: fechaIni,
-      p_fecha_fin: fechaFin,
-      p_canal: c
-    });
-    if (canalData && canalData[0]) {
-      const cd = canalData[0];
-      canalHtml += `
-        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-          <span class="font-medium capitalize">${c}</span>
-          <div class="text-right">
-            <div class="font-bold">${formatMoney(cd.venta_total)}</div>
-            <div class="text-xs text-gray-500">${cd.litros_vendidos || 0} litros</div>
-          </div>
+  if (esDistFilter) {
+    // Para distribuidores, mostrar el consolidado
+    const b = balance && balance[0] ? balance[0] : { venta_total: 0, litros_vendidos: 0 };
+    ventasCanalContainer.innerHTML = `
+      <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+        <span class="font-medium">Todos los distribuidores</span>
+        <div class="text-right">
+          <div class="font-bold">${formatMoney(b.venta_total)}</div>
+          <div class="text-xs text-gray-500">${b.litros_vendidos || 0} litros</div>
         </div>
-      `;
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Para ver el detalle por distribuidor, ve al modulo Distribuidores > Ventas por distribuidor.</p>
+    `;
+  } else {
+    const canales = ['web', 'tradicional', 'agente'];
+    let canalHtml = '';
+
+    for (const c of canales) {
+      const { data: canalData } = await supabaseClient.rpc('balance_resumen', {
+        p_fecha_ini: fechaIni,
+        p_fecha_fin: fechaFin,
+        p_canal: c
+      });
+      if (canalData && canalData[0]) {
+        const cd = canalData[0];
+        canalHtml += `
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <span class="font-medium capitalize">${c}</span>
+            <div class="text-right">
+              <div class="font-bold">${formatMoney(cd.venta_total)}</div>
+              <div class="text-xs text-gray-500">${cd.litros_vendidos || 0} litros</div>
+            </div>
+          </div>
+        `;
+      }
     }
+    ventasCanalContainer.innerHTML = canalHtml || '<p class="text-gray-500">Sin ventas</p>';
   }
-  ventasCanalContainer.innerHTML = canalHtml || '<p class="text-gray-500">Sin ventas</p>';
 
   // Ultimos gastos
   const { data: gastos } = await supabaseClient.from('gastos').select('*').order('fecha', { ascending: false }).limit(5);

@@ -12,10 +12,11 @@ if (typeof window.waLink !== 'function') {
   };
 }
 let pedidosTab = 'por_confirmar';
-let pedidosCanalFiltro = ''; // '', 'agente', 'web' para sub-filtrar en Por confirmar
+let pedidosCanalFiltro = ''; // '', 'agente', 'web', 'distribuidores' para sub-filtrar en Por confirmar
 let pedidosData = [];
 let productosCache = [];
 let clientesCache = [];
+let distribuidoresCache = {}; // id -> nombre para mostrar en la tabla
 
 async function renderPedidos(container) {
   // Load productos cache
@@ -50,10 +51,11 @@ async function renderPedidos(container) {
       </div>
 
       <!-- Sub-filtro por canal (solo en Por confirmar) -->
-      <div id="subfiltro-canal" class="${pedidosTab === 'por_confirmar' ? 'flex gap-2' : 'hidden'}">
+      <div id="subfiltro-canal" class="${pedidosTab === 'por_confirmar' ? 'flex gap-2 flex-wrap' : 'hidden'}">
         <button onclick="setPedidosCanalFiltro('')" class="subfiltro-btn ${pedidosCanalFiltro === '' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-todos">Todos</button>
         <button onclick="setPedidosCanalFiltro('agente')" class="subfiltro-btn ${pedidosCanalFiltro === 'agente' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-agente">Agente IA</button>
         <button onclick="setPedidosCanalFiltro('web')" class="subfiltro-btn ${pedidosCanalFiltro === 'web' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-web">Landing/Web</button>
+        ${window.PERFIL && window.PERFIL.rol === 'ceo' ? `<button onclick="setPedidosCanalFiltro('distribuidores')" class="subfiltro-btn ${pedidosCanalFiltro === 'distribuidores' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-distribuidores">Distribuidores</button>` : ''}
       </div>
 
       <!-- Table -->
@@ -175,8 +177,15 @@ async function renderPedidos(container) {
 }
 
 async function loadPedidos() {
-  let query = supabaseClient
-    .from('pedidos')
+  // Cargar cache de distribuidores si es CEO y no está cargado
+  if (window.PERFIL && window.PERFIL.rol === 'ceo' && Object.keys(distribuidoresCache).length === 0) {
+    const { data: dists } = await supabaseClient.fromTodos('distribuidores').select('id, nombre, slug');
+    if (dists) dists.forEach(d => { distribuidoresCache[d.id] = d.nombre || d.slug; });
+  }
+
+  // Si es filtro distribuidores, usar fromTodos() para ver todos los pedidos con distribuidor_id
+  const esDistFilter = pedidosCanalFiltro === 'distribuidores';
+  let query = (esDistFilter ? supabaseClient.fromTodos('pedidos') : supabaseClient.from('pedidos'))
     .select('*, cliente:clientes(*), items:pedido_items(*, producto:productos(*))')
     .eq('estado', pedidosTab)
     .eq('es_test', false)
@@ -184,7 +193,11 @@ async function loadPedidos() {
 
   // Aplicar filtro de canal en Por confirmar
   if (pedidosTab === 'por_confirmar' && pedidosCanalFiltro) {
-    query = query.eq('canal', pedidosCanalFiltro);
+    if (esDistFilter) {
+      query = query.not('distribuidor_id', 'is', null);
+    } else {
+      query = query.eq('canal', pedidosCanalFiltro);
+    }
   }
 
   const { data, error } = await query;
@@ -204,7 +217,7 @@ async function loadPedidos() {
 }
 
 async function updateSubfiltroContadores() {
-  // Contar pedidos por canal
+  // Contar pedidos por canal (solo OZOAGRO, sin distribuidores)
   const { data: counts } = await supabaseClient
     .from('pedidos')
     .select('canal')
@@ -220,19 +233,33 @@ async function updateSubfiltroContadores() {
   const btnTodos = document.getElementById('subfiltro-todos');
   const btnAgente = document.getElementById('subfiltro-agente');
   const btnWeb = document.getElementById('subfiltro-web');
+  const btnDist = document.getElementById('subfiltro-distribuidores');
 
   if (btnTodos) btnTodos.textContent = `Todos (${total})`;
   if (btnAgente) btnAgente.textContent = `Agente IA (${agente})`;
   if (btnWeb) btnWeb.textContent = `Landing/Web (${web})`;
+
+  // Contar pedidos de distribuidores (solo CEO)
+  if (btnDist && window.PERFIL && window.PERFIL.rol === 'ceo') {
+    const { data: distCounts } = await supabaseClient.fromTodos('pedidos')
+      .select('id')
+      .eq('estado', 'por_confirmar')
+      .eq('es_test', false)
+      .not('distribuidor_id', 'is', null);
+    const distTotal = distCounts ? distCounts.length : 0;
+    btnDist.textContent = `Distribuidores (${distTotal})`;
+  }
 }
 
 function renderPedidosTable() {
   const tbody = document.getElementById('pedidos-tbody');
   const conMotivo = pedidosTab === 'cancelado' || pedidosTab === 'devuelto';
+  const esDistFilter = pedidosCanalFiltro === 'distribuidores';
   const th = (t, al) => `<th class="px-4 py-3 text-${al || 'left'} text-xs font-medium text-gray-500 uppercase">${t}</th>`;
   const thead = document.getElementById('pedidos-thead');
   if (thead) {
-    thead.innerHTML = th('Codigo') + th('Fecha') + th('Cliente') + th('Ciudad') + th('Canal') + th('Valor', 'right') +
+    thead.innerHTML = th('Codigo') + th('Fecha') + th('Cliente') + th('Ciudad') +
+      (esDistFilter ? th('Distribuidor') : th('Canal')) + th('Valor', 'right') +
       (conMotivo ? th('Motivo') : th('Rentabilidad', 'right')) + th('Acciones', 'center');
   }
   const btnExp = document.getElementById('btn-export-cancelados');
@@ -253,7 +280,9 @@ function renderPedidosTable() {
       </td>
       <td class="px-4 py-3 text-sm">${p.ciudad_envio || '-'}</td>
       <td class="px-4 py-3">
-        <span class="px-2 py-1 text-xs rounded-full ${p.canal === 'web' ? 'bg-blue-100 text-blue-700' : p.canal === 'agente' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${p.canal}</span>
+        ${esDistFilter
+          ? `<span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">${escapeHtml(distribuidoresCache[p.distribuidor_id] || 'Dist.')}</span>`
+          : `<span class="px-2 py-1 text-xs rounded-full ${p.canal === 'web' ? 'bg-blue-100 text-blue-700' : p.canal === 'agente' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${p.canal}</span>`}
       </td>
       <td class="px-4 py-3 text-right font-medium">${formatMoney(p.subtotal)}</td>
       ${conMotivo
@@ -314,6 +343,8 @@ window.setPedidosCanalFiltro = async function(canal) {
       btn.className = `subfiltro-btn ${isActive ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'} px-3 py-1 rounded-full text-sm transition`;
     } else if (btn.id === 'subfiltro-web') {
       btn.className = `subfiltro-btn ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} px-3 py-1 rounded-full text-sm transition`;
+    } else if (btn.id === 'subfiltro-distribuidores') {
+      btn.className = `subfiltro-btn ${isActive ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'} px-3 py-1 rounded-full text-sm transition`;
     }
   });
 
