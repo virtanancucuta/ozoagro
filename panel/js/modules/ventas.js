@@ -58,7 +58,7 @@ async function renderVentas(container) {
       </div>
 
       <!-- KPIs por Canal -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
           <div class="flex items-center gap-2 mb-2">
             <span class="w-3 h-3 rounded-full bg-purple-600"></span>
@@ -93,6 +93,18 @@ async function renderVentas(container) {
             <div><span class="text-gray-500">Venta:</span> <span id="kpi-trad-venta" class="font-bold">-</span></div>
           </div>
         </div>
+        ${window.PERFIL && window.PERFIL.rol === 'ceo' ? `
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+            <span class="font-medium text-orange-800">Distribuidores</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div><span class="text-gray-500">Litros:</span> <span id="kpi-dist-litros" class="font-bold">-</span></div>
+            <div><span class="text-gray-500">Venta:</span> <span id="kpi-dist-venta" class="font-bold">-</span></div>
+            <div class="col-span-2"><span class="text-gray-500">Pedidos:</span> <span id="kpi-dist-pedidos" class="font-bold text-orange-700">-</span></div>
+          </div>
+        </div>` : ''}
       </div>
 
       <!-- Cobertura -->
@@ -333,6 +345,29 @@ async function loadKpisPorCanal(range) {
   document.getElementById('kpi-agente-tasa').textContent = numConvs > 0 && numPedidos <= numConvs
     ? `${tasa}% (${numPedidos}/${numConvs})`
     : `${numPedidos} pedidos · ${numConvs} chats`;
+
+  // Distribuidores (solo CEO)
+  if (window.PERFIL && window.PERFIL.rol === 'ceo') {
+    const { data: pedidosDist } = await supabaseClient.fromTodos('pedidos')
+      .select('subtotal, items:pedido_items(litros, cantidad)')
+      .in('estado', ['despachado', 'cerrado'])
+      .eq('es_test', false)
+      .not('distribuidor_id', 'is', null)
+      .gte('fecha_despachado', range.start)
+      .lte('fecha_despachado', range.end + 'T23:59:59');
+
+    if (pedidosDist && pedidosDist.length > 0) {
+      const litros = pedidosDist.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0);
+      const venta = pedidosDist.reduce((s, p) => s + (p.subtotal || 0), 0);
+      document.getElementById('kpi-dist-litros').textContent = litros;
+      document.getElementById('kpi-dist-venta').textContent = formatMoney(venta);
+      document.getElementById('kpi-dist-pedidos').textContent = pedidosDist.length;
+    } else {
+      document.getElementById('kpi-dist-litros').textContent = '0';
+      document.getElementById('kpi-dist-venta').textContent = '$0';
+      document.getElementById('kpi-dist-pedidos').textContent = '0';
+    }
+  }
 }
 
 window.exportVentasCSV = function() {
