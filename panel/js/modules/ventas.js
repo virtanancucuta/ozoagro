@@ -24,7 +24,7 @@ async function renderVentas(container) {
             <option value="web">Web/Landing</option>
             <option value="tradicional">Tradicional</option>
             <option value="agente">Agente IA</option>
-            ${window.PERFIL && window.PERFIL.rol === 'ceo' ? '<option value="distribuidores">Distribuidores</option>' : ''}
+            ${window.PERFIL && window.PERFIL.rol === 'ceo' ? '<option value="mayorista">Mayorista (venta a distribuidores)</option>' : ''}
           </select>
         </div>
       </div>
@@ -97,12 +97,13 @@ async function renderVentas(container) {
         <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
           <div class="flex items-center gap-2 mb-2">
             <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-            <span class="font-medium text-orange-800">Distribuidores</span>
+            <span class="font-medium text-orange-800">Mayorista (a distribuidores)</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div><span class="text-gray-500">Litros:</span> <span id="kpi-dist-litros" class="font-bold">-</span></div>
             <div><span class="text-gray-500">Venta:</span> <span id="kpi-dist-venta" class="font-bold">-</span></div>
-            <div class="col-span-2"><span class="text-gray-500">Pedidos:</span> <span id="kpi-dist-pedidos" class="font-bold text-orange-700">-</span></div>
+            <div><span class="text-gray-500">Pedidos:</span> <span id="kpi-dist-pedidos" class="font-bold text-orange-700">-</span></div>
+            <div><span class="text-gray-500">Margen:</span> <span id="kpi-dist-margen" class="font-bold text-orange-700">-</span></div>
           </div>
         </div>` : ''}
       </div>
@@ -179,7 +180,7 @@ window.onPresetChange = function() {
 window.loadVentasData = async function() {
   const preset = document.getElementById('ventas-preset').value;
   const canal = document.getElementById('ventas-canal').value;
-  const esDistFilter = canal === 'distribuidores';
+  const esDistFilter = canal === 'mayorista';   // CEDI: lo que OZOAGRO vende a sus distribuidores (precio mayorista − costo OZOAGRO)
 
   let range;
   if (preset === 'custom') {
@@ -192,36 +193,12 @@ window.loadVentasData = async function() {
     range = getDateRange(preset);
   }
 
-  // Get resumen via RPC
-  // Para distribuidores: consultar con p_distribuidor_id especial o hacer query manual
-  let resumen;
-  if (esDistFilter) {
-    // Sumar ventas de TODOS los distribuidores (p_distribuidor_id no puede ser 'todos', hacemos query manual)
-    const { data: pedidos } = await supabaseClient.fromTodos('pedidos')
-      .select('subtotal, costo_total, rentabilidad, items:pedido_items(litros, cantidad)')
-      .in('estado', ['despachado', 'cerrado'])
-      .eq('es_test', false)
-      .not('distribuidor_id', 'is', null)
-      .gte('fecha_despachado', range.start)
-      .lte('fecha_despachado', range.end + 'T23:59:59');
-
-    if (pedidos && pedidos.length > 0) {
-      const litros = pedidos.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0);
-      const venta = pedidos.reduce((s, p) => s + (p.subtotal || 0), 0);
-      const costo = pedidos.reduce((s, p) => s + (p.costo_total || 0), 0);
-      const rent = pedidos.reduce((s, p) => s + (p.rentabilidad || 0), 0);
-      resumen = [{ litros_vendidos: litros, venta_total: venta, costo_total: costo, rentabilidad: rent, rentabilidad_pct: venta > 0 ? Math.round(rent / venta * 100) : 0, valor_promedio_litro: litros > 0 ? Math.round(venta / litros) : 0 }];
-    } else {
-      resumen = [{ litros_vendidos: 0, venta_total: 0, costo_total: 0, rentabilidad: 0, rentabilidad_pct: 0, valor_promedio_litro: 0 }];
-    }
-  } else {
-    const { data } = await supabaseClient.rpc('ventas_resumen', {
-      p_fecha_ini: range.start,
-      p_fecha_fin: range.end,
-      p_canal: canal || null
-    });
-    resumen = data;
-  }
+  // Get resumen via RPC (el canal 'mayorista' lo resuelve la misma RPC para el CEO)
+  const { data: resumen } = await supabaseClient.rpc('ventas_resumen', {
+    p_fecha_ini: range.start,
+    p_fecha_fin: range.end,
+    p_canal: canal || null
+  });
 
   if (resumen && resumen[0]) {
     const r = resumen[0];
@@ -247,22 +224,35 @@ window.loadVentasData = async function() {
   }
 
   // Get pedidos detail
-  let query = (esDistFilter ? supabaseClient.fromTodos('pedidos') : supabaseClient.from('pedidos'))
+  const tbody = document.getElementById('ventas-tbody');
+  if (esDistFilter) {
+    const { data: filas } = await supabaseClient.rpc('ventas_mayorista_detalle', { p_fecha_ini: range.start, p_fecha_fin: range.end });
+    if (!filas || filas.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin ventas mayoristas en este periodo</td></tr>'; return; }
+    tbody.innerHTML = filas.map(f => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 font-mono text-sm">${f.codigo_publico}</td>
+        <td class="px-4 py-3 text-sm">${formatDate(f.fecha)}</td>
+        <td class="px-4 py-3">${escapeHtml(f.distribuidor || '-')}<div class="text-xs text-gray-400">${escapeHtml(f.transportadora || '')} ${escapeHtml(f.guia || '')}</div></td>
+        <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">mayorista</span></td>
+        <td class="px-4 py-3 text-right">${f.litros}</td>
+        <td class="px-4 py-3 text-right font-medium">${formatMoney(f.valor)}</td>
+        <td class="px-4 py-3 text-right ${f.rentabilidad < 0 ? 'text-red-600' : 'text-green-600'}">${formatMoney(f.rentabilidad)}</td>
+      </tr>`).join('');
+    return;
+  }
+  let query = supabaseClient.from('pedidos')
     .select('*, cliente:clientes(nombre), items:pedido_items(litros, cantidad)')
     .in('estado', ['despachado', 'cerrado'])
     .eq('es_test', false)
     .or(`and(fecha_despachado.gte.${range.start},fecha_despachado.lte.${range.end}T23:59:59),and(fecha_despachado.is.null,created_at.gte.${range.start},created_at.lte.${range.end}T23:59:59)`)
     .order('fecha_despachado', { ascending: false, nullsFirst: false });
 
-  if (esDistFilter) {
-    query = query.not('distribuidor_id', 'is', null);
-  } else if (canal) {
+  if (canal) {
     query = query.eq('canal', canal);
   }
 
   const { data: pedidos } = await query;
 
-  const tbody = document.getElementById('ventas-tbody');
   if (!pedidos || pedidos.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin ventas en este periodo</td></tr>';
     return;
@@ -346,43 +336,13 @@ async function loadKpisPorCanal(range) {
     ? `${tasa}% (${numPedidos}/${numConvs})`
     : `${numPedidos} pedidos · ${numConvs} chats`;
 
-  // Distribuidores (solo CEO)
+  // Mayorista (solo CEO): venta de OZOAGRO a sus distribuidores, reconocida al despachar desde el CEDI
   if (window.PERFIL && window.PERFIL.rol === 'ceo') {
-    const { data: pedidosDist } = await supabaseClient.fromTodos('pedidos')
-      .select('subtotal, items:pedido_items(litros, cantidad)')
-      .in('estado', ['despachado', 'cerrado'])
-      .eq('es_test', false)
-      .not('distribuidor_id', 'is', null)
-      .gte('fecha_despachado', range.start)
-      .lte('fecha_despachado', range.end + 'T23:59:59');
-
-    if (pedidosDist && pedidosDist.length > 0) {
-      const litros = pedidosDist.reduce((s, p) => s + (p.items?.reduce((ss, i) => ss + (i.litros * i.cantidad), 0) || 0), 0);
-      const venta = pedidosDist.reduce((s, p) => s + (p.subtotal || 0), 0);
-      document.getElementById('kpi-dist-litros').textContent = litros;
-      document.getElementById('kpi-dist-venta').textContent = formatMoney(venta);
-      document.getElementById('kpi-dist-pedidos').textContent = pedidosDist.length;
-    } else {
-      document.getElementById('kpi-dist-litros').textContent = '0';
-      document.getElementById('kpi-dist-venta').textContent = '$0';
-      document.getElementById('kpi-dist-pedidos').textContent = '0';
-    }
+    const { data: resMay } = await supabaseClient.rpc('ventas_resumen', { p_fecha_ini: range.start, p_fecha_fin: range.end, p_canal: 'mayorista' });
+    const m = (resMay && resMay[0]) || {};
+    document.getElementById('kpi-dist-litros').textContent = m.litros_vendidos || 0;
+    document.getElementById('kpi-dist-venta').textContent = formatMoney(m.venta_total || 0);
+    document.getElementById('kpi-dist-pedidos').textContent = m.num_pedidos || 0;
+    document.getElementById('kpi-dist-margen').textContent = formatMoney(m.rentabilidad || 0) + ' (' + (m.rentabilidad_pct || 0) + '%)';
   }
-}
-
-window.exportVentasCSV = function() {
-  const rows = document.querySelectorAll('#ventas-tbody tr');
-  let csv = 'Codigo,Fecha,Cliente,Canal,Litros,Venta,Rentabilidad\n';
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 7) {
-      csv += Array.from(cells).map(c => '"' + c.textContent.trim().replace(/"/g, '""') + '"').join(',') + '\n';
-    }
-  });
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'ventas_ozoagro.csv';
-  a.click();
 };

@@ -17,12 +17,21 @@ let pedidosData = [];
 let productosCache = [];
 let clientesCache = [];
 let distribuidoresCache = {}; // id -> nombre para mostrar en la tabla
+// CEDI (2026-09-21): un pedido de distribuidor tiene dos vidas: la del distribuidor con su cliente (estado) y la de OZOAGRO con el
+// distribuidor (estado_cedi: por_pagar → pagado → despachado). El CEO lo opera desde el sub-filtro "Distribuidores" de cada pestaña.
+const CEDI_POR_TAB = { por_confirmar: 'por_pagar', confirmado: 'pagado', despachado: 'despachado' };
+const CEDI_TXT = { por_pagar: 'Pago por confirmar', pagado: 'Pagado · por despachar', despachado: 'Despachado por OZOAGRO' };
+const esCEO = () => !!(window.PERFIL && window.PERFIL.rol === 'ceo');
+function precioMayoristaDe(productoId) { const p = productosCache.find(x => x.id === productoId); return p ? Number(p.precio_mayorista || p.precio_venta || 0) : 0; }
+function costoCeoDe(productoId) { const p = productosCache.find(x => x.id === productoId); return p ? Number(p.costo_unitario || 0) : 0; }
+function valorMayorista(pedido) { if (pedido.cedi_valor != null) return Number(pedido.cedi_valor); return (pedido.items || []).reduce((a, i) => a + Number(i.cantidad || 0) * precioMayoristaDe(i.producto_id), 0); }
+function margenMayorista(pedido) { if (pedido.cedi_valor != null) return Number(pedido.cedi_valor) - Number(pedido.cedi_costo || 0); return valorMayorista(pedido) - (pedido.items || []).reduce((a, i) => a + Number(i.cantidad || 0) * costoCeoDe(i.producto_id), 0); }
 
 async function renderPedidos(container) {
   // Load productos cache
   if (productosCache.length === 0) {
-    const { data } = await supabaseClient.from('productos').select('*').eq('activo', true);
-    productosCache = data || [];
+    const { data } = await supabaseClient.rpc('productos_panel');   // CEDI: costo según el rol (CEO real; distribuidor = precio mayorista)
+    productosCache = (data || []).filter(p => p.activo);
   }
 
   container.innerHTML = `
@@ -51,11 +60,12 @@ async function renderPedidos(container) {
       </div>
 
       <!-- Sub-filtro por canal (solo en Por confirmar) -->
-      <div id="subfiltro-canal" class="${pedidosTab === 'por_confirmar' ? 'flex gap-2 flex-wrap' : 'hidden'}">
+      <div id="subfiltro-canal" class="${(pedidosTab === 'por_confirmar' || (esCEO() && CEDI_POR_TAB[pedidosTab])) ? 'flex gap-2 flex-wrap' : 'hidden'}">
         <button onclick="setPedidosCanalFiltro('')" class="subfiltro-btn ${pedidosCanalFiltro === '' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-todos">Todos</button>
         <button onclick="setPedidosCanalFiltro('agente')" class="subfiltro-btn ${pedidosCanalFiltro === 'agente' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-agente">Agente IA</button>
         <button onclick="setPedidosCanalFiltro('web')" class="subfiltro-btn ${pedidosCanalFiltro === 'web' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-web">Landing/Web</button>
         ${window.PERFIL && window.PERFIL.rol === 'ceo' ? `<button onclick="setPedidosCanalFiltro('distribuidores')" class="subfiltro-btn ${pedidosCanalFiltro === 'distribuidores' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'} px-3 py-1 rounded-full text-sm transition" id="subfiltro-distribuidores">Distribuidores</button>` : ''}
+        ${esCEO() ? `<span id="subfiltro-ayuda" class="text-xs text-gray-500 self-center ${pedidosCanalFiltro === 'distribuidores' ? '' : 'hidden'}">${({ por_confirmar: 'Pedidos que el distribuidor ya confirmó con su cliente: revisa que te haya pagado y confirma el pago.', confirmado: 'Pagados por el distribuidor: despáchale la mercancía con la guía. Su inventario recibe las unidades a precio mayorista.', despachado: 'Mercancía enviada al distribuidor; él despacha a su cliente.' })[pedidosTab] || ''}</span>` : ''}
       </div>
 
       <!-- Table -->
@@ -194,18 +204,16 @@ async function loadPedidos() {
   // Si es filtro distribuidores, usar fromTodos() para ver todos los pedidos con distribuidor_id
   const esDistFilter = pedidosCanalFiltro === 'distribuidores';
   let query = (esDistFilter ? supabaseClient.fromTodos('pedidos') : supabaseClient.from('pedidos'))
-    .select('*, cliente:clientes(*), items:pedido_items(*, producto:productos(*))')
-    .eq('estado', pedidosTab)
+    .select('*, cliente:clientes(*), items:pedido_items(*, producto:productos(id, nombre, litros, precio_venta))')
     .eq('es_test', false)
     .order('created_at', { ascending: false });
 
-  // Aplicar filtro de canal en Por confirmar
-  if (pedidosTab === 'por_confirmar' && pedidosCanalFiltro) {
-    if (esDistFilter) {
-      query = query.not('distribuidor_id', 'is', null);
-    } else {
-      query = query.eq('canal', pedidosCanalFiltro);
-    }
+  if (esDistFilter && CEDI_POR_TAB[pedidosTab]) {
+    // CEDI: la pestaña del CEO mira el estado con el distribuidor, no el del cliente final
+    query = query.not('distribuidor_id', 'is', null).eq('estado_cedi', CEDI_POR_TAB[pedidosTab]).not('estado', 'in', '(cancelado,devuelto)');
+  } else {
+    query = query.eq('estado', pedidosTab);
+    if (pedidosCanalFiltro && !esDistFilter) query = query.eq('canal', pedidosCanalFiltro);
   }
 
   const { data, error } = await query;
@@ -219,7 +227,7 @@ async function loadPedidos() {
   renderPedidosTable();
 
   // Actualizar contadores en sub-filtros
-  if (pedidosTab === 'por_confirmar') {
+  if (pedidosTab === 'por_confirmar' || (esCEO() && CEDI_POR_TAB[pedidosTab])) {
     updateSubfiltroContadores();
   }
 }
@@ -229,7 +237,7 @@ async function updateSubfiltroContadores() {
   const { data: counts } = await supabaseClient
     .from('pedidos')
     .select('canal')
-    .eq('estado', 'por_confirmar')
+    .eq('estado', pedidosTab)
     .eq('es_test', false);
 
   if (!counts) return;
@@ -251,11 +259,15 @@ async function updateSubfiltroContadores() {
   if (btnDist && window.PERFIL && window.PERFIL.rol === 'ceo') {
     const { data: distCounts } = await supabaseClient.fromTodos('pedidos')
       .select('id')
-      .eq('estado', 'por_confirmar')
+      .eq('estado_cedi', CEDI_POR_TAB[pedidosTab] || 'por_pagar')
+      .not('estado', 'in', '(cancelado,devuelto)')
       .eq('es_test', false)
       .not('distribuidor_id', 'is', null);
     const distTotal = distCounts ? distCounts.length : 0;
     btnDist.textContent = `Distribuidores (${distTotal})`;
+    ['subfiltro-todos', 'subfiltro-agente', 'subfiltro-web'].forEach(id => { const b = document.getElementById(id); if (b) b.classList.toggle('hidden', pedidosTab !== 'por_confirmar'); });
+    const ayuda = document.getElementById('subfiltro-ayuda');
+    if (ayuda) { ayuda.textContent = ({ por_confirmar: 'Pedidos que el distribuidor ya confirmó con su cliente: revisa que te haya pagado y confirma el pago.', confirmado: 'Pagados por el distribuidor: despáchale la mercancía con la guía. Su inventario recibe las unidades a precio mayorista.', despachado: 'Mercancía enviada al distribuidor; él despacha a su cliente.' })[pedidosTab] || ''; ayuda.classList.toggle('hidden', pedidosCanalFiltro !== 'distribuidores'); }
   }
 }
 
@@ -267,8 +279,8 @@ function renderPedidosTable() {
   const thead = document.getElementById('pedidos-thead');
   if (thead) {
     thead.innerHTML = th('Codigo') + th('Fecha') + th('Cliente') + th('Ciudad') +
-      (esDistFilter ? th('Distribuidor') : th('Canal')) + th('Valor', 'right') +
-      (conMotivo ? th('Motivo') : th('Rentabilidad', 'right')) + th('Acciones', 'center');
+      (esDistFilter ? th('Distribuidor') : th('Canal')) + th(esDistFilter ? 'Valor mayorista' : 'Valor', 'right') +
+      (conMotivo ? th('Motivo') : th(esDistFilter ? 'Margen OZOAGRO' : 'Rentabilidad', 'right')) + th('Acciones', 'center');
   }
   const btnExp = document.getElementById('btn-export-cancelados');
   if (btnExp) btnExp.classList.toggle('hidden', pedidosTab !== 'cancelado');
@@ -289,13 +301,15 @@ function renderPedidosTable() {
       <td class="px-4 py-3 text-sm">${p.ciudad_envio || '-'}</td>
       <td class="px-4 py-3">
         ${esDistFilter
-          ? `<span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">${escapeHtml(distribuidoresCache[p.distribuidor_id] || 'Dist.')}</span>`
+          ? `<span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">${escapeHtml(distribuidoresCache[p.distribuidor_id] || 'Dist.')}</span><div class="text-xs text-gray-500 mt-1">${CEDI_TXT[p.estado_cedi] || ''}${p.guia_cedi ? ' · guía ' + escapeHtml(p.guia_cedi) : ''}</div>`
           : `<span class="px-2 py-1 text-xs rounded-full ${p.canal === 'web' ? 'bg-blue-100 text-blue-700' : p.canal === 'agente' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${p.canal}</span>`}
       </td>
-      <td class="px-4 py-3 text-right font-medium">${formatMoney(p.subtotal)}</td>
+      <td class="px-4 py-3 text-right font-medium">${esDistFilter ? formatMoney(valorMayorista(p)) + `<div class="text-xs text-gray-400 font-normal">cliente pagó ${formatMoney(p.subtotal)}</div>` : formatMoney(p.subtotal)}</td>
       ${conMotivo
         ? `<td class="px-4 py-3 text-sm text-gray-700 max-w-xs"><div class="truncate" title="${escapeHtml(p.motivo || '')}">${escapeHtml(p.motivo || '-')}</div><div class="text-xs text-gray-400">${formatDate(p.fecha_cancelado || p.updated_at)}</div></td>`
-        : `<td class="px-4 py-3 text-right ${p.rentabilidad_negativa ? 'text-red-600' : 'text-green-600'}">${formatMoney(p.rentabilidad)}</td>`}
+        : (esDistFilter
+          ? `<td class="px-4 py-3 text-right ${margenMayorista(p) < 0 ? 'text-red-600' : 'text-green-600'}">${formatMoney(margenMayorista(p))}</td>`
+          : `<td class="px-4 py-3 text-right ${p.rentabilidad_negativa ? 'text-red-600' : 'text-green-600'}">${formatMoney(p.rentabilidad)}</td>`)}
       <td class="px-4 py-3">
         <div class="flex justify-center gap-1">
           ${getAccionesButtons(p)}
@@ -308,6 +322,18 @@ function renderPedidosTable() {
 function getAccionesButtons(pedido) {
   const wa = pedido.cliente?.telefono ? `<a href="${waLink(pedido.cliente.telefono, 'Hola! Tu pedido ' + pedido.codigo_publico)}" target="_blank" class="p-1 text-green-600 hover:bg-green-50 rounded" title="WhatsApp"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>` : '';
 
+  // CEO operando la venta al distribuidor (sub-filtro Distribuidores)
+  if (esCEO() && pedidosCanalFiltro === 'distribuidores' && pedido.distribuidor_id) {
+    if (pedido.estado_cedi === 'por_pagar') return `<button onclick="accionCedi('${pedido.id}','cedi_pago')" class="px-3 py-1 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700">Confirmar pago</button>`;
+    if (pedido.estado_cedi === 'pagado') return `<button onclick="accionPedido('${pedido.id}','cedi_despachar')" class="px-3 py-1 text-sm rounded-lg bg-primary text-white hover:bg-green-700">Despachar al distribuidor</button>`;
+    if (pedido.estado_cedi === 'despachado') return `<span class="text-xs text-gray-500">${escapeHtml(pedido.transportadora_cedi || '')} ${escapeHtml(pedido.guia_cedi || '')}</span>`;
+    return '';
+  }
+  // Distribuidor: no puede despachar a su cliente hasta que OZOAGRO le envíe la mercancía (el servidor también lo exige)
+  if (window.esDistribuidor && window.esDistribuidor() && pedido.estado === 'confirmado' && pedido.estado_cedi !== 'despachado') {
+    return `${wa}<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800" title="Podrás despachar cuando OZOAGRO confirme tu pago y envíe la mercancía">${pedido.estado_cedi === 'pagado' ? 'Pago confirmado · OZOAGRO está despachando' : 'Esperando a OZOAGRO (pago por confirmar)'}</span>
+        <button onclick="accionPedido('${pedido.id}','cancelar')" class="p-1 text-red-600 hover:bg-red-50 rounded" title="Cancelar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+  }
   switch (pedido.estado) {
     case 'por_confirmar':
       return `${wa}<button onclick="accionPedido('${pedido.id}','confirmar')" class="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Confirmar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
@@ -332,8 +358,9 @@ window.setPedidosTab = async function(tab) {
   // Mostrar/ocultar sub-filtro
   const subfiltro = document.getElementById('subfiltro-canal');
   if (subfiltro) {
-    subfiltro.classList.toggle('hidden', tab !== 'por_confirmar');
-    subfiltro.classList.toggle('flex', tab === 'por_confirmar');
+    const conSub = tab === 'por_confirmar' || (esCEO() && !!CEDI_POR_TAB[tab]);   // CEDI: el CEO también filtra Distribuidores en Confirmados y Despachados
+    subfiltro.classList.toggle('hidden', !conSub);
+    subfiltro.classList.toggle('flex', conSub);
   }
 
   await loadPedidos();
@@ -542,6 +569,16 @@ async function handleCrearPedido(e) {
   await loadPedidos();
 }
 
+window.accionCedi = async function(id, tipo) {
+  if (tipo === 'cedi_pago') {
+    if (!confirm('¿Confirmas que el distribuidor ya te pagó este pedido a precio mayorista?')) return;
+    const { error } = await supabaseClient.rpc('cedi_confirmar_pago', { p_pedido_id: id });
+    if (error) { showToast('No se pudo: ' + error.message, 'error'); return; }
+    showToast('Pago confirmado. Ahora despáchale la mercancía (pestaña Confirmados › Distribuidores).');
+    await loadPedidos();
+  }
+};
+
 window.accionPedido = function(id, tipo) {
   document.getElementById('accion-pedido-id').value = id;
   document.getElementById('accion-tipo').value = tipo;
@@ -561,6 +598,11 @@ window.accionPedido = function(id, tipo) {
       break;
     case 'despachar':
       document.getElementById('accion-titulo').textContent = 'Despachar Pedido';
+      document.getElementById('accion-guia-container').classList.remove('hidden');
+      document.getElementById('accion-transportadora-container').classList.remove('hidden');
+      break;
+    case 'cedi_despachar':
+      document.getElementById('accion-titulo').textContent = 'Despachar al distribuidor (desde el CEDI)';
       document.getElementById('accion-guia-container').classList.remove('hidden');
       document.getElementById('accion-transportadora-container').classList.remove('hidden');
       break;
@@ -587,6 +629,17 @@ async function handleAccionPedido(e) {
   e.preventDefault();
   const id = document.getElementById('accion-pedido-id').value;
   const tipo = document.getElementById('accion-tipo').value;
+
+  if (tipo === 'cedi_despachar') {
+    const guia = document.getElementById('accion-guia').value.trim();
+    if (!guia) { showToast('La guia es obligatoria para despachar', 'error'); return; }
+    const { data: r, error } = await supabaseClient.rpc('cedi_despachar', { p_pedido_id: id, p_guia: guia, p_transportadora: document.getElementById('accion-transportadora').value || null });
+    if (error) { showToast('No se pudo: ' + error.message, 'error'); return; }
+    showToast('Despachado al distribuidor: ' + (r && r.litros) + ' L salieron de tu inventario y entraron al suyo. Venta mayorista ' + formatMoney(r && r.valor) + '.');
+    closeModal('modal-accion-pedido');
+    await loadPedidos();
+    return;
+  }
 
   let updateData = {};
   switch (tipo) {

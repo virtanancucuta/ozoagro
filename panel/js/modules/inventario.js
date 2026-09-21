@@ -93,16 +93,16 @@ async function renderInventario(container) {
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Precio Venta (publico)</label>
-            <input type="number" id="edit-prod-precio" required class="w-full px-3 py-2 border rounded-lg" min="0" step="1000">
+            <input type="number" id="edit-prod-precio" required class="w-full px-3 py-2 border rounded-lg" min="0" step="any">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Precio Mayorista (costo del distribuidor)</label>
-            <input type="number" id="edit-prod-mayorista" class="w-full px-3 py-2 border rounded-lg" min="0" step="1000" placeholder="Dejar vacio = usa precio venta">
+            <input type="number" id="edit-prod-mayorista" class="w-full px-3 py-2 border rounded-lg" min="0" step="any" placeholder="Dejar vacio = usa precio venta">
             <p class="text-xs text-gray-500 mt-1">Este es el precio al que OZOAGRO le vende al distribuidor. El distribuidor lo paga como su costo.</p>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Costo Unitario (de OZOAGRO)</label>
-            <input type="number" id="edit-prod-costo" required class="w-full px-3 py-2 border rounded-lg" min="0" step="1000">
+            <input type="number" id="edit-prod-costo" required class="w-full px-3 py-2 border rounded-lg" min="0" step="any">
           </div>
           <div class="flex justify-end gap-3">
             <button type="button" onclick="closeModal('modal-editar-producto')" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
@@ -195,7 +195,12 @@ function mensajeErrorInventario(error) {
 
 async function loadInventarioData() {
   // Load productos
-  const { data: productos } = await supabaseClient.from('productos').select('*').eq('activo', true).order('litros');
+  // CEDI (2026-09-21): productos por RPC. El CEO ve su costo y el precio mayorista; el distribuidor recibe como "costo"
+  // el precio mayorista que le fijó OZOAGRO (el costo real de OZOAGRO ya no sale por la API para él) y no edita productos.
+  const { data: prodAll } = await supabaseClient.rpc('productos_panel');
+  const productos = (prodAll || []).filter(p => p.activo);
+  window.__prodPanel = {}; (prodAll || []).forEach(p => { window.__prodPanel[p.id] = p; });
+  const soyDist = !!(window.esDistribuidor && window.esDistribuidor());
 
   const cardsContainer = document.getElementById('productos-cards');
   cardsContainer.innerHTML = (productos || []).map(p => `
@@ -206,10 +211,10 @@ async function loadInventarioData() {
       </div>
       <div class="text-right shrink-0">
         <div class="font-semibold">${formatMoney(p.precio_venta)}</div>
-        ${p.precio_mayorista ? `<div class="text-xs text-purple-600">mayorista ${formatMoney(p.precio_mayorista)}</div>` : ''}
-        <div class="text-xs text-gray-500">costo ${formatMoney(p.costo_unitario)}</div>
+        ${!soyDist && p.precio_mayorista ? `<div class="text-xs text-purple-600">mayorista ${formatMoney(p.precio_mayorista)}</div>` : ''}
+        <div class="text-xs text-gray-500">${soyDist ? 'tu costo (mayorista)' : 'costo'} ${formatMoney(p.costo_unitario)}</div>
       </div>
-      <button onclick="editarProducto('${p.id}')" class="text-primary hover:underline text-sm shrink-0">Editar</button>
+      ${soyDist ? '' : `<button onclick="editarProducto('${p.id}')" class="text-primary hover:underline text-sm shrink-0">Editar</button>`}
     </div>
   `).join('') || '<div class="col-span-3 text-center text-gray-500">Sin productos</div>';
 
@@ -288,7 +293,7 @@ async function handleAgregarInventario(e) {
 }
 
 window.editarProducto = async function(id) {
-  const { data: producto } = await supabaseClient.from('productos').select('*').eq('id', id).single();
+  const producto = (window.__prodPanel || {})[id];
   if (!producto) return;
 
   document.getElementById('edit-prod-id').value = id;
@@ -308,7 +313,7 @@ async function handleEditarProducto(e) {
   const nuevoCosto = parseFloat(document.getElementById('edit-prod-costo').value);
 
   // Get current costo for history
-  const { data: producto } = await supabaseClient.from('productos').select('costo_unitario').eq('id', id).single();
+  const producto = (window.__prodPanel || {})[id];
 
   // Update producto
   const { error } = await supabaseClient.from('productos').update({
