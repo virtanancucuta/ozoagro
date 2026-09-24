@@ -104,15 +104,44 @@
   }); });
 
   /* ---------- Productos (por litros) ---------- */
-  let productosCache = null;
-  async function productoPorLitros(litros) {
-    if (!productosCache) {
-      const { data, error } = await sb.from('productos').select('id, litros, nombre, precio_venta').eq('activo', true);
-      if (error) throw error;
-      productosCache = data || [];
+  let productosPromesa = null;
+  function cargarProductos() {
+    if (!productosPromesa) {
+      productosPromesa = sb.from('productos').select('id, litros, nombre, precio_venta').eq('activo', true)
+        .then(({ data, error }) => { if (error) throw error; return data || []; });
+      productosPromesa.catch(() => { productosPromesa = null; });   // si falla, el próximo intento vuelve a consultar
     }
-    return productosCache.find(p => Number(p.litros) === Number(litros)) || null;
+    return productosPromesa;
   }
+  async function productoPorLitros(litros) {
+    const productos = await cargarProductos();
+    return productos.find(p => Number(p.litros) === Number(litros)) || null;
+  }
+
+  /* ---------- Precios desde la BD (2026-09-24): el CEO cambia el precio en Panel › Inventario y la landing lo muestra sola
+     (tarjetas, selector del formulario, total y pixel). Los precios escritos en el HTML quedan de respaldo si la consulta falla. ---------- */
+  const fmtPrecio = (n) => '$' + Math.round(Number(n)).toLocaleString('es-CO');
+  function aplicarPrecios(productos) {
+    const porLitros = {};
+    productos.forEach(p => { porLitros[Number(p.litros)] = Number(p.precio_venta); });
+    Object.keys(LITROS).forEach(nombre => {
+      const precio = porLitros[LITROS[nombre]];
+      if (!(precio > 0)) return;
+      PRECIOS[LITROS[nombre]] = precio;
+      const txt = fmtPrecio(precio);
+      document.querySelectorAll('.presentation-card').forEach(c => {
+        if (c.dataset.product !== nombre) return;
+        c.dataset.price = txt;
+        const el = c.querySelector('.card-price'); if (el) el.textContent = txt;
+      });
+      document.querySelectorAll('#modalVariant option').forEach(o => {
+        if (o.value !== nombre) return;
+        o.dataset.price = txt; o.textContent = nombre + ' — ' + txt;
+      });
+    });
+    if (typeof window.ozoagroSyncPrecio === 'function') window.ozoagroSyncPrecio();   // refresca el producto ya elegido (script.js)
+  }
+  cargarProductos().then(aplicarPrecios).catch(e => console.log('Precios no cargados (quedan los del HTML):', e));
 
   /* ---------- Envío del pedido (lo llama script.js) ---------- */
   window.ozoagroEnviarPedido = async function (order, form) {

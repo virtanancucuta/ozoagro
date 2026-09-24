@@ -129,6 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   setSelectedCard(initialCard);
+  // 2026-09-24: conexion.js reescribe los precios con los de la BD y llama esto para refrescar el producto ya elegido.
+  window.ozoagroSyncPrecio = () => setSelectedCard(cards.find(c => c.classList.contains("selected")) || initialCard);
 
   function openModal() {
     syncModal(selectedProduct);
