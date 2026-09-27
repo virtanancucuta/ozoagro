@@ -1,1257 +1,1408 @@
 {
-  "name": "OZOAGRO WhatsApp - Agente Andres v10",
-  "nodes": [
-    {
-      "parameters": {
-        "path": "whatsapp-aimma",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "wh_get",
-      "name": "Webhook GET Verify",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -208,
-        0
-      ],
-      "webhookId": "ozoagro-wa-verify"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "c1",
-              "leftValue": "={{ $json.query['hub.verify_token'] }}",
-              "rightValue": "aimma-verify-2026",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if_token",
-      "name": "Token correcto",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        0,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.query['hub.challenge'] }}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "resp_ch",
-      "name": "Responder challenge",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        224,
-        -112
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "Forbidden",
-        "options": {
-          "responseCode": 403
-        }
-      },
-      "id": "resp_403",
-      "name": "Responder 403",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        224,
-        112
-      ]
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "whatsapp-aimma",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "wh_post",
-      "name": "Webhook POST Mensajes",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -208,
-        368
-      ],
-      "webhookId": "ozoagro-wa-messages"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "EVENT_RECEIVED",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "resp_200",
-      "name": "Responder 200 a Meta",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        0,
-        368
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed') {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
-      },
-      "id": "extract",
-      "name": "Extraer mensaje",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        208,
-        368
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-audio",
-              "leftValue": "={{ $json.es_audio }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if_audio",
-      "name": "Es audio",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        416,
-        368
-      ]
-    },
-    {
-      "parameters": {
-        "url": "=https://graph.facebook.com/v25.0/{{ $('Extraer mensaje').item.json.audio_id }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {}
-      },
-      "id": "get_media",
-      "name": "Obtener URL media",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        624,
-        208
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "HxFbYAP7T9Wi7vGc",
-          "name": "AIMMA Meta WhatsApp Token"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.url }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file"
-            }
-          }
-        }
-      },
-      "id": "download_audio",
-      "name": "Descargar audio",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        832,
-        208
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "HxFbYAP7T9Wi7vGc",
-          "name": "AIMMA Meta WhatsApp Token"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "audio",
-        "operation": "transcribe",
-        "options": {
-          "language": "es"
-        }
-      },
-      "id": "transcribe",
-      "name": "Transcribir audio",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [
-        1040,
-        208
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "Gy1kSNlEmpsaTTwE",
-          "name": "AIMMA OpenAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const orig = $('Extraer mensaje').item.json;\nlet transcripcion = '';\ntry { transcripcion = $input.first().json.text || ''; } catch (e) {}\nconst texto = (transcripcion || orig.texto || '').trim();\nreturn [{ json: { ...orig, texto, fue_audio: !!orig.es_audio } }];"
-      },
-      "id": "merge_text",
-      "name": "Unir texto",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1248,
-        368
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $json.from, p_contenido: $json.texto, p_nombre: $json.nombre }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "id": "reg_in",
-      "name": "Registrar entrante",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1456,
-        368
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500,
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ ($('Unir texto').item.json.fue_audio ? '(nota de voz transcrita) ' : '') + ($('Es el ultimo?').item.json.texto || $('Unir texto').item.json.texto) }}",
-        "options": {
-          "systemMessage": "=# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\"). NUNCA escribas \"don\" o \"doña\" solos, sin nombre: si aún no sabes el nombre, háblale de \"usted\".\n- Nunca digas desde qué ciudad escribes tú ni inventes tu ubicación.\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje del cliente trae varias líneas, son varios mensajes que mandó seguidos: léelos todos y responde a todo en UN solo mensaje, sin saludar otra vez.\n- Nunca vuelvas a pedir un dato que ya esté en el historial (nombre, ciudad, cultivo): úsalo con naturalidad.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda con el SALUDO CORRECTO PARA LA HORA (te lo doy abajo en el contexto; úsalo tal cual, nunca otro) y preséntate: \"¡[saludo según la hora]! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números cuando ya hay interés, y SIEMPRE que los pida: si el cliente pregunta cuánto vale o pide recomendación y ya dijo cuántas hectáreas o litros necesita, respóndele en ese mismo mensaje con la presentación recomendada, el total, el valor por litro y el ahorro; puedes preguntar su nombre o cultivo en la misma respuesta, pero nunca aplaces el precio a otro mensaje.\n8. Cierra con alternativa y con números: {{ $('Armar precios').first().json.cierre }}\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies; se actualizan solos desde el inventario de OZOAGRO)\nPRESENTACIONES Y PRECIOS (son exactamente los de la página oficial; pago contra entrega y envío gratis):\n{{ $('Armar precios').first().json.bloque }}\nCÓMO RECOMENDAR: si no sabes cuántas hectáreas tiene o cuántas bombas gasta por aplicación, pregúntalo; si ya lo dijo, recomienda de inmediato. La dosis es 1 litro de OZOAGRO por hectárea por aplicación, cada 12 a 15 días. Con eso recomienda: hasta 1 hectárea → el litro; de 2 a 4 hectáreas → el galón; de 5 a 10 hectáreas → 10 unidades; más de 10 hectáreas → 20 unidades. Si duda entre dos, muéstrale el precio por litro de cada una.\n{{ $('Armar precios').first().json.combinaciones }}\n- OJO: di \"galón de 4 litros\" (es un solo envase) y \"10 unidades\" / \"20 unidades\" (son envases de 1 litro). Ya NO existen los combos de 2 ni de 3 litros ni sus precios anteriores.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n{{ $('Armar precios').first().json.bomba }}\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- ENVÍO GRATIS a cualquier parte de Colombia desde 1 litro (no hay costo de envío, nunca lo cobres ni digas que se confirma). Va por transportadora (Interrapidísimo, Envía o Servientrega) y tarda de 4 a 8 días hábiles; se le avisa el seguimiento.\n- Pago CONTRAENTREGA en TODOS los pedidos: el cliente no paga nada por adelantado; paga en efectivo en su casa o finca cuando la transportadora le entrega el producto. Resume siempre así: \"el envío es gratis y paga cuando le llegue\".\n- Después de registrar el pedido, un asesor de OZOAGRO lo llama para confirmarlo; solo entonces se despacha.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba ({{ $('Armar precios').first().json.objecion }}) y al precio por litro de las presentaciones grandes y al rendimiento (1 L = 200 L de mezcla), a lo que hoy gasta en químicos más los días de carencia perdidos, y recuérdale que el envío es gratis y no paga nada hasta recibirlo.\n- Desconfianza / \"¿sí funciona?\" → contraentrega y envío gratis: \"usted no arriesga un peso: el envío es gratis y paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos que FALTEN uno por uno: nombre completo, departamento, ciudad o municipio, dirección de entrega y cuántos litros desea (el teléfono es el de este WhatsApp salvo que dé otro). REGLA DE ORO: en cuanto tengas nombre, ciudad, departamento, dirección y litros, NO hagas ninguna otra pregunta ni cambies de tema: escribe el resumen completo y pregunta \"¿Me confirma que todo está correcto?\". Si el cliente ya mandó todos los datos y además dijo \"sí\", \"confirmo\" o \"todo correcto\", tómalo como confirmación: registra el pedido en ese mismo mensaje (despedida + tag), sin volver a preguntar. Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido de X (1 litro / galón de 4 litros / 10 unidades / 20 unidades). Uno de nuestros asesores lo llama antes del despacho para confirmarle todo. Recuerde: el envío es gratis y paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":<litros totales, ej. 2>,\"cantidad\":1}]\n(combo_litros = litros totales que lleva: 1, 4 (galón), 10, 20 o la suma de la combinación, ej. 5; cantidad siempre 1.)\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- SIEMPRE que el cliente mencione su nombre, ciudad, departamento o cultivo (en cualquier momento de la conversación, aunque venga mezclado con otra cosa), agrega el tag correspondiente en ESE mismo mensaje: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]. Si dice solo la ciudad y tú sabes el departamento, agrega también [DATO_DEPTO:...].\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos, márgenes, cantidad de pedidos ni datos de otros clientes. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- SALUDO CORRECTO PARA LA HORA: {{ (function(h){ return h < 12 ? 'Buenos días' : (h < 18 ? 'Buenas tardes' : 'Buenas noches'); })(Number($now.setZone('America/Bogota').toFormat('H'))) }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando).\n- Número de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.from }} (si no da otro teléfono, ese es el del pedido; no se lo pidas)."
-        }
-      },
-      "id": "agent",
-      "name": "Agente OZOAGRO",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.9,
-      "position": [
-        1664,
-        368
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4.1-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4.1-mini"
-        },
-        "options": {
-          "temperature": 0.6
-        }
-      },
-      "id": "openai_model",
-      "name": "OpenAI Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        1408,
-        768
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "Gy1kSNlEmpsaTTwE",
-          "name": "AIMMA OpenAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}_v8_20260831",
-        "contextWindowLength": 30
-      },
-      "id": "memory",
-      "name": "Memoria Conversacion",
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1,
-      "position": [
-        1776,
-        784
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "DVcaWvXX4O25Lqiw",
-          "name": "OZOAGRO Postgres Supabase (no-verify)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const inp = $input.first().json || {};\nlet raw = inp.output || inp.text || '';\nif (typeof raw !== 'string') raw = String(raw || '');\nlet fallback = false;\nif (!raw.trim()) {\n  raw = 'Disculpe, se me fue la señal un momento. ¿Me repite por favor lo último que me escribió?';\n  fallback = true;\n}\nconst from = $('Extraer mensaje').item.json.from;\n\nconst mediaMap = {\n  '[ENVIAR_IMAGEN]': 'imagen',\n  '[ENVIAR_VIDEO_PEPINO]': 'video_pepino',\n  '[ENVIAR_VIDEO_PAPAYA]': 'video_papaya',\n  '[ENVIAR_VIDEO_SANDIA]': 'video_sandia'\n};\nlet media = null;\nfor (const [tag, tipo] of Object.entries(mediaMap)) {\n  if (raw.includes(tag)) { media = tipo; break; }\n}\n\n// Datos del lead\nconst datos = {};\nconst datoRe = /\\[DATO_(NOMBRE|CIUDAD|DEPTO|CULTIVO):([^\\]]*)\\]/g;\nlet m;\nwhile ((m = datoRe.exec(raw)) !== null) { datos[m[1].toLowerCase()] = m[2].trim(); }\n\n// Pedido cerrado por el agente\nlet pedido = null;\nconst pIni = raw.indexOf('[CREAR_PEDIDO:');\nif (pIni !== -1) {\n  const pFin = raw.indexOf(']', pIni);\n  if (pFin !== -1) {\n    try { pedido = JSON.parse(raw.substring(pIni + 14, pFin)); }\n    catch (e) { pedido = { parse_error: true, raw: raw.substring(pIni + 14, pFin) }; }\n  }\n}\n\n// Limpiar TODOS los tags del texto que ve el cliente\nlet respuesta = raw\n  .replace(/\\[ENVIAR_[A-Z_]+\\]/g, '')\n  .replace(/\\[DATO_[A-Z]+:[^\\]]*\\]/g, '')\n  .replace(/\\[CREAR_PEDIDO:[^\\]]*\\]/g, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{ json: { from, respuesta, media, datos, tiene_datos: Object.keys(datos).length > 0, pedido, tiene_pedido: !!pedido, fallback } }];"
-      },
-      "id": "parse_resp",
-      "name": "Parsear respuesta",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2000,
-        528
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v25.0/1151148548077223/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ (function(){ const f = $('Parsear respuesta').item.json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: 'text', text: { body: $('Parsear respuesta').item.json.respuesta } }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
-        "options": {}
-      },
-      "id": "send_wa",
-      "name": "Enviar WhatsApp",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2080,
-        368
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 2000,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "HxFbYAP7T9Wi7vGc",
-          "name": "AIMMA Meta WhatsApp Token"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_saliente",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_contenido: $('Parsear respuesta').item.json.respuesta }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "id": "reg_out",
-      "name": "Registrar saliente",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2288,
-        368
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500,
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-media",
-              "leftValue": "={{ $('Parsear respuesta').item.json.media }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if_media",
-      "name": "Hay media?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2496,
-        368
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const media = $('Parsear respuesta').item.json.media;\nconst from = $('Parsear respuesta').item.json.from;\nconst baseUrl = 'https://ozoagro-ozoagro.pgnm3b.easypanel.host/media/';\nconst mediaUrls = {\n  'imagen': { type: 'image', url: baseUrl + 'producto.jpg' },\n  'video_pepino': { type: 'video', url: baseUrl + 'video_pepino.mp4' },\n  'video_papaya': { type: 'video', url: baseUrl + 'video_papaya.mp4' },\n  'video_sandia': { type: 'video', url: baseUrl + 'video_sandia.mp4' }\n};\nif ($('Extraer mensaje').item.json.es_test) return [];\nconst m = mediaUrls[media] || null;\nif (!m) return [];\nreturn [{ json: { from, mediaType: m.type, mediaUrl: m.url } }];"
-      },
-      "id": "prep_media",
-      "name": "Preparar media",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2704,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v25.0/1151148548077223/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ (function(){ const f = $json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: $json.mediaType }; p[$json.mediaType] = { link: $json.mediaUrl }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
-        "options": {}
-      },
-      "id": "send_media",
-      "name": "Enviar media",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2912,
-        272
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "HxFbYAP7T9Wi7vGc",
-          "name": "AIMMA Meta WhatsApp Token"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-datos",
-              "leftValue": "={{ $json.tiene_datos }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2640,
-        528
-      ],
-      "id": "7851e715-fdbf-4e11-9fdf-8f795edd35d6",
-      "name": "Hay datos lead?"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-pedido",
-              "leftValue": "={{ $json.tiene_pedido }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2000,
-        1008
-      ],
-      "id": "c0e9c8e6-2a19-4bfa-a4ac-26547bed8467",
-      "name": "Hay pedido?"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/actualizar_lead",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_nombre: $('Parsear respuesta').item.json.datos.nombre || null, p_ciudad: $('Parsear respuesta').item.json.datos.ciudad || null, p_departamento: $('Parsear respuesta').item.json.datos.depto || null, p_cultivo: $('Parsear respuesta').item.json.datos.cultivo || null }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2448,
-        672
-      ],
-      "id": "a06cb465-92fa-4117-9d37-0765394e9ca0",
-      "name": "Guardar datos lead",
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/crear_pedido_agente",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_pedido: $('Parsear respuesta').item.json.pedido }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2464,
-        1008
-      ],
-      "id": "b980c8c0-f2a1-42c7-bc12-fad66b6e6ae8",
-      "name": "Crear pedido agente",
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Pausa anti-rafaga (5 s) sin nodo Wait ni staticData\nawait new Promise(r => setTimeout(r, 5000));\nreturn $input.all();"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        864,
-        432
-      ],
-      "id": "2938038b-46ee-469f-b4e9-f775601f8546",
-      "name": "Pausa anti-rafaga"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/mensajes_pendientes",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $('Unir texto').item.json.from, p_contenido: $('Unir texto').item.json.texto, p_msg_id: (String($('Registrar entrante').item.json.data || '').replace(/\"/g, '').trim() || null) }) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1040,
-        432
-      ],
-      "id": "a5494e48-2836-4fbb-adab-a6a497753ff5",
-      "name": "Mensajes pendientes",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1500,
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-ultimo",
-              "leftValue": "={{ $json.es_ultimo }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1216,
-        608
-      ],
-      "id": "36b0f630-fd5e-4b30-9b1b-208332d93fef",
-      "name": "Es el ultimo?"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-test",
-              "leftValue": "={{ $('Extraer mensaje').item.json.es_test }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "modo-test-if",
-      "name": "Modo test?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1872,
-        208
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c-fallo",
-              "leftValue": "={{ $json.es_fallo_entrega }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-fallo-entrega",
-      "name": "Fallo entrega?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        388,
-        208
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_telefono: $json.from, p_contenido: $json.fallo_detalle, p_nombre: null, p_rol: 'system' }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "id": "reg-fallo-entrega",
-      "name": "Registrar fallo entrega",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        588,
-        148
-      ],
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/productos?select=nombre,litros,precio_venta&activo=eq.true&order=litros",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "options": {
-          "timeout": 8000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1330,
-        608
-      ],
-      "id": "bcd3ce45-7373-4f07-a7b1-dcc177bbd1a7",
-      "name": "Precios actuales",
-      "credentials": {
-        "supabaseApi": {
-          "id": "LCGbR0bTrhslOHDy",
-          "name": "OZOAGRO Supabase service_role"
-        }
-      },
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1000,
-      "onError": "continueRegularOutput",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// 2026-09-24 · Precios VIVOS de la BD (Panel › Inventario). El CEO cambia un precio y el agente lo usa en el siguiente mensaje.\n// Si la consulta falla, quedan los precios de respaldo (los de la landing al 2026-09-24).\nconst RESPALDO = { 1: 129900, 4: 409900, 10: 1100000, 20: 1998000 };\nconst P = {};\nfor (const it of $input.all()) {\n  const p = it.json || {};\n  if (Number(p.litros) > 0 && Number(p.precio_venta) > 0) P[Number(p.litros)] = Number(p.precio_venta);\n}\nconst fuente = Object.keys(P).length ? 'bd' : 'respaldo';\nif (fuente === 'respaldo') Object.assign(P, RESPALDO);\nconst $$ = (n) => '$' + String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');\nconst L = Object.keys(P).map(Number).sort((a, b) => a - b);\nconst P1 = P[1] || null;\nconst porLitro = (l) => P[l] / l;\nconst NOMBRE = {\n  1: '1 litro (envase de 1 L)',\n  4: 'Galón de 4 litros (UN solo envase de 4 L)',\n  10: '10 unidades (10 envases de 1 L = 10 litros)',\n  20: '20 unidades (20 envases de 1 L = 20 litros)'\n};\nconst CORTO = { 1: 'el litro', 4: 'el galón', 10: '10 unidades', 20: '20 unidades' };\nconst nombre = (l) => NOMBRE[l] || (l + ' litros');\nconst corto = (l) => CORTO[l] || (l + ' litros');\nconst mejor = L.reduce((a, b) => (porLitro(b) < porLitro(a) ? b : a), L[0]);\n\n// Combinación más barata para N litros (misma lógica que el agente promete al cliente)\nfunction combo(n) {\n  const best = [0], pick = [0];\n  for (let i = 1; i <= n; i++) {\n    best[i] = Infinity;\n    for (const l of L) if (l <= i && best[i - l] + P[l] < best[i]) { best[i] = best[i - l] + P[l]; pick[i] = l; }\n  }\n  const partes = {}; let i = n;\n  while (i > 0 && pick[i]) { partes[pick[i]] = (partes[pick[i]] || 0) + 1; i -= pick[i]; }\n  const txt = Object.keys(partes).map(Number).sort((a, b) => b - a)\n    .map(l => (partes[l] > 1 ? partes[l] + ' ' : '') + (l === 1 ? (partes[l] > 1 ? 'envases de 1 L' : '1 litro') : l === 4 ? (partes[l] > 1 ? 'galones' : 'galón') : corto(l))).join(' + ');\n  return { total: best[n], txt };\n}\n\nconst lineas = L.map(l => {\n  let s = '- ' + nombre(l) + ': ' + $$(P[l]);\n  if (l > 1) s += ', es decir ' + $$(porLitro(l)) + ' el litro';\n  if (l === mejor && L.length > 1) s += ', el mejor precio por litro';\n  if (l > 1 && P1 && l * P1 - P[l] > 0) s += '. Ahorra ' + $$(l * P1 - P[l]) + ' frente a ' + l + ' litros sueltos';\n  if (l === 4) s += '. Es el más vendido';\n  s += '. Rinde ' + $$(l * 200).slice(1) + ' litros de mezcla = ' + l + (l === 1 ? ' hectárea' : ' hectáreas') + ' por aplicación.';\n  return s;\n});\nconst ej = P[4] ? 'El galón de 4 litros vale ' + $$(P[4]) + ', le sale a ' + $$(porLitro(4)) + ' el litro' + (P1 && 4 * P1 > P[4] ? ' y ahorra ' + $$(4 * P1 - P[4]) + ' frente a comprar los litros sueltos' : '') : '';\nconst bloque = lineas.join('\\n') + '\\n- Cuando des un precio, di siempre las tres cosas: el total, cuánto sale el litro y cuánto ahorra.' + (ej ? ' Ejemplo: \"' + ej + '\".' : '');\n\nconst combos = [2, 3, 5, 8, 12].map(n => {\n  const c = combo(n);\n  let s = n + ' litros = ' + c.txt + ' = ' + $$(c.total);\n  if (n === 3 && P[4] && P[4] < c.total * 1.15) s += ', mejor ofrézcale el galón por ' + $$(P[4]) + ' que trae 4';\n  return s;\n}).join('; ');\nconst combinaciones = 'OTRAS CANTIDADES: se arman combinando presentaciones y el total es la SUMA exacta (' + combos + '). Nunca inventes otro precio, promoción ni descuento.';\n\nconst bomba = '- Rendimiento en plata por bomba de 20 L (100 ml de producto): ' + L.map(l => 'con ' + corto(l) + ' ' + $$(porLitro(l) / 10)).join('; ') + '.';\nconst objecion = 'desde ' + $$(porLitro(mejor) / 10) + ' con ' + corto(mejor) + (P[4] && mejor !== 4 ? ', ' + $$(porLitro(4) / 10) + ' con el galón' : '');\nconst cierre = (P1 && P[4]) ? '\"¿Le despacho el litro a ' + $$(P1) + ' o aprovecha el galón de 4 litros a ' + $$(P[4]) + ', que le sale a ' + $$(porLitro(4)) + ' el litro?\"' : '';\n\nreturn [{ json: { fuente, precios: P, bloque, combinaciones, bomba, objecion, cierre }, pairedItem: { item: 0 } }];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1480,
-        608
-      ],
-      "id": "2b1ca8c0-aa49-452e-9f01-9ed690eff6f2",
-      "name": "Armar precios"
-    }
-  ],
-  "connections": {
-    "Webhook GET Verify": {
-      "main": [
-        [
-          {
-            "node": "Token correcto",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Token correcto": {
-      "main": [
-        [
-          {
-            "node": "Responder challenge",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Responder 403",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook POST Mensajes": {
-      "main": [
-        [
-          {
-            "node": "Responder 200 a Meta",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Extraer mensaje",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extraer mensaje": {
-      "main": [
-        [
-          {
-            "node": "Fallo entrega?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Es audio": {
-      "main": [
-        [
-          {
-            "node": "Obtener URL media",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Unir texto",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Obtener URL media": {
-      "main": [
-        [
-          {
-            "node": "Descargar audio",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Descargar audio": {
-      "main": [
-        [
-          {
-            "node": "Transcribir audio",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Transcribir audio": {
-      "main": [
-        [
-          {
-            "node": "Unir texto",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Unir texto": {
-      "main": [
-        [
-          {
-            "node": "Registrar entrante",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Registrar entrante": {
-      "main": [
-        [
-          {
-            "node": "Pausa anti-rafaga",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Agente OZOAGRO",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Memoria Conversacion": {
-      "ai_memory": [
-        [
-          {
-            "node": "Agente OZOAGRO",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Agente OZOAGRO": {
-      "main": [
-        [
-          {
-            "node": "Parsear respuesta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parsear respuesta": {
-      "main": [
-        [
-          {
-            "node": "Hay datos lead?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Hay pedido?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Modo test?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Enviar WhatsApp": {
-      "main": [
-        [
-          {
-            "node": "Registrar saliente",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Registrar saliente": {
-      "main": [
-        [
-          {
-            "node": "Hay media?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Hay media?": {
-      "main": [
-        [
-          {
-            "node": "Preparar media",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Preparar media": {
-      "main": [
-        [
-          {
-            "node": "Enviar media",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Hay datos lead?": {
-      "main": [
-        [
-          {
-            "node": "Guardar datos lead",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Hay pedido?": {
-      "main": [
-        [
-          {
-            "node": "Crear pedido agente",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Pausa anti-rafaga": {
-      "main": [
-        [
-          {
-            "node": "Mensajes pendientes",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mensajes pendientes": {
-      "main": [
-        [
-          {
-            "node": "Es el ultimo?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Es el ultimo?": {
-      "main": [
-        [
-          {
-            "node": "Precios actuales",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Modo test?": {
-      "main": [
-        [
-          {
-            "node": "Registrar saliente",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Enviar WhatsApp",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fallo entrega?": {
-      "main": [
-        [
-          {
-            "node": "Registrar fallo entrega",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Es audio",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Precios actuales": {
-      "main": [
-        [
-          {
-            "node": "Armar precios",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Armar precios": {
-      "main": [
-        [
-          {
-            "node": "Agente OZOAGRO",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+ "name": "OZOAGRO WhatsApp - Agente Andres v11",
+ "nodes": [
+  {
+   "parameters": {
+    "path": "whatsapp-aimma",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "id": "wh_get",
+   "name": "Webhook GET Verify",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    -208,
+    0
+   ],
+   "webhookId": "ozoagro-wa-verify"
   },
-  "settings": {
-    "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict"
+     },
+     "conditions": [
+      {
+       "id": "c1",
+       "leftValue": "={{ $json.query['hub.verify_token'] }}",
+       "rightValue": "aimma-verify-2026",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "if_token",
+   "name": "Token correcto",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    0,
+    0
+   ]
+  },
+  {
+   "parameters": {
+    "respondWith": "text",
+    "responseBody": "={{ $json.query['hub.challenge'] }}",
+    "options": {
+     "responseCode": 200
+    }
+   },
+   "id": "resp_ch",
+   "name": "Responder challenge",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1,
+   "position": [
+    224,
+    -112
+   ]
+  },
+  {
+   "parameters": {
+    "respondWith": "text",
+    "responseBody": "Forbidden",
+    "options": {
+     "responseCode": 403
+    }
+   },
+   "id": "resp_403",
+   "name": "Responder 403",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1,
+   "position": [
+    224,
+    112
+   ]
+  },
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "whatsapp-aimma",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "id": "wh_post",
+   "name": "Webhook POST Mensajes",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    -208,
+    368
+   ],
+   "webhookId": "ozoagro-wa-messages"
+  },
+  {
+   "parameters": {
+    "respondWith": "text",
+    "responseBody": "EVENT_RECEIVED",
+    "options": {
+     "responseCode": 200
+    }
+   },
+   "id": "resp_200",
+   "name": "Responder 200 a Meta",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1,
+   "position": [
+    0,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed') {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
+   },
+   "id": "extract",
+   "name": "Extraer mensaje",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    208,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-audio",
+       "leftValue": "={{ $json.es_audio }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "if_audio",
+   "name": "Es audio",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    416,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "url": "=https://graph.facebook.com/v25.0/{{ $('Extraer mensaje').item.json.audio_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {}
+   },
+   "id": "get_media",
+   "name": "Obtener URL media",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    624,
+    208
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "url": "={{ $json.url }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "file"
+      }
+     }
+    }
+   },
+   "id": "download_audio",
+   "name": "Descargar audio",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    832,
+    208
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "resource": "audio",
+    "operation": "transcribe",
+    "options": {
+     "language": "es"
+    }
+   },
+   "id": "transcribe",
+   "name": "Transcribir audio",
+   "type": "@n8n/n8n-nodes-langchain.openAi",
+   "typeVersion": 1.8,
+   "position": [
+    1040,
+    208
+   ],
+   "credentials": {
+    "openAiApi": {
+     "id": "Gy1kSNlEmpsaTTwE",
+     "name": "AIMMA OpenAI"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "jsCode": "const orig = $('Extraer mensaje').item.json;\nlet transcripcion = '';\ntry { transcripcion = $input.first().json.text || ''; } catch (e) {}\nlet texto = (transcripcion || orig.texto || '').trim();\n// 2026-09-27 v11: Whisper devuelve frases inventadas cuando el audio esta vacio o con ruido (caso real: \"Subtitulos realizados por la comunidad de Amara.org\")\nconst ALUCINACION = /amara\\.org|subt[ií]tulos? (realizados|por|hechos)|gracias por ver|suscr[ií]b(e|a)te|www\\.|traducido por|^\\W*$/i;\nlet audio_no_entendido = false;\nif (orig.es_audio && (!texto || ALUCINACION.test(texto))) { texto = '(nota de voz que no se entendio: pidale que la repita o que escriba)'; audio_no_entendido = true; }\nreturn [{ json: { ...orig, texto, fue_audio: !!orig.es_audio, audio_no_entendido } }];"
+   },
+   "id": "merge_text",
+   "name": "Unir texto",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1248,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $json.from, p_contenido: $json.texto, p_nombre: $json.nombre }) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "text"
+      }
+     }
+    }
+   },
+   "id": "reg_in",
+   "name": "Registrar entrante",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1456,
+    368
+   ],
+   "retryOnFail": true,
+   "maxTries": 2,
+   "waitBetweenTries": 1500,
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "promptType": "define",
+    "text": "={{ ($('Unir texto').item.json.fue_audio ? '(nota de voz transcrita) ' : '') + ($('Es el ultimo?').item.json.texto || $('Unir texto').item.json.texto) }}",
+    "options": {
+     "systemMessage": "=# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion. Tienes dos misiones: vender OZOAGRO al agricultor que lo necesita y abrirle la puerta a quien quiera ser DISTRIBUIDOR de OZOAGRO en su zona.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\"). NUNCA escribas \"don\" o \"doña\" solos, sin nombre: si aún no sabes el nombre, háblale de \"usted\".\n- Nunca digas desde qué ciudad escribes tú ni inventes tu ubicación.\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje del cliente trae varias líneas, son varios mensajes que mandó seguidos: léelos todos y responde a todo en UN solo mensaje, sin saludar otra vez.\n- Nunca vuelvas a pedir un dato que ya esté en el historial (nombre, ciudad, cultivo): úsalo con naturalidad.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n- Si el mensaje llega como \"(nota de voz que no se entendió)\", el audio llegó vacío o con ruido: NO adivines qué dijo. Dile con naturalidad que el audio no se escuchó bien y pídele que lo repita o que le escriba por texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda con el SALUDO CORRECTO PARA LA HORA (te lo doy abajo en el contexto; úsalo tal cual, nunca otro) y preséntate: \"¡[saludo según la hora]! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números cuando ya hay interés, y SIEMPRE que los pida: si el cliente pregunta cuánto vale o pide recomendación y ya dijo cuántas hectáreas o litros necesita, respóndele en ese mismo mensaje con la presentación recomendada, el total, el valor por litro y el ahorro; puedes preguntar su nombre o cultivo en la misma respuesta, pero nunca aplaces el precio a otro mensaje.\n8. Cierra con alternativa y con números: {{ $('Armar precios').first().json.cierre }}\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios, con más de 10 años en el mercado agrícola colombiano: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies; se actualizan solos desde el inventario de OZOAGRO)\nPRESENTACIONES Y PRECIOS (son exactamente los de la página oficial; pago contra entrega y envío gratis):\n{{ $('Armar precios').first().json.bloque }}\nCÓMO RECOMENDAR: si no sabes cuántas hectáreas tiene o cuántas bombas gasta por aplicación, pregúntalo; si ya lo dijo, recomienda de inmediato. La dosis es 1 litro de OZOAGRO por hectárea por aplicación, cada 12 a 15 días. Con eso recomienda: hasta 1 hectárea → el litro; de 2 a 4 hectáreas → el galón; de 5 a 10 hectáreas → 10 unidades; más de 10 hectáreas → 20 unidades. Si duda entre dos, muéstrale el precio por litro de cada una.\n{{ $('Armar precios').first().json.combinaciones }}\n- OJO: di \"galón de 4 litros\" (es un solo envase) y \"10 unidades\" / \"20 unidades\" (son envases de 1 litro). Ya NO existen los combos de 2 ni de 3 litros ni sus precios anteriores.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n{{ $('Armar precios').first().json.bomba }}\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- ENVÍO GRATIS a cualquier parte de Colombia desde 1 litro (no hay costo de envío, nunca lo cobres ni digas que se confirma). Va por transportadora (Interrapidísimo, Envía o Servientrega) y tarda de 4 a 8 días hábiles; se le avisa el seguimiento.\n- Pago CONTRAENTREGA en TODOS los pedidos: el cliente no paga nada por adelantado; paga en efectivo en su casa o finca cuando la transportadora le entrega el producto. Resume siempre así: \"el envío es gratis y paga cuando le llegue\".\n- Después de registrar el pedido, un asesor de OZOAGRO lo llama para confirmarlo; solo entonces se despacha.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba ({{ $('Armar precios').first().json.objecion }}) y al precio por litro de las presentaciones grandes y al rendimiento (1 L = 200 L de mezcla), a lo que hoy gasta en químicos más los días de carencia perdidos, y recuérdale que el envío es gratis y no paga nada hasta recibirlo.\n- Desconfianza / \"¿sí funciona?\" → contraentrega y envío gratis: \"usted no arriesga un peso: el envío es gratis y paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos que FALTEN uno por uno: nombre completo, departamento, ciudad o municipio, dirección de entrega y cuántos litros desea (el teléfono es el de este WhatsApp salvo que dé otro). REGLA DE ORO: en cuanto tengas nombre, ciudad, departamento, dirección y litros, NO hagas ninguna otra pregunta ni cambies de tema: escribe el resumen completo y pregunta \"¿Me confirma que todo está correcto?\". Si el cliente ya mandó todos los datos y además dijo \"sí\", \"confirmo\" o \"todo correcto\", tómalo como confirmación: registra el pedido en ese mismo mensaje (despedida + tag), sin volver a preguntar. Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido de X (1 litro / galón de 4 litros / 10 unidades / 20 unidades). Uno de nuestros asesores lo llama antes del despacho para confirmarle todo. Recuerde: el envío es gratis y paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":<litros totales, ej. 2>,\"cantidad\":1}]\n(combo_litros = litros totales que lleva: 1, 4 (galón), 10, 20 o la suma de la combinación, ej. 5; cantidad siempre 1.)\n\n# SER DISTRIBUIDOR DE OZOAGRO (oportunidad de negocio)\nCUÁNDO OFRECERLO (una sola vez por conversación; nunca insistas):\n- Siempre que el cliente lo pida o lo insinúe: \"quiero ser distribuidor\", \"precio mayorista\", \"para revender\", \"¿puedo vender el producto en mi zona?\", \"tengo un almacén / agropecuaria / tienda agrícola\", \"soy ingeniero o técnico y tengo clientes\", \"quiero el negocio\".\n- O cuando dé señales claras: maneja más de 10 hectáreas, pide 20 litros o más, asesora o le vende a otros agricultores, o le compran vecinos.\n- Si solo quiere comprar para su cultivo, NO se lo ofrezcas: cierra la venta normal. Solo después de registrar un pedido de 10 o 20 unidades puedes mencionarlo en UNA frase (\"Y si algún día quiere distribuir OZOAGRO en su zona, me avisa: hay precio mayorista y le damos su propio panel y página\").\nQUÉ ES SER DISTRIBUIDOR (usa SOLO esto; en frases cortas, de a una o dos por mensaje, conectadas a lo que él dijo):\n- Compra a precio MAYORISTA y vende a sus clientes al precio público de la página: {{ $('Armar precios').first().json.distribuidor }}\n- Panel empresarial GRATIS con su usuario en ozoagro.co/panel: pedidos, ventas, inventario, gastos, rentabilidad y balance en tiempo real, más CRM de sus clientes. Es el mismo sistema que usa OZOAGRO.\n- Su propia página web YA construida: ozoagro.co/su-nombre, igual a la oficial, con SU WhatsApp; los pedidos que entren por ahí le llegan directo a su panel.\n- Respaldo de OZOAGRO: fabricante directo con más de 10 años en el mercado, producto de calidad, y OZOAGRO le despacha la mercancía; usted vende y atiende su zona.\n- Lo que NO sabes, NO lo inventes (pedido mínimo, forma de pago del mayorista, exclusividad de zona, plazos, precios mayoristas que no estén arriba): \"eso se lo confirma directamente el equipo de OZOAGRO cuando lo llamen\".\n- El precio mayorista y estos beneficios son solo para quien quiere distribuir: a un cliente que compra para su finca no le des el precio mayorista.\nCÓMO CERRARLO: conversa y capta lo que falte, uno por uno: nombre completo, ciudad y departamento, si tiene negocio agrícola o experiencia vendiendo, la zona que quiere cubrir y su correo (opcional). En cuanto tengas al menos nombre y ciudad (y él siga interesado), dile que el equipo de OZOAGRO lo llama a este WhatsApp para activarle su panel y su página, y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[INTERES_DISTRIBUIDOR:{\"nombre\":\"...\",\"ciudad\":\"...\",\"departamento\":\"...\",\"negocio\":\"...\",\"zona\":\"...\",\"email\":\"...\"}]\n(Pon \"\" en lo que no sepas. Si después el cliente agrega datos nuevos, repite el tag con los datos completos. Si ya lo emitiste y no hay datos nuevos, no lo repitas.) El interesado también puede comprar como cliente: los dos caminos van juntos.\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- SIEMPRE que el cliente mencione su nombre, ciudad, departamento o cultivo (en cualquier momento de la conversación, aunque venga mezclado con otra cosa), agrega el tag correspondiente en ESE mismo mensaje: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]. Si dice solo la ciudad y tú sabes el departamento, agrega también [DATO_DEPTO:...].\n- [INTERES_DISTRIBUIDOR:{...}] — cuando alguien quiere ser distribuidor y ya tienes nombre y ciudad (ver arriba).\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos de fabricación, márgenes de OZOAGRO, cantidad de pedidos, datos de otros clientes ni de otros distribuidores. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- SALUDO CORRECTO PARA LA HORA: {{ (function(h){ return h < 12 ? 'Buenos días' : (h < 18 ? 'Buenas tardes' : 'Buenas noches'); })(Number($now.setZone('America/Bogota').toFormat('H'))) }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando).\n- Número de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.from }} (si no da otro teléfono, ese es el del pedido; no se lo pidas).\n"
+    }
+   },
+   "id": "agent",
+   "name": "Agente OZOAGRO",
+   "type": "@n8n/n8n-nodes-langchain.agent",
+   "typeVersion": 1.9,
+   "position": [
+    1664,
+    368
+   ],
+   "retryOnFail": true,
+   "maxTries": 2,
+   "waitBetweenTries": 3000,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "model": {
+     "__rl": true,
+     "value": "gpt-4.1-mini",
+     "mode": "list",
+     "cachedResultName": "gpt-4.1-mini"
+    },
+    "options": {
+     "temperature": 0.6
+    }
+   },
+   "id": "openai_model",
+   "name": "OpenAI Chat Model",
+   "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+   "typeVersion": 1.2,
+   "position": [
+    1408,
+    768
+   ],
+   "credentials": {
+    "openAiApi": {
+     "id": "Gy1kSNlEmpsaTTwE",
+     "name": "AIMMA OpenAI"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "sessionIdType": "customKey",
+    "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}_v11_20260927",
+    "contextWindowLength": 30
+   },
+   "id": "memory",
+   "name": "Memoria Conversacion",
+   "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+   "typeVersion": 1,
+   "position": [
+    1776,
+    784
+   ],
+   "credentials": {
+    "postgres": {
+     "id": "DVcaWvXX4O25Lqiw",
+     "name": "OZOAGRO Postgres Supabase (no-verify)"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "jsCode": "const inp = $input.first().json || {};\nlet raw = inp.output || inp.text || '';\nif (typeof raw !== 'string') raw = String(raw || '');\nlet fallback = false;\nif (!raw.trim()) {\n  raw = 'Disculpe, se me fue la señal un momento. ¿Me repite por favor lo último que me escribió?';\n  fallback = true;\n}\nconst from = $('Extraer mensaje').item.json.from;\n\nconst mediaMap = {\n  '[ENVIAR_IMAGEN]': 'imagen',\n  '[ENVIAR_VIDEO_PEPINO]': 'video_pepino',\n  '[ENVIAR_VIDEO_PAPAYA]': 'video_papaya',\n  '[ENVIAR_VIDEO_SANDIA]': 'video_sandia'\n};\nlet media = null;\nfor (const [tag, tipo] of Object.entries(mediaMap)) {\n  if (raw.includes(tag)) { media = tipo; break; }\n}\n\n// Datos del lead\nconst datos = {};\nconst datoRe = /\\[DATO_(NOMBRE|CIUDAD|DEPTO|CULTIVO):([^\\]]*)\\]/g;\nlet m;\nwhile ((m = datoRe.exec(raw)) !== null) { datos[m[1].toLowerCase()] = m[2].trim(); }\n\n// Pedido cerrado por el agente\nlet pedido = null;\nconst pIni = raw.indexOf('[CREAR_PEDIDO:');\nif (pIni !== -1) {\n  const pFin = raw.indexOf(']', pIni);\n  if (pFin !== -1) {\n    try { pedido = JSON.parse(raw.substring(pIni + 14, pFin)); }\n    catch (e) { pedido = { parse_error: true, raw: raw.substring(pIni + 14, pFin) }; }\n  }\n}\n\n// Interes en ser distribuidor (v11)\nlet interes = null;\nconst iIni = raw.indexOf('[INTERES_DISTRIBUIDOR:');\nif (iIni !== -1) {\n  const iFin = raw.indexOf(']', iIni);\n  if (iFin !== -1) {\n    try { interes = JSON.parse(raw.substring(iIni + 22, iFin)); }\n    catch (e) { interes = { parse_error: true, raw: raw.substring(iIni + 22, iFin) }; }\n  }\n}\n\n// Limpiar TODOS los tags del texto que ve el cliente\nlet respuesta = raw\n  .replace(/\\[ENVIAR_[A-Z_]+\\]/g, '')\n  .replace(/\\[DATO_[A-Z]+:[^\\]]*\\]/g, '')\n  .replace(/\\[CREAR_PEDIDO:[^\\]]*\\]/g, '')\n  .replace(/\\[INTERES_DISTRIBUIDOR:[^\\]]*\\]/g, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nreturn [{ json: { from, respuesta, media, datos, tiene_datos: Object.keys(datos).length > 0, pedido, tiene_pedido: !!pedido, interes, tiene_interes: !!interes, fallback } }];"
+   },
+   "id": "parse_resp",
+   "name": "Parsear respuesta",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2000,
+    528
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v25.0/1151148548077223/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ (function(){ const f = $('Parsear respuesta').item.json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: 'text', text: { body: $('Parsear respuesta').item.json.respuesta } }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
+    "options": {}
+   },
+   "id": "send_wa",
+   "name": "Enviar WhatsApp",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2080,
+    368
+   ],
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000,
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_saliente",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_contenido: $('Parsear respuesta').item.json.respuesta }) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "text"
+      }
+     }
+    }
+   },
+   "id": "reg_out",
+   "name": "Registrar saliente",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2288,
+    368
+   ],
+   "retryOnFail": true,
+   "maxTries": 2,
+   "waitBetweenTries": 1500,
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-media",
+       "leftValue": "={{ $('Parsear respuesta').item.json.media }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "if_media",
+   "name": "Hay media?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    2496,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const media = $('Parsear respuesta').item.json.media;\nconst from = $('Parsear respuesta').item.json.from;\nconst baseUrl = 'https://ozoagro.co/media/';\nconst mediaUrls = {\n  'imagen': { type: 'image', url: baseUrl + 'producto.jpg' },\n  'video_pepino': { type: 'video', url: baseUrl + 'video_pepino.mp4' },\n  'video_papaya': { type: 'video', url: baseUrl + 'video_papaya.mp4' },\n  'video_sandia': { type: 'video', url: baseUrl + 'video_sandia.mp4' }\n};\nif ($('Extraer mensaje').item.json.es_test) return [];\nconst m = mediaUrls[media] || null;\nif (!m) return [];\nreturn [{ json: { from, mediaType: m.type, mediaUrl: m.url } }];"
+   },
+   "id": "prep_media",
+   "name": "Preparar media",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2704,
+    272
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v25.0/1151148548077223/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ (function(){ const f = $json.from; const p = { messaging_product: 'whatsapp', recipient_type: 'individual', type: $json.mediaType }; p[$json.mediaType] = { link: $json.mediaUrl }; if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}",
+    "options": {}
+   },
+   "id": "send_media",
+   "name": "Enviar media",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2912,
+    272
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-datos",
+       "leftValue": "={{ $json.tiene_datos }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    2640,
+    528
+   ],
+   "id": "7851e715-fdbf-4e11-9fdf-8f795edd35d6",
+   "name": "Hay datos lead?"
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-pedido",
+       "leftValue": "={{ $json.tiene_pedido }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    2000,
+    1008
+   ],
+   "id": "c0e9c8e6-2a19-4bfa-a4ac-26547bed8467",
+   "name": "Hay pedido?"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/actualizar_lead",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_nombre: $('Parsear respuesta').item.json.datos.nombre || null, p_ciudad: $('Parsear respuesta').item.json.datos.ciudad || null, p_departamento: $('Parsear respuesta').item.json.datos.depto || null, p_cultivo: $('Parsear respuesta').item.json.datos.cultivo || null }) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "text"
+      }
+     }
+    }
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2448,
+    672
+   ],
+   "id": "a06cb465-92fa-4117-9d37-0765394e9ca0",
+   "name": "Guardar datos lead",
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/crear_pedido_agente",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $('Parsear respuesta').item.json.from, p_pedido: $('Parsear respuesta').item.json.pedido }) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "text"
+      }
+     }
+    }
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2464,
+    1008
+   ],
+   "id": "b980c8c0-f2a1-42c7-bc12-fad66b6e6ae8",
+   "name": "Crear pedido agente",
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "// Pausa anti-rafaga (5 s) sin nodo Wait ni staticData\nawait new Promise(r => setTimeout(r, 5000));\nreturn $input.all();"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    864,
+    432
+   ],
+   "id": "2938038b-46ee-469f-b4e9-f775601f8546",
+   "name": "Pausa anti-rafaga"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/mensajes_pendientes",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $('Unir texto').item.json.from, p_contenido: $('Unir texto').item.json.texto, p_msg_id: (String($('Registrar entrante').item.json.data || '').replace(/\"/g, '').trim() || null) }) }}",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1040,
+    432
+   ],
+   "id": "a5494e48-2836-4fbb-adab-a6a497753ff5",
+   "name": "Mensajes pendientes",
+   "retryOnFail": true,
+   "maxTries": 2,
+   "waitBetweenTries": 1500,
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-ultimo",
+       "leftValue": "={{ $json.es_ultimo }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    1216,
+    608
+   ],
+   "id": "36b0f630-fd5e-4b30-9b1b-208332d93fef",
+   "name": "Es el ultimo?"
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-test",
+       "leftValue": "={{ $('Extraer mensaje').item.json.es_test }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "modo-test-if",
+   "name": "Modo test?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    1872,
+    208
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-fallo",
+       "leftValue": "={{ $json.es_fallo_entrega }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "if-fallo-entrega",
+   "name": "Fallo entrega?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    388,
+    208
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/rpc/registrar_mensaje_entrante",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_telefono: $json.from, p_contenido: $json.fallo_detalle, p_nombre: null, p_rol: 'system' }) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "text"
+      }
+     }
+    }
+   },
+   "id": "reg-fallo-entrega",
+   "name": "Registrar fallo entrega",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    588,
+    148
+   ],
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "url": "https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/productos?select=nombre,litros,precio_venta,precio_mayorista&activo=eq.true&order=litros",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "options": {
+     "timeout": 8000
+    }
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1330,
+    608
+   ],
+   "id": "bcd3ce45-7373-4f07-a7b1-dcc177bbd1a7",
+   "name": "Precios actuales",
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   },
+   "retryOnFail": true,
+   "maxTries": 2,
+   "waitBetweenTries": 1000,
+   "onError": "continueRegularOutput",
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "// 2026-09-24 · Precios VIVOS de la BD (Panel › Inventario). El CEO cambia un precio y el agente lo usa en el siguiente mensaje.\n// Si la consulta falla, quedan los precios de respaldo (los de la landing al 2026-09-24).\nconst RESPALDO = { 1: 129900, 4: 409900, 10: 1100000, 20: 1998000 };\nconst P = {};\nconst M = {}; // precio mayorista fijado por el CEO (NULL = no fijado)\nfor (const it of $input.all()) {\n  const p = it.json || {};\n  if (Number(p.litros) > 0 && Number(p.precio_venta) > 0) P[Number(p.litros)] = Number(p.precio_venta);\n  if (Number(p.litros) > 0 && Number(p.precio_mayorista) > 0 && Number(p.precio_mayorista) < Number(p.precio_venta)) M[Number(p.litros)] = Number(p.precio_mayorista);\n}\nconst fuente = Object.keys(P).length ? 'bd' : 'respaldo';\nif (fuente === 'respaldo') Object.assign(P, RESPALDO);\nconst $$ = (n) => '$' + String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');\nconst L = Object.keys(P).map(Number).sort((a, b) => a - b);\nconst P1 = P[1] || null;\nconst porLitro = (l) => P[l] / l;\nconst NOMBRE = {\n  1: '1 litro (envase de 1 L)',\n  4: 'Galón de 4 litros (UN solo envase de 4 L)',\n  10: '10 unidades (10 envases de 1 L = 10 litros)',\n  20: '20 unidades (20 envases de 1 L = 20 litros)'\n};\nconst CORTO = { 1: 'el litro', 4: 'el galón', 10: '10 unidades', 20: '20 unidades' };\nconst nombre = (l) => NOMBRE[l] || (l + ' litros');\nconst corto = (l) => CORTO[l] || (l + ' litros');\nconst mejor = L.reduce((a, b) => (porLitro(b) < porLitro(a) ? b : a), L[0]);\n\n// Combinación más barata para N litros (misma lógica que el agente promete al cliente)\nfunction combo(n) {\n  const best = [0], pick = [0];\n  for (let i = 1; i <= n; i++) {\n    best[i] = Infinity;\n    for (const l of L) if (l <= i && best[i - l] + P[l] < best[i]) { best[i] = best[i - l] + P[l]; pick[i] = l; }\n  }\n  const partes = {}; let i = n;\n  while (i > 0 && pick[i]) { partes[pick[i]] = (partes[pick[i]] || 0) + 1; i -= pick[i]; }\n  const txt = Object.keys(partes).map(Number).sort((a, b) => b - a)\n    .map(l => (partes[l] > 1 ? partes[l] + ' ' : '') + (l === 1 ? (partes[l] > 1 ? 'envases de 1 L' : '1 litro') : l === 4 ? (partes[l] > 1 ? 'galones' : 'galón') : corto(l))).join(' + ');\n  return { total: best[n], txt };\n}\n\nconst lineas = L.map(l => {\n  let s = '- ' + nombre(l) + ': ' + $$(P[l]);\n  if (l > 1) s += ', es decir ' + $$(porLitro(l)) + ' el litro';\n  if (l === mejor && L.length > 1) s += ', el mejor precio por litro';\n  if (l > 1 && P1 && l * P1 - P[l] > 0) s += '. Ahorra ' + $$(l * P1 - P[l]) + ' frente a ' + l + ' litros sueltos';\n  if (l === 4) s += '. Es el más vendido';\n  s += '. Rinde ' + $$(l * 200).slice(1) + ' litros de mezcla = ' + l + (l === 1 ? ' hectárea' : ' hectáreas') + ' por aplicación.';\n  return s;\n});\nconst ej = P[4] ? 'El galón de 4 litros vale ' + $$(P[4]) + ', le sale a ' + $$(porLitro(4)) + ' el litro' + (P1 && 4 * P1 > P[4] ? ' y ahorra ' + $$(4 * P1 - P[4]) + ' frente a comprar los litros sueltos' : '') : '';\nconst bloque = lineas.join('\\n') + '\\n- Cuando des un precio, di siempre las tres cosas: el total, cuánto sale el litro y cuánto ahorra.' + (ej ? ' Ejemplo: \"' + ej + '\".' : '');\n\nconst combos = [2, 3, 5, 8, 12].map(n => {\n  const c = combo(n);\n  let s = n + ' litros = ' + c.txt + ' = ' + $$(c.total);\n  if (n === 3 && P[4] && P[4] < c.total * 1.15) s += ', mejor ofrézcale el galón por ' + $$(P[4]) + ' que trae 4';\n  return s;\n}).join('; ');\nconst combinaciones = 'OTRAS CANTIDADES: se arman combinando presentaciones y el total es la SUMA exacta (' + combos + '). Nunca inventes otro precio, promoción ni descuento.';\n\nconst bomba = '- Rendimiento en plata por bomba de 20 L (100 ml de producto): ' + L.map(l => 'con ' + corto(l) + ' ' + $$(porLitro(l) / 10)).join('; ') + '.';\nconst objecion = 'desde ' + $$(porLitro(mejor) / 10) + ' con ' + corto(mejor) + (P[4] && mejor !== 4 ? ', ' + $$(porLitro(4) / 10) + ' con el galón' : '');\nconst cierre = (P1 && P[4]) ? '\"¿Le despacho el litro a ' + $$(P1) + ' o aprovecha el galón de 4 litros a ' + $$(P[4]) + ', que le sale a ' + $$(porLitro(4)) + ' el litro?\"' : '';\n\n// 2026-09-27 v11: precio mayorista para quien quiere ser distribuidor (solo lo fijado en Inventario; lo demas lo confirma el equipo)\nconst LM = Object.keys(M).map(Number).sort((a, b) => a - b);\nconst sinM = L.filter(l => !M[l]);\nlet distribuidor;\nif (LM.length) {\n  distribuidor = 'PRECIO MAYORISTA vigente: ' + LM.map(l => corto(l) + ' le queda al distribuidor en ' + $$(M[l]) + ' y lo vende al publico en ' + $$(P[l]) + ' (gana ' + $$(P[l] - M[l]) + (l > 1 ? ' por ' + corto(l) : ' por litro') + ')').join('; ') + '.'\n    + (sinM.length ? ' El precio mayorista ' + sinM.map(l => corto(l).replace(/^el /, 'del ')).join(', ') + ' se lo confirma el equipo de OZOAGRO.' : '');\n} else {\n  distribuidor = 'El precio mayorista exacto se lo confirma el equipo de OZOAGRO cuando lo llamen (no des cifras).';\n}\nreturn [{ json: { fuente, precios: P, mayorista: M, bloque, combinaciones, bomba, objecion, cierre, distribuidor }, pairedItem: { item: 0 } }];\n"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1480,
+    608
+   ],
+   "id": "2b1ca8c0-aa49-452e-9f01-9ed690eff6f2",
+   "name": "Armar precios"
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-interes",
+       "leftValue": "={{ $json.tiene_interes }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    2640,
+    1240
+   ],
+   "id": "a99dfbe6-beea-4475-8fd9-e66b4992f4e6",
+   "name": "Hay interes distribuidor?"
+  },
+  {
+   "parameters": {
+    "url": "=https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/wa_conversaciones?telefono=eq.{{ $('Parsear respuesta').item.json.from }}&select=id,metadata",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    2860,
+    1240
+   ],
+   "id": "be5bba34-f555-4852-94cf-c147c3ba111b",
+   "name": "Leer conversacion",
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   },
+   "onError": "continueRegularOutput",
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "// Fusiona el interes de ser distribuidor en wa_conversaciones.metadata (sin migracion de BD)\nconst p = $('Parsear respuesta').item.json;\nconst rows = $input.all().map(i => i.json).filter(j => j && j.id);\nconst prev = (rows[0] && rows[0].metadata && typeof rows[0].metadata === 'object') ? rows[0].metadata : {};\nconst ant = prev.interes_distribuidor || {};\nconst nuevo = Object.assign({}, ant);\nconst src = (p.interes && !p.interes.parse_error) ? p.interes : {};\nfor (const [k, v] of Object.entries(src)) { if (v !== null && v !== undefined && String(v).trim() !== '') nuevo[k] = String(v).trim(); }\nif (p.interes && p.interes.parse_error) nuevo.raw = p.interes.raw;\nnuevo.telefono = nuevo.telefono || p.from;\nnuevo.primera_vez = ant.primera_vez || new Date().toISOString();\nnuevo.actualizado = new Date().toISOString();\nnuevo.veces = (Number(ant.veces) || 0) + 1;\nnuevo.estado = ant.estado || 'nuevo';\nnuevo.origen = 'agente_andres';\nreturn [{ json: { from: p.from, existe: rows.length > 0, metadata: Object.assign({}, prev, { interes_distribuidor: nuevo }) } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    3080,
+    1240
+   ],
+   "id": "27f85fd4-425a-4902-979a-3f5fcf0c0f7c",
+   "name": "Fusionar interes"
+  },
+  {
+   "parameters": {
+    "method": "PATCH",
+    "url": "=https://vlcxeajnucdkwamcivgy.supabase.co/rest/v1/wa_conversaciones?telefono=eq.{{ $json.from }}",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "supabaseApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      },
+      {
+       "name": "Prefer",
+       "value": "return=representation"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ metadata: $json.metadata, updated_at: new Date().toISOString() }) }}",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    3300,
+    1240
+   ],
+   "id": "e4a9456d-05e8-4f97-8120-abb9056471e8",
+   "name": "Guardar interes distribuidor",
+   "credentials": {
+    "supabaseApi": {
+     "id": "LCGbR0bTrhslOHDy",
+     "name": "OZOAGRO Supabase service_role"
+    }
+   },
+   "onError": "continueRegularOutput",
+   "retryOnFail": true
   }
+ ],
+ "connections": {
+  "Webhook GET Verify": {
+   "main": [
+    [
+     {
+      "node": "Token correcto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Token correcto": {
+   "main": [
+    [
+     {
+      "node": "Responder challenge",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Responder 403",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Webhook POST Mensajes": {
+   "main": [
+    [
+     {
+      "node": "Responder 200 a Meta",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Extraer mensaje",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Extraer mensaje": {
+   "main": [
+    [
+     {
+      "node": "Fallo entrega?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Es audio": {
+   "main": [
+    [
+     {
+      "node": "Obtener URL media",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Unir texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Obtener URL media": {
+   "main": [
+    [
+     {
+      "node": "Descargar audio",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Descargar audio": {
+   "main": [
+    [
+     {
+      "node": "Transcribir audio",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Transcribir audio": {
+   "main": [
+    [
+     {
+      "node": "Unir texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Unir texto": {
+   "main": [
+    [
+     {
+      "node": "Registrar entrante",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Registrar entrante": {
+   "main": [
+    [
+     {
+      "node": "Pausa anti-rafaga",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "OpenAI Chat Model": {
+   "ai_languageModel": [
+    [
+     {
+      "node": "Agente OZOAGRO",
+      "type": "ai_languageModel",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Memoria Conversacion": {
+   "ai_memory": [
+    [
+     {
+      "node": "Agente OZOAGRO",
+      "type": "ai_memory",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Agente OZOAGRO": {
+   "main": [
+    [
+     {
+      "node": "Parsear respuesta",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Parsear respuesta": {
+   "main": [
+    [
+     {
+      "node": "Hay datos lead?",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Hay pedido?",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Modo test?",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Hay interes distribuidor?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Enviar WhatsApp": {
+   "main": [
+    [
+     {
+      "node": "Registrar saliente",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Registrar saliente": {
+   "main": [
+    [
+     {
+      "node": "Hay media?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Hay media?": {
+   "main": [
+    [
+     {
+      "node": "Preparar media",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "Preparar media": {
+   "main": [
+    [
+     {
+      "node": "Enviar media",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Hay datos lead?": {
+   "main": [
+    [
+     {
+      "node": "Guardar datos lead",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "Hay pedido?": {
+   "main": [
+    [
+     {
+      "node": "Crear pedido agente",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "Pausa anti-rafaga": {
+   "main": [
+    [
+     {
+      "node": "Mensajes pendientes",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mensajes pendientes": {
+   "main": [
+    [
+     {
+      "node": "Es el ultimo?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Es el ultimo?": {
+   "main": [
+    [
+     {
+      "node": "Precios actuales",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "Modo test?": {
+   "main": [
+    [
+     {
+      "node": "Registrar saliente",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Enviar WhatsApp",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fallo entrega?": {
+   "main": [
+    [
+     {
+      "node": "Registrar fallo entrega",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Es audio",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Precios actuales": {
+   "main": [
+    [
+     {
+      "node": "Armar precios",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Armar precios": {
+   "main": [
+    [
+     {
+      "node": "Agente OZOAGRO",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Hay interes distribuidor?": {
+   "main": [
+    [
+     {
+      "node": "Leer conversacion",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "Leer conversacion": {
+   "main": [
+    [
+     {
+      "node": "Fusionar interes",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fusionar interes": {
+   "main": [
+    [
+     {
+      "node": "Guardar interes distribuidor",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "callerPolicy": "workflowsFromSameOwner",
+  "availableInMCP": false
+ },
+ "id": "4KA11Mhc7Qs4HzDt"
 }

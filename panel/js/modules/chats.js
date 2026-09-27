@@ -74,7 +74,11 @@ async function renderChats(container) {
       </div>
 
       <!-- KPIs -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white rounded-xl p-4 shadow border-l-4 border-purple-500">
+          <div class="text-sm text-gray-500">Quieren ser distribuidor</div>
+          <div id="kpi-chats-dist" class="text-2xl font-bold text-purple-700">-</div>
+        </div>
         <div class="bg-white rounded-xl p-4 shadow">
           <div class="text-sm text-gray-500">Chats atendidos</div>
           <div id="kpi-chats-total" class="text-2xl font-bold text-primary">-</div>
@@ -98,6 +102,7 @@ async function renderChats(container) {
         <div class="flex gap-4">
           <button onclick="setChatsTab('sin_conversion')" class="tab-btn ${chatsTab === 'sin_conversion' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Sin conversion</button>
           <button onclick="setChatsTab('con_conversion')" class="tab-btn ${chatsTab === 'con_conversion' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Con conversion</button>
+          <button onclick="setChatsTab('distribuidor')" class="tab-btn ${chatsTab === 'distribuidor' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Quieren ser distribuidor</button>
           <button onclick="setChatsTab('todos')" class="tab-btn ${chatsTab === 'todos' ? 'active' : ''} px-4 py-2 text-gray-600 hover:text-primary transition">Todos</button>
         </div>
         <input id="chats-buscar" type="text" placeholder="Buscar nombre, telefono, ciudad o cultivo" class="mb-2 px-3 py-2 border rounded-lg w-72 text-sm" oninput="filtrarChats(this.value)">
@@ -153,23 +158,49 @@ async function loadChatsData() {
   }
   chatsData = data || [];
 
+  // v11 (2026-09-27): interes en ser distribuidor que el agente guarda en wa_conversaciones.metadata.interes_distribuidor
+  await cargarInteresDistribuidor();
+
   const total = chatsData.length;
   const con = chatsData.filter(c => c.tiene_pedido).length;
+  const dist = chatsData.filter(c => c.interes).length;
   document.getElementById('kpi-chats-total').textContent = total;
   document.getElementById('kpi-chats-con').textContent = con;
   document.getElementById('kpi-chats-sin').textContent = total - con;
   document.getElementById('kpi-chats-tasa').textContent = total ? Math.round(con * 100 / total) + '%' : '-';
+  const kd = document.getElementById('kpi-chats-dist'); if (kd) kd.textContent = dist;
 
   renderChatsTable();
+}
+
+// Lee metadata.interes_distribuidor de las conversaciones (RLS: solo el CEO). Si falla, el modulo sigue sin el dato.
+async function cargarInteresDistribuidor() {
+  chatsData.forEach(c => { c.interes = null; });
+  const ids = chatsData.map(c => c.conversacion_id).filter(Boolean);
+  if (!ids.length) return;
+  try {
+    const { data, error } = await supabaseClient.from('wa_conversaciones').select('id, metadata').in('id', ids);
+    if (error || !data) return;
+    const porId = {};
+    data.forEach(r => { porId[r.id] = (r.metadata && r.metadata.interes_distribuidor) || null; });
+    chatsData.forEach(c => { c.interes = porId[c.conversacion_id] || null; });
+  } catch (e) { console.warn('interes distribuidor no disponible:', e && e.message); }
+}
+
+function interesBadge(c, extra) {
+  if (!c.interes) return '';
+  const est = c.interes.estado && c.interes.estado !== 'nuevo' ? ' · ' + escapeHtml(c.interes.estado) : '';
+  return `<span class="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800 font-medium ${extra || ''}">Quiere ser distribuidor${est}</span>`;
 }
 
 function chatsFiltrados() {
   let rows = chatsData;
   if (chatsTab === 'sin_conversion') rows = rows.filter(c => !c.tiene_pedido);
   if (chatsTab === 'con_conversion') rows = rows.filter(c => c.tiene_pedido);
+  if (chatsTab === 'distribuidor') rows = rows.filter(c => c.interes);
   const q = chatsBusqueda.trim().toLowerCase();
   if (q) {
-    rows = rows.filter(c => [c.nombre, c.telefono, c.ciudad, c.departamento, c.cultivo].some(v => String(v || '').toLowerCase().includes(q)));
+    rows = rows.filter(c => [c.nombre, c.telefono, c.ciudad, c.departamento, c.cultivo, c.interes && c.interes.negocio, c.interes && c.interes.zona].some(v => String(v || '').toLowerCase().includes(q)));
   }
   return rows;
 }
@@ -193,8 +224,9 @@ function renderChatsTable() {
   tbody.innerHTML = rows.map(c => `
     <tr class="hover:bg-gray-50 ${c.contactado ? 'opacity-60' : ''}">
       <td class="px-4 py-3">
-        <div class="font-medium">${escapeHtml(c.nombre || 'Sin nombre')}</div>
+        <div class="font-medium">${escapeHtml(c.nombre || (c.interes && c.interes.nombre) || 'Sin nombre')}</div>
         <div class="text-xs text-gray-500">${c.contactado ? 'Contactado (remarketing)' : ''}</div>
+        ${interesBadge(c)}
       </td>
       <td class="px-4 py-3 text-sm">${escapeHtml(c.telefono)}</td>
       <td class="px-4 py-3 text-sm">${escapeHtml(c.ciudad || '-')}${c.departamento ? '<div class="text-xs text-gray-500">' + escapeHtml(c.departamento) + '</div>' : ''}</td>
@@ -268,10 +300,19 @@ window.verChat = async function(conversacionId) {
     box.scrollTop = box.scrollHeight;
   }
 
+  const i = c.interes;
+  const interesHtml = i ? `
+    <div class="w-full bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-900">
+      <div class="font-bold mb-1">Quiere ser distribuidor de OZOAGRO ${i.estado && i.estado !== 'nuevo' ? '· ' + escapeHtml(i.estado) : ''}</div>
+      <div>${[i.nombre && 'Nombre: ' + escapeHtml(i.nombre), (i.ciudad || i.departamento) && 'Zona: ' + escapeHtml([i.ciudad, i.departamento].filter(Boolean).join(', ')), i.negocio && 'Negocio: ' + escapeHtml(i.negocio), i.zona && 'Quiere cubrir: ' + escapeHtml(i.zona), i.email && 'Correo: ' + escapeHtml(i.email)].filter(Boolean).join(' · ') || 'Sin datos aun'}</div>
+      <div class="text-xs text-purple-700 mt-1">Desde ${i.primera_vez ? formatDateTime(i.primera_vez) : '-'} · ${i.veces || 1} vez(ces) · <button onclick="closeModal('modal-ver-chat'); loadModule('distribuidores')" class="underline font-medium">Crear distribuidor en el modulo Distribuidores</button></div>
+    </div>` : '';
   document.getElementById('chat-footer').innerHTML = `
+    ${interesHtml ? '<div class="w-full">' + interesHtml + '</div>' : ''}
     <div>${c.tiene_pedido ? `Pedido <span class="font-mono">${escapeHtml(c.pedido_codigo)}</span> ${estadoPedidoBadge(c.pedido_estado)} ${formatMoney(c.pedido_total)}` : '<span class="text-orange-600 font-medium">Sin pedido: candidato a remarketing</span>'}</div>
     <a href="${waLink(c.telefono, 'Hola ' + (c.nombre ? c.nombre.split(' ')[0] : '') + ', le escribe OZOAGRO')}" target="_blank" class="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700">Escribir por WhatsApp</a>
   `;
+  if (interesHtml) document.getElementById('chat-footer').classList.add('flex-wrap');
 };
 
 window.marcarChatContactado = async function(conversacionId, contactado) {
@@ -298,7 +339,11 @@ window.exportChatsExcel = function() {
     'Pedido': c.pedido_codigo || '',
     'Estado pedido': c.pedido_estado || '',
     'Valor pedido': c.pedido_total || 0,
-    'Contactado remarketing': c.contactado ? 'SI' : 'NO'
+    'Contactado remarketing': c.contactado ? 'SI' : 'NO',
+    'Quiere ser distribuidor': c.interes ? 'SI' : 'NO',
+    'Distribuidor - negocio': (c.interes && c.interes.negocio) || '',
+    'Distribuidor - zona': (c.interes && c.interes.zona) || '',
+    'Distribuidor - correo': (c.interes && c.interes.email) || ''
   }));
   if (rows.length === 0) {
     showToast('No hay chats para exportar', 'error');
