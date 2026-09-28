@@ -1,0 +1,37 @@
+{
+ "roya_cafe": {
+  "title": "File:Hemileia vastatrix - coffee leaf rust.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Hemileia_vastatrix_-_coffee_leaf_rust.jpg/1280px-Hemileia_vastatrix_-_coffee_leaf_rust.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "mime": "image/jpeg",
+  "w": 3648,
+  "h": 2736
+ },
+ "tizon_tomate": {
+  "title": "File:Tomato late blight leaf curl 2 (5816171413).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Tomato_late_blight_leaf_curl_2_%285816171413%29.jpg/1280px-Tomato_late_blight_leaf_curl_2_%285816171413%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "mime": "image/jpeg",
+  "w": 1856,
+  "h": 2784
+ },
+ "mosca_blanca": {
+  "title": "File:Silverleaf Whitefly (Bemisia tabaci) adult.jpg",
+  "url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Silverleaf_Whitefly_%28Bemisia_tabaci%29_adult.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "mime": "image/jpeg",
+  "w": 640,
+  "h": 480
+ },
+ "no_planta": {
+  "title": "File:Sahan Supermarket receipt, Hillegersberg, Rotterdam (2021) 01.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Sahan_Supermarket_receipt%2C_Hillegersberg%2C_Rotterdam_%282021%29_01.jpg/1280px-Sahan_Supermarket_receipt%2C_Hillegersberg%2C_Rotterdam_%282021%29_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "mime": "image/jpeg",
+  "w": 4864,
+  "h": 2736
+ },
+ "cultivo_sano": {
+  "title": "File:Tomato Greenhouse in a Libyan Farm.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Tomato_Greenhouse_in_a_Libyan_Farm.jpg/1280px-Tomato_Greenhouse_in_a_Libyan_Farm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "mime": "image/jpeg",
+  "w": 3024,
+  "h": 4032
+ }
+}

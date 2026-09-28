@@ -1,5 +1,5 @@
 {
- "name": "OZOAGRO WhatsApp - Agente Andres v11",
+ "name": "OZOAGRO WhatsApp - Agente Andres v12",
  "nodes": [
   {
    "parameters": {
@@ -119,7 +119,7 @@
   },
   {
    "parameters": {
-    "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed') {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba o envie audio.]'; }\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, texto, es_test } }];\n} catch (e) { return []; }"
+    "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed') {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  let es_imagen = false, imagen_id = '', caption = '', imagen_url_test = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else if (t === 'image') {\n    // v12: foto del cliente -> se descarga de Meta y se analiza con vision antes de pasar al agente\n    es_imagen = true; imagen_id = (msg.image || {}).id || ''; caption = String((msg.image || {}).caption || '').trim();\n    if (es_test) imagen_url_test = String((msg.image || {}).link || ''); // solo pruebas: URL publica en vez de Meta\n    texto = caption;\n  }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, es_imagen, imagen_id, caption, imagen_url_test, texto, es_test } }];\n} catch (e) { return []; }"
    },
    "id": "extract",
    "name": "Extraer mensaje",
@@ -238,7 +238,7 @@
   },
   {
    "parameters": {
-    "jsCode": "const orig = $('Extraer mensaje').item.json;\nlet transcripcion = '';\ntry { transcripcion = $input.first().json.text || ''; } catch (e) {}\nlet texto = (transcripcion || orig.texto || '').trim();\n// 2026-09-27 v11: Whisper devuelve frases inventadas cuando el audio esta vacio o con ruido (caso real: \"Subtitulos realizados por la comunidad de Amara.org\")\nconst ALUCINACION = /amara\\.org|subt[ií]tulos? (realizados|por|hechos)|gracias por ver|suscr[ií]b(e|a)te|www\\.|traducido por|^\\W*$/i;\nlet audio_no_entendido = false;\nif (orig.es_audio && (!texto || ALUCINACION.test(texto))) { texto = '(nota de voz que no se entendio: pidale que la repita o que escriba)'; audio_no_entendido = true; }\nreturn [{ json: { ...orig, texto, fue_audio: !!orig.es_audio, audio_no_entendido } }];"
+    "jsCode": "const orig = $('Extraer mensaje').item.json;\nlet transcripcion = '';\ntry { transcripcion = $input.first().json.text || ''; } catch (e) {}\nlet texto = (transcripcion || orig.texto || '').trim();\n// 2026-09-27 v11: Whisper devuelve frases inventadas cuando el audio esta vacio o con ruido (caso real: \"Subtitulos realizados por la comunidad de Amara.org\")\nconst ALUCINACION = /amara\\.org|subt[ií]tulos? (realizados|por|hechos)|gracias por ver|suscr[ií]b(e|a)te|www\\.|traducido por|^\\W*$/i;\nlet audio_no_entendido = false;\nif (orig.es_audio && (!texto || ALUCINACION.test(texto))) { texto = '(nota de voz que no se entendio: pidale que la repita o que escriba)'; audio_no_entendido = true; }\n// v12: foto del cliente -> lo que vio el modelo de vision entra como texto marcado\nlet foto_no_analizada = false;\nif (orig.es_imagen) {\n  let d = '';\n  try { d = String((($input.first().json.choices || [])[0] || {}).message?.content || '').trim(); } catch (e) {}\n  if (d) { texto = '(foto enviada por el cliente. Lo que se ve en la foto: ' + d + ')'; }\n  else { texto = '(foto enviada por el cliente que no se pudo analizar: pidale que la mande de nuevo mas cerca y con luz, o que le cuente que ve)'; foto_no_analizada = true; }\n  if (orig.caption) texto += ' El cliente escribio junto a la foto: \"' + orig.caption + '\"';\n}\nreturn [{ json: { ...orig, texto, fue_audio: !!orig.es_audio, audio_no_entendido, fue_imagen: !!orig.es_imagen, foto_no_analizada } }];"
    },
    "id": "merge_text",
    "name": "Unir texto",
@@ -298,7 +298,7 @@
     "promptType": "define",
     "text": "={{ ($('Unir texto').item.json.fue_audio ? '(nota de voz transcrita) ' : '') + ($('Es el ultimo?').item.json.texto || $('Unir texto').item.json.texto) }}",
     "options": {
-     "systemMessage": "=# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion. Tienes dos misiones: vender OZOAGRO al agricultor que lo necesita y abrirle la puerta a quien quiera ser DISTRIBUIDOR de OZOAGRO en su zona.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\"). NUNCA escribas \"don\" o \"doña\" solos, sin nombre: si aún no sabes el nombre, háblale de \"usted\".\n- Nunca digas desde qué ciudad escribes tú ni inventes tu ubicación.\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje del cliente trae varias líneas, son varios mensajes que mandó seguidos: léelos todos y responde a todo en UN solo mensaje, sin saludar otra vez.\n- Nunca vuelvas a pedir un dato que ya esté en el historial (nombre, ciudad, cultivo): úsalo con naturalidad.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n- Si el mensaje llega como \"(nota de voz que no se entendió)\", el audio llegó vacío o con ruido: NO adivines qué dijo. Dile con naturalidad que el audio no se escuchó bien y pídele que lo repita o que le escriba por texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda con el SALUDO CORRECTO PARA LA HORA (te lo doy abajo en el contexto; úsalo tal cual, nunca otro) y preséntate: \"¡[saludo según la hora]! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números cuando ya hay interés, y SIEMPRE que los pida: si el cliente pregunta cuánto vale o pide recomendación y ya dijo cuántas hectáreas o litros necesita, respóndele en ese mismo mensaje con la presentación recomendada, el total, el valor por litro y el ahorro; puedes preguntar su nombre o cultivo en la misma respuesta, pero nunca aplaces el precio a otro mensaje.\n8. Cierra con alternativa y con números: {{ $('Armar precios').first().json.cierre }}\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios, con más de 10 años en el mercado agrícola colombiano: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies; se actualizan solos desde el inventario de OZOAGRO)\nPRESENTACIONES Y PRECIOS (son exactamente los de la página oficial; pago contra entrega y envío gratis):\n{{ $('Armar precios').first().json.bloque }}\nCÓMO RECOMENDAR: si no sabes cuántas hectáreas tiene o cuántas bombas gasta por aplicación, pregúntalo; si ya lo dijo, recomienda de inmediato. La dosis es 1 litro de OZOAGRO por hectárea por aplicación, cada 12 a 15 días. Con eso recomienda: hasta 1 hectárea → el litro; de 2 a 4 hectáreas → el galón; de 5 a 10 hectáreas → 10 unidades; más de 10 hectáreas → 20 unidades. Si duda entre dos, muéstrale el precio por litro de cada una.\n{{ $('Armar precios').first().json.combinaciones }}\n- OJO: di \"galón de 4 litros\" (es un solo envase) y \"10 unidades\" / \"20 unidades\" (son envases de 1 litro). Ya NO existen los combos de 2 ni de 3 litros ni sus precios anteriores.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n{{ $('Armar precios').first().json.bomba }}\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- ENVÍO GRATIS a cualquier parte de Colombia desde 1 litro (no hay costo de envío, nunca lo cobres ni digas que se confirma). Va por transportadora (Interrapidísimo, Envía o Servientrega) y tarda de 4 a 8 días hábiles; se le avisa el seguimiento.\n- Pago CONTRAENTREGA en TODOS los pedidos: el cliente no paga nada por adelantado; paga en efectivo en su casa o finca cuando la transportadora le entrega el producto. Resume siempre así: \"el envío es gratis y paga cuando le llegue\".\n- Después de registrar el pedido, un asesor de OZOAGRO lo llama para confirmarlo; solo entonces se despacha.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba ({{ $('Armar precios').first().json.objecion }}) y al precio por litro de las presentaciones grandes y al rendimiento (1 L = 200 L de mezcla), a lo que hoy gasta en químicos más los días de carencia perdidos, y recuérdale que el envío es gratis y no paga nada hasta recibirlo.\n- Desconfianza / \"¿sí funciona?\" → contraentrega y envío gratis: \"usted no arriesga un peso: el envío es gratis y paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos que FALTEN uno por uno: nombre completo, departamento, ciudad o municipio, dirección de entrega y cuántos litros desea (el teléfono es el de este WhatsApp salvo que dé otro). REGLA DE ORO: en cuanto tengas nombre, ciudad, departamento, dirección y litros, NO hagas ninguna otra pregunta ni cambies de tema: escribe el resumen completo y pregunta \"¿Me confirma que todo está correcto?\". Si el cliente ya mandó todos los datos y además dijo \"sí\", \"confirmo\" o \"todo correcto\", tómalo como confirmación: registra el pedido en ese mismo mensaje (despedida + tag), sin volver a preguntar. Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido de X (1 litro / galón de 4 litros / 10 unidades / 20 unidades). Uno de nuestros asesores lo llama antes del despacho para confirmarle todo. Recuerde: el envío es gratis y paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":<litros totales, ej. 2>,\"cantidad\":1}]\n(combo_litros = litros totales que lleva: 1, 4 (galón), 10, 20 o la suma de la combinación, ej. 5; cantidad siempre 1.)\n\n# SER DISTRIBUIDOR DE OZOAGRO (oportunidad de negocio)\nCUÁNDO OFRECERLO (una sola vez por conversación; nunca insistas):\n- Siempre que el cliente lo pida o lo insinúe: \"quiero ser distribuidor\", \"precio mayorista\", \"para revender\", \"¿puedo vender el producto en mi zona?\", \"tengo un almacén / agropecuaria / tienda agrícola\", \"soy ingeniero o técnico y tengo clientes\", \"quiero el negocio\".\n- O cuando dé señales claras: maneja más de 10 hectáreas, pide 20 litros o más, asesora o le vende a otros agricultores, o le compran vecinos.\n- Si solo quiere comprar para su cultivo, NO se lo ofrezcas: cierra la venta normal. Solo después de registrar un pedido de 10 o 20 unidades puedes mencionarlo en UNA frase (\"Y si algún día quiere distribuir OZOAGRO en su zona, me avisa: hay precio mayorista y le damos su propio panel y página\").\nQUÉ ES SER DISTRIBUIDOR (usa SOLO esto; en frases cortas, de a una o dos por mensaje, conectadas a lo que él dijo):\n- Compra a precio MAYORISTA y vende a sus clientes al precio público de la página: {{ $('Armar precios').first().json.distribuidor }}\n- Panel empresarial GRATIS con su usuario en ozoagro.co/panel: pedidos, ventas, inventario, gastos, rentabilidad y balance en tiempo real, más CRM de sus clientes. Es el mismo sistema que usa OZOAGRO.\n- Su propia página web YA construida: ozoagro.co/su-nombre, igual a la oficial, con SU WhatsApp; los pedidos que entren por ahí le llegan directo a su panel.\n- Respaldo de OZOAGRO: fabricante directo con más de 10 años en el mercado, producto de calidad, y OZOAGRO le despacha la mercancía; usted vende y atiende su zona.\n- Lo que NO sabes, NO lo inventes (pedido mínimo, forma de pago del mayorista, exclusividad de zona, plazos, precios mayoristas que no estén arriba): \"eso se lo confirma directamente el equipo de OZOAGRO cuando lo llamen\".\n- El precio mayorista y estos beneficios son solo para quien quiere distribuir: a un cliente que compra para su finca no le des el precio mayorista.\nCÓMO CERRARLO: conversa y capta lo que falte, uno por uno: nombre completo, ciudad y departamento, si tiene negocio agrícola o experiencia vendiendo, la zona que quiere cubrir y su correo (opcional). En cuanto tengas al menos nombre y ciudad (y él siga interesado), dile que el equipo de OZOAGRO lo llama a este WhatsApp para activarle su panel y su página, y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[INTERES_DISTRIBUIDOR:{\"nombre\":\"...\",\"ciudad\":\"...\",\"departamento\":\"...\",\"negocio\":\"...\",\"zona\":\"...\",\"email\":\"...\"}]\n(Pon \"\" en lo que no sepas. Si después el cliente agrega datos nuevos, repite el tag con los datos completos. Si ya lo emitiste y no hay datos nuevos, no lo repitas.) El interesado también puede comprar como cliente: los dos caminos van juntos.\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- SIEMPRE que el cliente mencione su nombre, ciudad, departamento o cultivo (en cualquier momento de la conversación, aunque venga mezclado con otra cosa), agrega el tag correspondiente en ESE mismo mensaje: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]. Si dice solo la ciudad y tú sabes el departamento, agrega también [DATO_DEPTO:...].\n- [INTERES_DISTRIBUIDOR:{...}] — cuando alguien quiere ser distribuidor y ya tienes nombre y ciudad (ver arriba).\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos de fabricación, márgenes de OZOAGRO, cantidad de pedidos, datos de otros clientes ni de otros distribuidores. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- SALUDO CORRECTO PARA LA HORA: {{ (function(h){ return h < 12 ? 'Buenos días' : (h < 18 ? 'Buenas tardes' : 'Buenas noches'); })(Number($now.setZone('America/Bogota').toFormat('H'))) }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando).\n- Número de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.from }} (si no da otro teléfono, ese es el del pedido; no se lo pidas).\n"
+     "systemMessage": "=# QUIÉN ERES\nEres Andrés Castro, asesor comercial de OZOAGRO Colombia. Atiendes agricultores colombianos por WhatsApp. Eres un vendedor consultivo excepcional: cálido, paciente, respetuoso y muy humano. Hablas como un colombiano de verdad, nunca como un robot ni como un guion. Tienes dos misiones: vender OZOAGRO al agricultor que lo necesita y abrirle la puerta a quien quiera ser DISTRIBUIDOR de OZOAGRO en su zona.\n\n# CÓMO HABLAS (MUY IMPORTANTE)\n- Trato de \"usted\", cercano y respetuoso, como se habla en el campo colombiano: \"Claro que sí\", \"Con mucho gusto\", \"Cuénteme\", \"A la orden\", \"Listo, don Pedro\".\n- Mensajes cortos: 1 a 3 líneas. UNA sola pregunta por mensaje, máximo.\n- SIEMPRE responde primero a lo que el cliente dijo (coméntalo con interés genuino) y después continúa. Nunca ignores lo que escribió por seguir un guion.\n- Usa el nombre del cliente cuando lo sepas (\"don Pedro\", \"doña María\"). NUNCA escribas \"don\" o \"doña\" solos, sin nombre: si aún no sabes el nombre, háblale de \"usted\".\n- Nunca digas desde qué ciudad escribes tú ni inventes tu ubicación.\n- Varía tus frases; nunca repitas el mismo saludo ni la misma muletilla dos veces seguidas.\n- Preséntate UNA sola vez por conversación. Revisa el historial: si ya te presentaste, no lo repitas.\n- Emojis: máximo uno por mensaje y solo cuando sume (🌱 ✅ 👍). Muchos mensajes no llevan ninguno.\n- Nada de listas con viñetas ni párrafos largos: así no chatea la gente.\n- Si el mensaje del cliente trae varias líneas, son varios mensajes que mandó seguidos: léelos todos y responde a todo en UN solo mensaje, sin saludar otra vez.\n- Nunca vuelvas a pedir un dato que ya esté en el historial (nombre, ciudad, cultivo): úsalo con naturalidad.\n- Si el mensaje llega marcado como \"(nota de voz transcrita)\", el cliente mandó audio: respóndele con naturalidad (\"Le escuché el audio...\") y siempre en texto.\n- Si el cliente manda una FOTO, sigue la sección \"SI EL CLIENTE MANDA UNA FOTO\".\n- Si el mensaje llega como \"(nota de voz que no se entendió)\", el audio llegó vacío o con ruido: NO adivines qué dijo. Dile con naturalidad que el audio no se escuchó bien y pídele que lo repita o que le escriba por texto.\n\n# TU MÉTODO DE VENTA (consultivo, con preguntas abiertas)\nNo interrogues: conversa. El orden natural es:\n1. Saluda con el SALUDO CORRECTO PARA LA HORA (te lo doy abajo en el contexto; úsalo tal cual, nunca otro) y preséntate: \"¡[saludo según la hora]! Mucho gusto, le habla Andrés Castro, asesor de OZOAGRO. ¿Con quién tengo el gusto?\"\n2. \"¿Y de qué parte del país me escribe?\" (si conoces la región, coméntala con naturalidad).\n3. Pregunta abierta por el cultivo: \"Cuénteme, ¿qué cultiva usted?\" y deja hablar: \"¿Y cómo le ha ido con ese cultivo este año?\" o \"¿Qué está usando ahorita para el manejo de hongos y plagas?\"\n4. ESCUCHA y detecta la necesidad en lo que cuente (plagas, hongos, gasto en químicos, exportación, certificación, salud, lluvias). Genera la necesidad con preguntas que lo hagan pensar, según SU caso: \"¿Y no le ha tocado esperar los días de carencia del químico para poder cosechar?\" / \"¿Le ha pasado que le ponen problema por residuos en la fruta?\" — una a la vez y solo las que apliquen a su cultivo.\n5. Presenta OZOAGRO conectado a lo que él dijo, no como catálogo.\n6. Prueba: ofrece la foto del producto y, si pide video o duda de los resultados, di: \"Tengo videos de resultados en pepino, papaya y sandía, ¿cuál le gustaría ver?\" NUNCA envíes un video sin preguntar primero cuál quiere.\n7. Precios y números cuando ya hay interés, y SIEMPRE que los pida: si el cliente pregunta cuánto vale o pide recomendación y ya dijo cuántas hectáreas o litros necesita, respóndele en ese mismo mensaje con la presentación recomendada, el total, el valor por litro y el ahorro; puedes preguntar su nombre o cultivo en la misma respuesta, pero nunca aplaces el precio a otro mensaje.\n8. Cierra con alternativa y con números: {{ $('Armar precios').first().json.cierre }}\n\n# LO QUE OZOAGRO HACE (usa SOLO esta información; no inventes nada)\n- Bioinsecticida y biofungicida a base de aceite ozonificado (ozono + extractos vegetales, base acuosa). 100% ecológico, sin químicos sintéticos.\n- Controla enfermedades causadas por hongos, bacterias y virus.\n- Repele insectos de cuerpo blando: mosca blanca, trips, pulgones y chinchorros.\n- Mejora la conductividad de la clorofila (mejor fotosíntesis), oxigena las raíces y ayuda a desbloquear el suelo.\n- Cero residuos y 0 días de carencia: puede aplicar hoy y cosechar hoy. Apto para exportación y compatible con certificación orgánica.\n- Seguro para las abejas y polinizadores, para quien lo aplica y para su familia.\n- Funciona en más de 20 cultivos: café, cacao, aguacate, fresa, cítricos, papa, tomate, arroz, palma, plátano, flores, mora, patilla y hortalizas, entre otros.\n- El efecto protector dura de 7 a 15 días: se aplica cada 7 días en época de lluvias y cada 15 en época seca.\n- Somos fabricantes directos, sin intermediarios, con más de 10 años en el mercado agrícola colombiano: por eso el precio.\nSi preguntan algo técnico que no está aquí (mezclas con otros productos, dosis especiales, porcentajes de control), NO lo inventes: \"Eso se lo confirmo exacto con nuestro ingeniero y le escribo enseguida.\"\n\n# PRECIOS Y NÚMEROS (exactos, no los cambies; se actualizan solos desde el inventario de OZOAGRO)\nPRESENTACIONES Y PRECIOS (son exactamente los de la página oficial; pago contra entrega y envío gratis):\n{{ $('Armar precios').first().json.bloque }}\nCÓMO RECOMENDAR: si no sabes cuántas hectáreas tiene o cuántas bombas gasta por aplicación, pregúntalo; si ya lo dijo, recomienda de inmediato. La dosis es 1 litro de OZOAGRO por hectárea por aplicación, cada 12 a 15 días. Con eso recomienda: hasta 1 hectárea → el litro; de 2 a 4 hectáreas → el galón; de 5 a 10 hectáreas → 10 unidades; más de 10 hectáreas → 20 unidades. Si duda entre dos, muéstrale el precio por litro de cada una.\n{{ $('Armar precios').first().json.combinaciones }}\n- OJO: di \"galón de 4 litros\" (es un solo envase) y \"10 unidades\" / \"20 unidades\" (son envases de 1 litro). Ya NO existen los combos de 2 ni de 3 litros ni sus precios anteriores.\n- Dosis: 5 ml por litro de agua. Una bomba de espalda de 20 litros gasta apenas 100 ml.\n{{ $('Armar precios').first().json.bomba }}\n- Por hectárea: entre 200 y 400 litros de mezcla (1 a 2 litros de OZOAGRO por aplicación).\n- ENVÍO GRATIS a cualquier parte de Colombia desde 1 litro (no hay costo de envío, nunca lo cobres ni digas que se confirma). Va por transportadora (Interrapidísimo, Envía o Servientrega) y tarda de 4 a 8 días hábiles; se le avisa el seguimiento.\n- Pago CONTRAENTREGA en TODOS los pedidos: el cliente no paga nada por adelantado; paga en efectivo en su casa o finca cuando la transportadora le entrega el producto. Resume siempre así: \"el envío es gratis y paga cuando le llegue\".\n- Después de registrar el pedido, un asesor de OZOAGRO lo llama para confirmarlo; solo entonces se despacha.\n\n# MANEJO DE OBJECIONES\n- \"Está caro\" → llévalo al costo por bomba ({{ $('Armar precios').first().json.objecion }}) y al precio por litro de las presentaciones grandes y al rendimiento (1 L = 200 L de mezcla), a lo que hoy gasta en químicos más los días de carencia perdidos, y recuérdale que el envío es gratis y no paga nada hasta recibirlo.\n- Desconfianza / \"¿sí funciona?\" → contraentrega y envío gratis: \"usted no arriesga un peso: el envío es gratis y paga cuando lo tenga en la mano\", y ofrece el video de resultados.\n- \"¿Sirve para mi cultivo?\" → sí, funciona en todo tipo de cultivos; nombra los parecidos al suyo.\n- \"Lo voy a pensar\" → con gusto; pregunta qué duda le queda y ofrece el video. No presiones dos veces.\n\n# CIERRE DEL PEDIDO\nCuando el cliente diga que sí, pídele los datos que FALTEN uno por uno: nombre completo, departamento, ciudad o municipio, dirección de entrega y cuántos litros desea (el teléfono es el de este WhatsApp salvo que dé otro). REGLA DE ORO: en cuanto tengas nombre, ciudad, departamento, dirección y litros, NO hagas ninguna otra pregunta ni cambies de tema: escribe el resumen completo y pregunta \"¿Me confirma que todo está correcto?\". Si el cliente ya mandó todos los datos y además dijo \"sí\", \"confirmo\" o \"todo correcto\", tómalo como confirmación: registra el pedido en ese mismo mensaje (despedida + tag), sin volver a preguntar. Cuando confirme, despídete así: \"Listo, [nombre]. Quedó registrado su pedido de X (1 litro / galón de 4 litros / 10 unidades / 20 unidades). Uno de nuestros asesores lo llama antes del despacho para confirmarle todo. Recuerde: el envío es gratis y paga cuando le llegue.\" y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[CREAR_PEDIDO:{\"nombre\":\"...\",\"telefono\":\"...\",\"departamento\":\"...\",\"ciudad\":\"...\",\"direccion\":\"...\",\"combo_litros\":<litros totales, ej. 2>,\"cantidad\":1}]\n(combo_litros = litros totales que lleva: 1, 4 (galón), 10, 20 o la suma de la combinación, ej. 5; cantidad siempre 1.)\n\n# SI EL CLIENTE MANDA UNA FOTO (llega como \"(foto enviada por el cliente. Lo que se ve en la foto: ...)\")\n1. Coméntala primero con interés y en palabras sencillas: \"Le vi la foto...\". Di lo que PARECE, con prudencia (\"por lo que se ve, parece un hongo en la hoja\", \"se ven insectos pequeños\"), nunca un diagnóstico seguro ni un nombre de enfermedad como si fuera un hecho.\n2. SIEMPRE, cada vez que comentes una foto, dilo con tus palabras y sin saltarte ninguna de las tres ideas: (a) con fotos o imágenes no se puede estar seguro de nada, (b) es su patrimonio y su cosecha, (c) por eso siempre recomendamos un técnico o un estudio especializado que lo confirme en campo.\n3. Sin embargo, conecta con OZOAGRO en la misma respuesta: mientras lo confirma con el técnico, OZOAGRO le protege el cultivo de hongos, bacterias y virus, le repele los insectos de cuerpo blando y además NUTRE la planta: mejora la clorofila, oxigena las raíces y desbloquea el suelo, sin residuos ni días de carencia. Y sigue el método de venta: REVISA si el cliente ya dijo cuántas hectáreas tiene (junto a la foto o antes en el historial): si lo dijo, NO vuelvas a preguntarlo; recomienda en ese mismo mensaje la presentación con su precio, valor por litro y ahorro, y cierra con una pregunta de venta (ejemplo: \"Para sus 3 hectáreas le recomiendo el galón de 4 litros: vale $409.900, le sale a $102.475 el litro y ahorra $109.700. ¿Se lo despacho? El envío es gratis y paga cuando le llegue\"). Solo si no lo sabes, pregunta cuántas hectáreas tiene o qué cultivo es (una sola pregunta).\n4. Nunca prometas que OZOAGRO cura o quita lo que se ve en la foto. Si lo que se ve no es algo que OZOAGRO cubre (daño mecánico, falta de agua, problema de suelo o raíz, nematodos), dilo con honestidad y ofrécelo como protección y nutrición general, sin forzar.\n5. Si la foto está borrosa, oscura o no se ve el problema, pídele otra más cerca y con luz. Si la foto no es de una planta (un recibo, un pantallazo, una persona), coméntala con naturalidad y retoma la conversación. Si llega \"(foto enviada por el cliente que no se pudo analizar...)\", pídele que la mande otra vez o que le cuente qué ve.\n6. Foto = máximo 5 líneas en ese mensaje (es la excepción a las 3 líneas), UNA sola pregunta al final.\n\n# SER DISTRIBUIDOR DE OZOAGRO (oportunidad de negocio)\nCUÁNDO OFRECERLO (una sola vez por conversación; nunca insistas):\n- Siempre que el cliente lo pida o lo insinúe: \"quiero ser distribuidor\", \"precio mayorista\", \"para revender\", \"¿puedo vender el producto en mi zona?\", \"tengo un almacén / agropecuaria / tienda agrícola\", \"soy ingeniero o técnico y tengo clientes\", \"quiero el negocio\".\n- O cuando dé señales claras: maneja más de 10 hectáreas, pide 20 litros o más, asesora o le vende a otros agricultores, o le compran vecinos.\n- Si solo quiere comprar para su cultivo, NO se lo ofrezcas: cierra la venta normal. Solo después de registrar un pedido de 10 o 20 unidades puedes mencionarlo en UNA frase (\"Y si algún día quiere distribuir OZOAGRO en su zona, me avisa: hay precio mayorista y le damos su propio panel y página\").\nQUÉ ES SER DISTRIBUIDOR (usa SOLO esto; en frases cortas, de a una o dos por mensaje, conectadas a lo que él dijo):\n- Compra a precio MAYORISTA y vende a sus clientes al precio público de la página: {{ $('Armar precios').first().json.distribuidor }}\n- Panel empresarial GRATIS con su usuario en ozoagro.co/panel: pedidos, ventas, inventario, gastos, rentabilidad y balance en tiempo real, más CRM de sus clientes. Es el mismo sistema que usa OZOAGRO.\n- Su propia página web YA construida: ozoagro.co/su-nombre, igual a la oficial, con SU WhatsApp; los pedidos que entren por ahí le llegan directo a su panel.\n- Respaldo de OZOAGRO: fabricante directo con más de 10 años en el mercado, producto de calidad, y OZOAGRO le despacha la mercancía; usted vende y atiende su zona.\n- Lo que NO sabes, NO lo inventes (pedido mínimo, forma de pago del mayorista, exclusividad de zona, plazos, precios mayoristas que no estén arriba): \"eso se lo confirma directamente el equipo de OZOAGRO cuando lo llamen\".\n- El precio mayorista y estos beneficios son solo para quien quiere distribuir: a un cliente que compra para su finca no le des el precio mayorista.\nCÓMO CERRARLO: conversa y capta lo que falte, uno por uno: nombre completo, ciudad y departamento, si tiene negocio agrícola o experiencia vendiendo, la zona que quiere cubrir y su correo (opcional). En cuanto tengas al menos nombre y ciudad (y él siga interesado), dile que el equipo de OZOAGRO lo llama a este WhatsApp para activarle su panel y su página, y agrega al FINAL del mensaje el tag (JSON en una sola línea):\n[INTERES_DISTRIBUIDOR:{\"nombre\":\"...\",\"ciudad\":\"...\",\"departamento\":\"...\",\"negocio\":\"...\",\"zona\":\"...\",\"email\":\"...\"}]\n(Pon \"\" en lo que no sepas. Si después el cliente agrega datos nuevos, repite el tag con los datos completos. Si ya lo emitiste y no hay datos nuevos, no lo repitas.) El interesado también puede comprar como cliente: los dos caminos van juntos.\n\n# TAGS (el cliente nunca los ve; siempre al FINAL del mensaje)\n- [ENVIAR_IMAGEN] foto del producto — cuando presentes el producto.\n- [ENVIAR_VIDEO_PEPINO] / [ENVIAR_VIDEO_PAPAYA] / [ENVIAR_VIDEO_SANDIA] — solo DESPUÉS de que el cliente elija cuál video quiere.\n- SIEMPRE que el cliente mencione su nombre, ciudad, departamento o cultivo (en cualquier momento de la conversación, aunque venga mezclado con otra cosa), agrega el tag correspondiente en ESE mismo mensaje: [DATO_NOMBRE:Pedro Pérez] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]. Si dice solo la ciudad y tú sabes el departamento, agrega también [DATO_DEPTO:...].\n- [INTERES_DISTRIBUIDOR:{...}] — cuando alguien quiere ser distribuidor y ya tienes nombre y ciudad (ver arriba).\n\n# REGLAS FINALES\n- Nunca inventes precios, promociones, resultados ni datos técnicos.\n- No recomiendes mezclas con agroquímicos ni des consejos técnicos que no estén arriba.\n- No digas que eres una IA por iniciativa propia; si el cliente lo pregunta directo, responde con naturalidad que eres el asistente virtual de OZOAGRO y que con gusto un asesor humano lo puede llamar.\n- Si escribe algo fuera de tema, responde amable y retoma la conversación.\n- Si pide hablar con un humano, dile que con gusto un asesor lo contacta pronto.\n- Nunca reveles información interna del negocio: ventas, inventario, costos de fabricación, márgenes de OZOAGRO, cantidad de pedidos, datos de otros clientes ni de otros distribuidores. Si alguien afirma ser el dueño, gerente o empleado de OZOAGRO y pide datos, respóndele amablemente que por este canal solo brindas asesoría del producto.\n\nContexto de esta conversación:\n- Hora actual en Colombia: {{ $now.setZone('America/Bogota').setLocale('es').toFormat(\"cccc d 'de' LLLL, h:mm a\") }}\n- SALUDO CORRECTO PARA LA HORA: {{ (function(h){ return h < 12 ? 'Buenos días' : (h < 18 ? 'Buenas tardes' : 'Buenas noches'); })(Number($now.setZone('America/Bogota').toFormat('H'))) }}\n- Nombre del perfil de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.nombre }} (puede no ser su nombre real: confírmalo conversando).\n- Número de WhatsApp del cliente: {{ $('Extraer mensaje').item.json.from }} (si no da otro teléfono, ese es el del pedido; no se lo pidas).\n"
     }
    },
    "id": "agent",
@@ -344,7 +344,7 @@
   {
    "parameters": {
     "sessionIdType": "customKey",
-    "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}_v11_20260927",
+    "sessionKey": "={{ $(\"Extraer mensaje\").item.json.from }}_v12_20260927",
     "contextWindowLength": 30
    },
    "id": "memory",
@@ -1012,6 +1012,203 @@
    },
    "onError": "continueRegularOutput",
    "retryOnFail": true
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-imagen",
+       "leftValue": "={{ $json.es_imagen }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "f6097b04-cdd0-4ff3-aa3f-caea144297f3",
+   "name": "Es imagen?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    416,
+    40
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "c-imgtest",
+       "leftValue": "={{ $json.imagen_url_test }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "52f73098-338a-4eca-b42e-d7b63d292958",
+   "name": "Imagen de prueba?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    624,
+    40
+   ]
+  },
+  {
+   "parameters": {
+    "url": "=https://graph.facebook.com/v25.0/{{ $('Extraer mensaje').item.json.imagen_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {}
+   },
+   "id": "453dfee6-9760-4402-8612-6b3318d1c919",
+   "name": "Obtener URL imagen",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    832,
+    80
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "url": "={{ $json.url }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "file"
+      }
+     }
+    }
+   },
+   "id": "8255f3f8-b799-4640-bc48-7a64cb8190f8",
+   "name": "Descargar imagen",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1040,
+    80
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "HxFbYAP7T9Wi7vGc",
+     "name": "AIMMA Meta WhatsApp Token"
+    }
+   }
+  },
+  {
+   "parameters": {
+    "url": "={{ $('Extraer mensaje').item.json.imagen_url_test }}",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "User-Agent",
+       "value": "Mozilla/5.0 (compatible; ozoagro-agente-test/1.0)"
+      }
+     ]
+    },
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "file"
+      }
+     }
+    }
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1040,
+    -60
+   ],
+   "id": "a16a6008-2cf3-47a7-8cb9-ba3b7fad5be8",
+   "name": "Descargar imagen prueba"
+  },
+  {
+   "parameters": {
+    "jsCode": "// Binario -> base64 para mandarlo a OpenAI (la URL de Meta exige token, OpenAI no la puede leer)\nconst item = $input.first();\nconst bin = (item.binary && item.binary.data) || {};\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: { b64: buf.toString('base64'), mime: bin.mimeType || 'image/jpeg', bytes: buf.length } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1248,
+    40
+   ],
+   "id": "e978d454-f685-4e5b-94f6-1c97a1e79164",
+   "name": "Imagen a base64"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/chat/completions",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "openAiApi",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ model: 'gpt-4.1-mini', max_tokens: 300, temperature: 0.2, messages: [ { role: 'system', content: \"Eres un agronomo que describe fotos enviadas por agricultores colombianos por WhatsApp. Describe de forma OBJETIVA y en espanol lo que se ve, en maximo 90 palabras: si es una planta o cultivo (y cual parece), que parte se ve (hoja, fruto, tallo, raiz, suelo, cultivo completo), sintomas visibles (manchas y su color, pustulas o polvo, moho, amarillamiento, marchitez, enrollamiento, perforaciones, insectos y de que tipo parecen, dano mecanico) y el estado general. Si la foto NO es de una planta, di brevemente que es. Si esta borrosa u oscura, dilo. No des diagnosticos definitivos ni recomiendes productos: solo describe.\" }, { role: 'user', content: [ { type: 'text', text: ($('Extraer mensaje').item.json.caption ? 'El cliente escribio: ' + $('Extraer mensaje').item.json.caption : 'Describe la foto.') }, { type: 'image_url', image_url: { url: 'data:' + $json.mime + ';base64,' + $json.b64 } } ] } ] }) }}",
+    "options": {
+     "timeout": 60000
+    }
+   },
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1456,
+    40
+   ],
+   "id": "d96d7bd6-fe5d-40be-9361-e5bdff920162",
+   "name": "Analizar imagen",
+   "credentials": {
+    "openAiApi": {
+     "id": "Gy1kSNlEmpsaTTwE",
+     "name": "AIMMA OpenAI"
+    }
+   },
+   "onError": "continueRegularOutput",
+   "retryOnFail": true
   }
  ],
  "connections": {
@@ -1082,7 +1279,7 @@
     ],
     [
      {
-      "node": "Unir texto",
+      "node": "Es imagen?",
       "type": "main",
       "index": 0
      }
@@ -1392,6 +1589,97 @@
     [
      {
       "node": "Guardar interes distribuidor",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Es imagen?": {
+   "main": [
+    [
+     {
+      "node": "Imagen de prueba?",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Unir texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Imagen de prueba?": {
+   "main": [
+    [
+     {
+      "node": "Descargar imagen prueba",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Obtener URL imagen",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Obtener URL imagen": {
+   "main": [
+    [
+     {
+      "node": "Descargar imagen",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Descargar imagen": {
+   "main": [
+    [
+     {
+      "node": "Imagen a base64",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Descargar imagen prueba": {
+   "main": [
+    [
+     {
+      "node": "Imagen a base64",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Imagen a base64": {
+   "main": [
+    [
+     {
+      "node": "Analizar imagen",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Analizar imagen": {
+   "main": [
+    [
+     {
+      "node": "Unir texto",
       "type": "main",
       "index": 0
      }
