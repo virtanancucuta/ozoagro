@@ -28,6 +28,8 @@ t('pedido -> video y luego redes, conserva metadata',o.length===2&&o[0].json.tip
 o=run(E,{'Parsear respuesta':pr({}),'Extraer mensaje':ex},[{}]);t('sin nada que enviar -> vacio',o.length===0);
 o=run(E,{'Parsear respuesta':pr({redes:true}),'Extraer mensaje':ex},[{}]);t('lectura fallida -> redes igual salen',o.length===1);
 o=run(E,{'Parsear respuesta':pr({media:'imagen'}),'Extraer mensaje':{from:'5730',es_test:false}},conv([]));t('foto del producto en modo real',o.length===1&&o[0].json.payload.image.link.endsWith('producto.jpg')&&o[0].json.es_test===false);
+o=run(E,{'Parsear respuesta':pr({ficha:true,redes:true}),'Extraer mensaje':ex},conv([{rol:'assistant',contenido:'Listo'},{rol:'user',contenido:'sí'},{rol:'assistant',contenido:'¿Le envío la ficha?'}],{x:1}));
+t('ficha+redes -> ambas marcas en la metadata de cada item',o.length===2&&o.every(i=>i.json.metadata.ficha_enviada&&i.json.metadata.redes_enviadas&&i.json.metadata.x===1));
 const A=N['Armar precios'].parameters.jsCode;o=run(A,{},[{litros:1,precio_venta:129900},{litros:4,precio_venta:409900},{litros:10,precio_venta:1100000},{litros:20,precio_venta:1998000}])[0].json;
 t('precios: rendimiento en tanques, sin hectareas',o.bloque.includes('4 tanques de 200 litros')&&!/hect/.test(o.bloque));
 console.log(`\n${ok} OK, ${fail} fallas`);process.exit(fail?1:0);

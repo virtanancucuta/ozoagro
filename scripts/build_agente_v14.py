@@ -5,9 +5,11 @@
 - Ficha tecnica en PDF: el agente pregunta antes; tag [ENVIAR_FICHA]; candado en el flujo (solo si la ofrecio en el
   mensaje anterior o el cliente la pidio).
 - Redes sociales al cierre: tag [ENVIAR_REDES] o pedido registrado; una sola vez por conversacion
-  (wa_conversaciones.metadata.redes_enviadas).
+  (wa_conversaciones.metadata.redes_enviadas / ficha_enviada; el nodo 'Estado conversacion' se las muestra al agente).
 - Envios extra (foto, video, ficha, redes) en un solo camino ordenado: reemplaza 'Hay media?' + 'Preparar media'.
-Uso: python build_agente_v14.py <flujo_vivo.json> [--dry]   (N8N_API_KEY en el entorno para el PUT)"""
+Uso: python build_agente_v14.py <flujo v13> [--modelo=gpt-4.1] [--dry]
+  El flujo v13 base es n8n/OZOAGRO_WHATSAPP.json del commit f26317a (git show f26317a:n8n/OZOAGRO_WHATSAPP.json > base.json).
+  En produccion corre con --modelo=gpt-4.1 (con gpt-4.1-mini el precio pedido con hectareas se aplazaba en 2 de 3 pruebas).   (N8N_API_KEY en el entorno para el PUT)"""
 import json, sys, os, urllib.request
 S = os.path.dirname(os.path.abspath(__file__)); R = os.path.dirname(S)
 LIVE = sys.argv[1]; OUT = os.path.join(S, 'ozo_v14.json')
@@ -86,7 +88,9 @@ const MEDIA = {
   video_sandia: { type: 'video', url: BASE + 'video_sandia.mp4', registro: '[Video de resultados en sandía enviado]' }
 };
 const out = [];
-const item = (tipo, payload, registro) => out.push({ json: { tipo, from: p.from, es_test: !!ex.es_test, payload, registro, metadata: meta, conversacion_existe: !!conv } });
+const ahora = new Date().toISOString();
+const metaFinal = Object.assign({}, meta); // marcas de lo enviado (el agente las lee en el siguiente turno)
+const item = (tipo, payload, registro) => out.push({ json: { tipo, from: p.from, es_test: !!ex.es_test, payload, registro, metadata: metaFinal, conversacion_existe: !!conv } });
 
 const m = MEDIA[p.media];
 if (m) item(p.media, { type: m.type, [m.type]: { link: m.url } }, m.registro);
@@ -100,12 +104,12 @@ if (p.ficha) {
   }
   const ofrecida = /ficha/i.test(previoAgente);
   const pedida = /(ficha|pdf)/i.test(delCliente);
-  if (ofrecida || pedida) item('ficha', { type: 'document', document: { link: FICHA_URL, filename: 'Ficha técnica OZOAGRO.pdf' } }, '[Ficha técnica OZOAGRO enviada en PDF]');
+  if (ofrecida || pedida) item('ficha', { type: 'document', document: { link: FICHA_URL, filename: 'Ficha técnica OZOAGRO.pdf' } }, '[Ficha técnica OZOAGRO enviada en PDF]'), metaFinal.ficha_enviada = ahora;
   // si no: el agente puso el tag sin haber preguntado -> no se envia (queda visible en la ejecucion por la ausencia del item)
 }
 
 if ((p.redes || p.tiene_pedido) && !meta.redes_enviadas) {
-  item('redes', { type: 'text', text: { body: REDES, preview_url: false } }, REDES);
+  item('redes', { type: 'text', text: { body: REDES, preview_url: false } }, REDES); metaFinal.redes_enviadas = ahora;
 }
 return out;"""
 preparar_js = preparar_js.replace('__FICHA_URL__', FICHA_URL).replace('__REDES__', json.dumps(REDES, ensure_ascii=False))
@@ -136,29 +140,42 @@ registrar = {'parameters': {
     'credentials': CRED_SUPA, 'onError': 'continueRegularOutput'}
 
 es_redes = {'parameters': {'conditions': {'options': {'caseSensitive': True, 'leftValue': '', 'typeValidation': 'loose'},
-    'conditions': [{'id': 'c-es-redes', 'leftValue': '={{ $json.tipo }}', 'rightValue': 'redes',
-                    'operator': {'type': 'string', 'operation': 'equals'}}], 'combinator': 'and'}, 'options': {}},
-    'name': 'Son redes?', 'type': 'n8n-nodes-base.if', 'typeVersion': 2.2, 'position': [x0 + 624, y0 + 288]}
+    'conditions': [{'id': 'c-es-redes', 'leftValue': "={{ ['redes', 'ficha'].includes($json.tipo) }}", 'rightValue': '',
+                    'operator': {'type': 'boolean', 'operation': 'true', 'singleValue': True}}], 'combinator': 'and'}, 'options': {}},
+    'name': 'Hay que marcar?', 'type': 'n8n-nodes-base.if', 'typeVersion': 2.2, 'position': [x0 + 624, y0 + 288]}
 
 marcar = {'parameters': {
     'method': 'PATCH', 'url': "=" + SUPA + "/rest/v1/wa_conversaciones?telefono=eq.{{ $json.from }}",
     'authentication': 'predefinedCredentialType', 'nodeCredentialType': 'supabaseApi',
     'sendHeaders': True, 'headerParameters': {'parameters': [{'name': 'Content-Type', 'value': 'application/json'}, {'name': 'Prefer', 'value': 'return=minimal'}]},
     'sendBody': True, 'specifyBody': 'json',
-    'jsonBody': "={{ JSON.stringify({ metadata: Object.assign({}, $json.metadata, { redes_enviadas: new Date().toISOString() }) }) }}",
+    'jsonBody': "={{ JSON.stringify({ metadata: $json.metadata }) }}",
     'options': {}},
-    'name': 'Marcar redes enviadas', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [x0 + 832, y0 + 288],
-    'credentials': CRED_SUPA, 'onError': 'continueRegularOutput'}
+    'name': 'Marcar envios', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [x0 + 832, y0 + 288],
+    'credentials': CRED_SUPA, 'onError': 'continueRegularOutput', 'executeOnce': True}
 
-w['nodes'] += [leer, preparar, envio_real, registrar, es_redes, marcar]
+ax, ay = N['Armar precios']['position']
+estado = {'parameters': {'url': "=" + SUPA + "/rest/v1/wa_conversaciones?telefono=eq.{{ $('Extraer mensaje').item.json.from }}&select=metadata",
+          'authentication': 'predefinedCredentialType', 'nodeCredentialType': 'supabaseApi', 'options': {}},
+          'name': 'Estado conversacion', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [ax + 104, ay + 160],
+          'credentials': CRED_SUPA, 'onError': 'continueRegularOutput', 'alwaysOutputData': True}
+w['nodes'] += [leer, preparar, envio_real, registrar, es_redes, marcar, estado]
 C = w['connections']
+C['Armar precios'] = {'main': [[{'node': 'Estado conversacion', 'type': 'main', 'index': 0}]]}
+C['Estado conversacion'] = {'main': [[{'node': 'Agente OZOAGRO', 'type': 'main', 'index': 0}]]}
 C['Registrar saliente'] = {'main': [[{'node': 'Leer contexto envios', 'type': 'main', 'index': 0}]]}
 C['Leer contexto envios'] = {'main': [[{'node': 'Preparar envios', 'type': 'main', 'index': 0}]]}
 C['Preparar envios'] = {'main': [[{'node': 'Envio real?', 'type': 'main', 'index': 0},
                                   {'node': 'Registrar envios', 'type': 'main', 'index': 0},
-                                  {'node': 'Son redes?', 'type': 'main', 'index': 0}]]}
+                                  {'node': 'Hay que marcar?', 'type': 'main', 'index': 0}]]}
 C['Envio real?'] = {'main': [[{'node': 'Enviar media', 'type': 'main', 'index': 0}], []]}
-C['Son redes?'] = {'main': [[{'node': 'Marcar redes enviadas', 'type': 'main', 'index': 0}], []]}
+C['Hay que marcar?'] = {'main': [[{'node': 'Marcar envios', 'type': 'main', 'index': 0}], []]}
+
+# ---------- 4b. Temperatura 0.6 -> 0.4 (mas consistente con las reglas de oro) ----------
+assert N['OpenAI Chat Model']['parameters']['options'].get('temperature') == 0.6
+N['OpenAI Chat Model']['parameters']['options']['temperature'] = 0.4
+MODELO = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--modelo=')), 'gpt-4.1-mini')
+N['OpenAI Chat Model']['parameters']['model'] = {'__rl': True, 'value': MODELO, 'mode': 'list', 'cachedResultName': MODELO}
 
 # ---------- 5. Memoria nueva (el saludo nuevo aplica tambien a quien ya habia escrito) ----------
 N = {n['name']: n for n in w['nodes']}
