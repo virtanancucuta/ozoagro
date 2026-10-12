@@ -115,7 +115,7 @@
 - **Proyecto:** vlcxeajnucdkwamcivgy
 - **URL:** https://vlcxeajnucdkwamcivgy.supabase.co
 - **Anon Key:** eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNjIzMjMsImV4cCI6MjEwMzYzODMyM30.OOvxOhMm5-g3ULCJEvLcBq9UBvv-VlTBEY8KQNdJD2s
-- **Service Role:** eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsY3hlYWpudWNka3dhbWNpdmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODA2MjMyMywiZXhwIjoyMTAzNjM4MzIzfQ.TTenskULkfWt7YfEy9QSF8tCuGKX4Tof8ICWveePjnw
+- **Service Role:** [RETIRADA del repo 2026-10-12: estaba expuesta en este repo público; debe ROTARSE en Supabase]
 
 ### Panel Admin
 - **Email:** ceo@ozoagro.co

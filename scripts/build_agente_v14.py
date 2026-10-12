@@ -7,7 +7,7 @@
 - Redes sociales al cierre: tag [ENVIAR_REDES] o pedido registrado; una sola vez por conversacion
   (wa_conversaciones.metadata.redes_enviadas / ficha_enviada; el nodo 'Estado conversacion' se las muestra al agente).
 - Envios extra (foto, video, ficha, redes) en un solo camino ordenado: reemplaza 'Hay media?' + 'Preparar media'.
-Uso: python build_agente_v14.py <flujo v13> [--modelo=gpt-4.1] [--dry]
+Uso: python build_agente_v14.py <flujo v13> [--modelo=gpt-4.1 (defecto)] [--dry]
   El flujo v13 base es n8n/OZOAGRO_WHATSAPP.json del commit f26317a (git show f26317a:n8n/OZOAGRO_WHATSAPP.json > base.json).
   En produccion corre con --modelo=gpt-4.1 (con gpt-4.1-mini el precio pedido con hectareas se aplazaba en 2 de 3 pruebas).   (N8N_API_KEY en el entorno para el PUT)"""
 import json, sys, os, urllib.request
@@ -72,12 +72,13 @@ leer = {
 preparar_js = r"""// v14 (2026-10-12): mensajes extra despues de la respuesta, EN ORDEN: foto/video del producto, ficha tecnica PDF, redes.
 // Candados deterministas (no dependen solo del prompt):
 //  - ficha: solo si el agente la OFRECIO en su mensaje anterior o el cliente la PIDIO en lo que acaba de escribir.
-//  - redes: una sola vez por conversacion (metadata.redes_enviadas); salen con [ENVIAR_REDES] o al registrar un pedido.
+//  - redes: una sola vez por conversacion (metadata.redes_enviadas); salen con [ENVIAR_REDES] o con un pedido bien formado.
+//  - si no se pudo leer la conversacion: NO salen ficha ni redes (fallar cerrado: sin estado no hay candado ni marca segura).
+// Cada item lleva la 'marca' que se guarda en metadata SOLO si el envio sale bien ('Confirmar envios' + 'Unir marcas').
 const p = $('Parsear respuesta').item.json;
 const ex = $('Extraer mensaje').item.json;
 const conv = ($input.all().map(i => i.json).find(j => j && j.id)) || null;
-const meta = (conv && conv.metadata && typeof conv.metadata === 'object') ? conv.metadata : {};
-const msgs = (conv && Array.isArray(conv.wa_mensajes)) ? conv.wa_mensajes : []; // mas reciente primero; [0] = respuesta actual ya registrada
+const msgs = (conv && Array.isArray(conv.wa_mensajes)) ? conv.wa_mensajes : []; // mas reciente primero
 const BASE = 'https://ozoagro.co/media/';
 const FICHA_URL = '__FICHA_URL__';
 const REDES = __REDES__;
@@ -87,29 +88,29 @@ const MEDIA = {
   video_papaya: { type: 'video', url: BASE + 'video_papaya.mp4', registro: '[Video de resultados en papaya enviado]' },
   video_sandia: { type: 'video', url: BASE + 'video_sandia.mp4', registro: '[Video de resultados en sandía enviado]' }
 };
+// filas que registran envios extra ("[Ficha ... enviada]", "[Video ...]", el texto de redes): no son mensajes del agente
+const esRegistro = (c) => { const s = String(c || '').trim(); return (s.startsWith('[') && s.endsWith(']')) || s === REDES; };
 const out = [];
-const ahora = new Date().toISOString();
-const metaFinal = Object.assign({}, meta); // marcas de lo enviado (el agente las lee en el siguiente turno)
-const item = (tipo, payload, registro) => out.push({ json: { tipo, from: p.from, es_test: !!ex.es_test, payload, registro, metadata: metaFinal, conversacion_existe: !!conv } });
+const item = (tipo, payload, registro, marca) => out.push({ json: { tipo, from: p.from, es_test: !!ex.es_test, payload, registro, marca: marca || null } });
 
 const m = MEDIA[p.media];
 if (m) item(p.media, { type: m.type, [m.type]: { link: m.url } }, m.registro);
 
-if (p.ficha) {
-  // mensaje anterior del agente = segundo 'assistant' (el primero es la respuesta actual); lo del cliente = 'user' entre ambos
-  let vistos = 0, previoAgente = '', delCliente = '';
-  for (const r of msgs) {
-    if (r.rol === 'assistant') { vistos++; if (vistos === 2) { previoAgente = String(r.contenido || ''); break; } }
-    else if (r.rol === 'user' && vistos === 1) delCliente += ' ' + String(r.contenido || '');
+if (conv) {
+  const meta = (conv.metadata && typeof conv.metadata === 'object') ? conv.metadata : {};
+  if (p.ficha) {
+    // primera fila real del agente = respuesta actual (ya registrada); la anterior = siguiente 'assistant' que no sea registro
+    let vistos = 0, previoAgente = '', delCliente = '';
+    for (const r of msgs) {
+      if (r.rol === 'assistant') { if (esRegistro(r.contenido)) continue; vistos++; if (vistos === 2) { previoAgente = String(r.contenido || ''); break; } }
+      else if (r.rol === 'user' && vistos === 1) delCliente += ' ' + String(r.contenido || '');
+    }
+    if (/ficha/i.test(previoAgente) || /(ficha|pdf)/i.test(delCliente))
+      item('ficha', { type: 'document', document: { link: FICHA_URL, filename: 'Ficha técnica OZOAGRO.pdf' } }, '[Ficha técnica OZOAGRO enviada en PDF]', 'ficha_enviada');
   }
-  const ofrecida = /ficha/i.test(previoAgente);
-  const pedida = /(ficha|pdf)/i.test(delCliente);
-  if (ofrecida || pedida) item('ficha', { type: 'document', document: { link: FICHA_URL, filename: 'Ficha técnica OZOAGRO.pdf' } }, '[Ficha técnica OZOAGRO enviada en PDF]'), metaFinal.ficha_enviada = ahora;
-  // si no: el agente puso el tag sin haber preguntado -> no se envia (queda visible en la ejecucion por la ausencia del item)
-}
-
-if ((p.redes || p.tiene_pedido) && !meta.redes_enviadas) {
-  item('redes', { type: 'text', text: { body: REDES, preview_url: false } }, REDES); metaFinal.redes_enviadas = ahora;
+  const pedidoOk = !!(p.tiene_pedido && p.pedido && !p.pedido.parse_error);
+  if ((p.redes || pedidoOk) && !meta.redes_enviadas)
+    item('redes', { type: 'text', text: { body: REDES, preview_url: false } }, REDES, 'redes_enviadas');
 }
 return out;"""
 preparar_js = preparar_js.replace('__FICHA_URL__', FICHA_URL).replace('__REDES__', json.dumps(REDES, ensure_ascii=False))
@@ -126,7 +127,7 @@ em['parameters']['jsonBody'] = ("={{ (function(){ const f = $json.from; const p 
                                 "if (/^[A-Z]{2}\\./.test(f)) { p.recipient = f; } else { p.to = f; } return JSON.stringify(p); })() }}")
 # uno por uno con pausa: WhatsApp entrega en el orden en que llegan (foto/video -> ficha -> redes)
 em['parameters']['options'] = {'batching': {'batch': {'batchSize': 1, 'batchInterval': 2500}}}
-em['onError'] = 'continueRegularOutput'
+em['onError'] = 'continueErrorOutput'  # salida 0 = enviado; salida 1 = Meta lo rechazo (no se registra ni se marca)
 em['position'] = [x0 + 832, y0 - 96]
 
 registrar = {'parameters': {
@@ -139,43 +140,67 @@ registrar = {'parameters': {
     'name': 'Registrar envios', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [x0 + 624, y0 + 96],
     'credentials': CRED_SUPA, 'onError': 'continueRegularOutput'}
 
-es_redes = {'parameters': {'conditions': {'options': {'caseSensitive': True, 'leftValue': '', 'typeValidation': 'loose'},
-    'conditions': [{'id': 'c-es-redes', 'leftValue': "={{ ['redes', 'ficha'].includes($json.tipo) }}", 'rightValue': '',
-                    'operator': {'type': 'boolean', 'operation': 'true', 'singleValue': True}}], 'combinator': 'and'}, 'options': {}},
-    'name': 'Hay que marcar?', 'type': 'n8n-nodes-base.if', 'typeVersion': 2.2, 'position': [x0 + 624, y0 + 288]}
+confirmar_js = r"""// Normaliza lo que SI salio: desde 'Enviar media' (salida OK) en real, o directo desde 'Envio real?' en modo test.
+return $input.all().map((it, i) => { const s = $('Preparar envios').itemMatching(i).json; return { json: { from: s.from, tipo: s.tipo, registro: s.registro, marca: s.marca } }; });"""
+confirmar = {'parameters': {'jsCode': confirmar_js}, 'name': 'Confirmar envios', 'type': 'n8n-nodes-base.code', 'typeVersion': 2,
+             'position': [x0 + 1040, y0]}
+unir_js = r"""// Una sola escritura por ejecucion: metadata leida en 'Leer contexto envios' + marcas de lo enviado con exito.
+const marcas = $input.all().map(i => i.json.marca).filter(Boolean);
+if (!marcas.length) return [];
+const conv = ($('Leer contexto envios').all().map(i => i.json).find(j => j && j.id)) || null;
+if (!conv) return [];
+const meta = Object.assign({}, (conv.metadata && typeof conv.metadata === 'object') ? conv.metadata : {});
+const ahora = new Date().toISOString();
+for (const k of marcas) meta[k] = ahora;
+return [{ json: { from: $input.first().json.from, metadata: meta } }];"""
+unir = {'parameters': {'jsCode': unir_js}, 'name': 'Unir marcas', 'type': 'n8n-nodes-base.code', 'typeVersion': 2,
+        'position': [x0 + 1248, y0 + 192]}
 
 marcar = {'parameters': {
     'method': 'PATCH', 'url': "=" + SUPA + "/rest/v1/wa_conversaciones?telefono=eq.{{ $json.from }}",
     'authentication': 'predefinedCredentialType', 'nodeCredentialType': 'supabaseApi',
     'sendHeaders': True, 'headerParameters': {'parameters': [{'name': 'Content-Type', 'value': 'application/json'}, {'name': 'Prefer', 'value': 'return=minimal'}]},
     'sendBody': True, 'specifyBody': 'json',
-    'jsonBody': "={{ JSON.stringify({ metadata: $json.metadata }) }}",
+    'jsonBody': "={{ JSON.stringify({ metadata: $json.metadata, updated_at: new Date().toISOString() }) }}",
     'options': {}},
-    'name': 'Marcar envios', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [x0 + 832, y0 + 288],
-    'credentials': CRED_SUPA, 'onError': 'continueRegularOutput', 'executeOnce': True}
+    'name': 'Marcar envios', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [x0 + 1456, y0 + 192],
+    'credentials': CRED_SUPA, 'onError': 'continueRegularOutput'}
+registrar['position'] = [x0 + 1248, y0 - 96]
 
 ax, ay = N['Armar precios']['position']
 estado = {'parameters': {'url': "=" + SUPA + "/rest/v1/wa_conversaciones?telefono=eq.{{ $('Extraer mensaje').item.json.from }}&select=metadata",
           'authentication': 'predefinedCredentialType', 'nodeCredentialType': 'supabaseApi', 'options': {}},
           'name': 'Estado conversacion', 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [ax + 104, ay + 160],
           'credentials': CRED_SUPA, 'onError': 'continueRegularOutput', 'alwaysOutputData': True}
-w['nodes'] += [leer, preparar, envio_real, registrar, es_redes, marcar, estado]
+w['nodes'] += [leer, preparar, envio_real, registrar, confirmar, unir, marcar, estado]
 C = w['connections']
 C['Armar precios'] = {'main': [[{'node': 'Estado conversacion', 'type': 'main', 'index': 0}]]}
 C['Estado conversacion'] = {'main': [[{'node': 'Agente OZOAGRO', 'type': 'main', 'index': 0}]]}
 C['Registrar saliente'] = {'main': [[{'node': 'Leer contexto envios', 'type': 'main', 'index': 0}]]}
 C['Leer contexto envios'] = {'main': [[{'node': 'Preparar envios', 'type': 'main', 'index': 0}]]}
-C['Preparar envios'] = {'main': [[{'node': 'Envio real?', 'type': 'main', 'index': 0},
-                                  {'node': 'Registrar envios', 'type': 'main', 'index': 0},
-                                  {'node': 'Hay que marcar?', 'type': 'main', 'index': 0}]]}
-C['Envio real?'] = {'main': [[{'node': 'Enviar media', 'type': 'main', 'index': 0}], []]}
-C['Hay que marcar?'] = {'main': [[{'node': 'Marcar envios', 'type': 'main', 'index': 0}], []]}
+C['Preparar envios'] = {'main': [[{'node': 'Envio real?', 'type': 'main', 'index': 0}]]}
+C['Envio real?'] = {'main': [[{'node': 'Enviar media', 'type': 'main', 'index': 0}], [{'node': 'Confirmar envios', 'type': 'main', 'index': 0}]]}
+C['Enviar media'] = {'main': [[{'node': 'Confirmar envios', 'type': 'main', 'index': 0}], []]}
+C['Confirmar envios'] = {'main': [[{'node': 'Registrar envios', 'type': 'main', 'index': 0}, {'node': 'Unir marcas', 'type': 'main', 'index': 0}]]}
+C['Unir marcas'] = {'main': [[{'node': 'Marcar envios', 'type': 'main', 'index': 0}]]}
 
 # ---------- 4b. Temperatura 0.6 -> 0.4 (mas consistente con las reglas de oro) ----------
 assert N['OpenAI Chat Model']['parameters']['options'].get('temperature') == 0.6
 N['OpenAI Chat Model']['parameters']['options']['temperature'] = 0.4
-MODELO = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--modelo=')), 'gpt-4.1-mini')
+MODELO = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--modelo=')), 'gpt-4.1')
 N['OpenAI Chat Model']['parameters']['model'] = {'__rl': True, 'value': MODELO, 'mode': 'list', 'cachedResultName': MODELO}
+
+# ---------- 4c. Seguridad: el link de imagen de prueba solo puede ser de Wikimedia (evita SSRF por el webhook publico) ----------
+js = N['Extraer mensaje']['parameters']['jsCode']
+old = "if (es_test) imagen_url_test = String((msg.image || {}).link || ''); // solo pruebas: URL publica en vez de Meta"
+new = ("if (es_test) { // solo pruebas: URL publica en vez de Meta, y SOLO de Wikimedia por https (el webhook es publico: nada de URLs arbitrarias)\n"
+       "      const lk = String((msg.image || {}).link || '');\n"
+       r"      if (/^https:\/\/(upload|thumb|commons)\.wikimedia\.org\/[^\s]*$/.test(lk)) imagen_url_test = lk; // regex: el sandbox de n8n no trae URL()" "\n"
+       "      if (!imagen_url_test) { es_imagen = false; imagen_id = ''; caption = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n"
+       "    }")
+assert old in js, 'Extraer mensaje cambio'
+N['Extraer mensaje']['parameters']['jsCode'] = js.replace(old, new)
+print('imagen prueba IF:', json.dumps(N['Imagen de prueba?']['parameters']['conditions']['conditions'])[:300])
 
 # ---------- 5. Memoria nueva (el saludo nuevo aplica tambien a quien ya habia escrito) ----------
 N = {n['name']: n for n in w['nodes']}

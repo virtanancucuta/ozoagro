@@ -1,6 +1,6 @@
 # Auditoría Agente Andrés v14 — manual del CEO + ficha técnica + redes (2026-10-12)
 
-**Workflow:** `4KA11Mhc7Qs4HzDt` · "OZOAGRO WhatsApp - Agente Andres v14" · ACTIVO · 50 nodos · modelo `gpt-4.1` (temp 0,4) · memoria `_v14_20261012`.
+**Workflow:** `4KA11Mhc7Qs4HzDt` · "OZOAGRO WhatsApp - Agente Andres v14" · ACTIVO · 51 nodos · modelo `gpt-4.1` (temp 0,4) · memoria `_v14_20261012`.
 **Build:** `scripts/build_agente_v14.py` (base = `n8n/OZOAGRO_WHATSAPP.json` de `f26317a`, reproducible: build desde git == vivo). Prompt: `n8n/PROMPT_ANDRES_V14.md`.
 
 ## Decisiones (aprobadas por Jorge el 2026-10-12)
@@ -38,3 +38,21 @@ Con mini, a "tengo N hectáreas, ¿cuánto vale?" respondía solo con la pregunt
 
 ## Limpieza para producción (2026-10-12)
 Respaldo en `Desktop\OZOAGRO_RESPALDO_2026-10-12\` y borrado: 19 conversaciones / 227 mensajes / 86 memorias del agente / 1 pedido / 1 cliente / 5 correos de prueba. `pedidos_codigo_seq` reiniciada (el primer pedido real será OZO-00001). Distribuidores: ya estaban en 0. Visitas de la landing (15) no se tocaron.
+
+## Revisión de código del backend (2026-10-12, /code-review) — corregido y re-probado
+1. **SSRF** en la imagen de prueba (preexistente desde v12): el webhook es público y `wamid.TEST_` + `image.link` hacía que n8n descargara cualquier URL. Ahora solo `https://(upload|thumb|commons).wikimedia.org/...` (regex: el sandbox de Code de n8n no trae `URL()`, que bloqueaba todo); link no permitido = "foto que no se pudo analizar" (antes caía a Meta con id falso y no respondía).
+2. Leer la conversación falla → ya no salen ficha ni redes ni se pisa `metadata` (fallar cerrado).
+3. Candado de la ficha ignoraba que los registros "[Video ... enviado]" / "[Ficha ... enviada]" son filas `assistant`: ahora se filtran.
+4. Registro y marcas solo tras envío exitoso a Meta (`Enviar media` con salida de error; `Confirmar envios` → `Registrar envios` + `Unir marcas` → una sola escritura de metadata con `updated_at`).
+5. Redes ya no salen con un `[CREAR_PEDIDO]` mal formado.
+6. `--modelo` por defecto = gpt-4.1 (antes un rebuild sin flag bajaba a mini).
+Pruebas: 29/29 nodos; E2E foto, ficha sí/no, distribuidor, pensar, saludo, precio OK.
+
+**Pendientes de la revisión (no aplicados):**
+- **Firma de Meta (`X-Hub-Signature-256`) no se valida**: cualquiera puede mandar mensajes falsos al webhook. Hacerlo al conectar la app de OZOAGRO (requiere su App Secret).
+- Registrar los envíos extra corre el corte de `mensajes_pendientes` unos segundos (si el cliente escribe 2 mensajes mientras salen ficha/redes, se responde solo al último). Arreglo real = cambio de función en BD (requiere OK).
+- `metadata` se reescribe completa (leer-modificar-escribir): carrera posible solo con ejecuciones simultáneas del mismo número. Arreglo real = RPC con merge jsonb (BD, requiere OK).
+- 3 lecturas de `wa_conversaciones` por mensaje (latencia menor; se puede unificar en una RPC).
+
+## SEGURIDAD — CRÍTICO (encontrado 2026-10-12)
+El repo `virtanancucuta/ozoagro` es **público** y `AUDITORIA.md` tenía la **service_role de Supabase VIGENTE** desde el commit `39f6d7c` (2026-08-30): da lectura/escritura total de la BD y administración de usuarios. Se retiró del archivo, pero **sigue en el historial de git** → hay que **ROTARLA** en Supabase (y actualizar la credencial n8n "OZOAGRO Supabase service_role", la credencial Postgres si aplica, y los secretos de las Edge Functions). Considerar volver el repo privado (ojo: GitHub Pages sirve la ficha PDF y la landing de respaldo).
