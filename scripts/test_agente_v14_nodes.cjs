@@ -68,6 +68,7 @@ t('Enviar media separa exito/error', N['Enviar media'].onError === 'continueErro
 
 // --- Armar precios ---
 const A = N['Armar precios'].parameters.jsCode; o = run(A, {}, [{ litros: 1, precio_venta: 129900 }, { litros: 4, precio_venta: 409900 }, { litros: 10, precio_venta: 1100000 }, { litros: 20, precio_venta: 1998000 }])[0].json;
-t('precios: rendimiento en tanques, sin hectareas', o.bloque.includes('4 tanques de 200 litros') && !/hect/.test(o.bloque));
+t('precios: rendimiento con la dosis de la ficha (1 L = 2 a 2,8 tanques), sin hectareas', o.bloque.includes('Alcanza para 2 a 2,8 tanques de 200 litros') && o.bloque.includes('8 a 11,4 tanques') && !/hect/.test(o.bloque));
+t('bomba de 20 L con hasta 50 ml', o.bomba.includes('hasta 50 ml') && o.bomba.includes('con el litro hasta $6.495') && o.objecion.startsWith('hasta '));
 t('modelo de produccion gpt-4.1', N['OpenAI Chat Model'].parameters.model.value === 'gpt-4.1');
 console.log(`\n${ok} OK, ${fail} fallas`); process.exit(fail ? 1 : 0);

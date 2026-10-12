@@ -37,9 +37,17 @@ N['Agente OZOAGRO']['parameters']['options']['systemMessage'] = '=' + sm
 # ---------- 2. Armar precios: rendimiento por tanques de 200 L (ya no "= N hectareas") ----------
 js = N['Armar precios']['parameters']['jsCode']
 old = "s += '. Rinde ' + $$(l * 200).slice(1) + ' litros de mezcla = ' + l + (l === 1 ? ' hectárea' : ' hectáreas') + ' por aplicación.';"
-new = "s += '. Alcanza para ' + l + (l === 1 ? ' tanque' : ' tanques') + ' de 200 litros de agua (' + $$(l * 200).slice(1) + ' litros de mezcla).';"
+new = ("s += '. Alcanza para ' + String(l * 2).replace('.', ',') + ' a ' + String(Math.floor(l / 0.35 * 10) / 10).replace('.', ',') + ' tanques de 200 litros de agua"
+       " (dosis de la ficha: 0,35 a 0,5 L por tanque).';")
 assert old in js, 'Armar precios cambio'
-N['Armar precios']['parameters']['jsCode'] = js.replace(old, new)
+js = js.replace(old, new)
+# costo por bomba de 20 L con la dosis alta de la ficha (50 ml = 1/20 de litro) en vez de 100 ml
+for a, c in [("'- Rendimiento en plata por bomba de 20 L (100 ml de producto): ' + L.map(l => 'con ' + corto(l) + ' ' + $$(porLitro(l) / 10))",
+              "'- Rendimiento en plata por bomba de 20 L (hasta 50 ml de producto): ' + L.map(l => 'con ' + corto(l) + ' hasta ' + $$(porLitro(l) / 20))"),
+             ("const objecion = 'desde ' + $$(porLitro(mejor) / 10) + ' con ' + corto(mejor) + (P[4] && mejor !== 4 ? ', ' + $$(porLitro(4) / 10)",
+              "const objecion = 'hasta ' + $$(porLitro(mejor) / 20) + ' por bomba con ' + corto(mejor) + (P[4] && mejor !== 4 ? ', ' + $$(porLitro(4) / 20)")]:
+    assert js.count(a) == 1, 'Armar precios: ' + a[:50]; js = js.replace(a, c)
+N['Armar precios']['parameters']['jsCode'] = js
 
 # ---------- 3. Parsear respuesta: tags nuevos ----------
 js = N['Parsear respuesta']['parameters']['jsCode']
@@ -201,6 +209,12 @@ new = ("if (es_test) { // solo pruebas: URL publica en vez de Meta, y SOLO de Wi
 assert old in js, 'Extraer mensaje cambio'
 N['Extraer mensaje']['parameters']['jsCode'] = js.replace(old, new)
 print('imagen prueba IF:', json.dumps(N['Imagen de prueba?']['parameters']['conditions']['conditions'])[:300])
+
+# ---------- 4d. Pedido del agente marcado es_test en modo prueba (crear_pedido_agente lo guarda; trg_pedidos_correos no envia correo) ----------
+cp = N['Crear pedido agente']['parameters']
+old = "p_pedido: $('Parsear respuesta').item.json.pedido })"
+assert cp['jsonBody'].count(old) == 1, 'Crear pedido agente cambio'
+cp['jsonBody'] = cp['jsonBody'].replace(old, "p_pedido: Object.assign({}, $('Parsear respuesta').item.json.pedido, { es_test: !!$('Extraer mensaje').item.json.es_test }) })")
 
 # ---------- 5. Memoria nueva (el saludo nuevo aplica tambien a quien ya habia escrito) ----------
 N = {n['name']: n for n in w['nodes']}

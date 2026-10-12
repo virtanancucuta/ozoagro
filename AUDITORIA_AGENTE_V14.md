@@ -6,7 +6,7 @@
 ## Decisiones (aprobadas por Jorge el 2026-10-12)
 | Tema | Decisión |
 |---|---|
-| Dosis | 1 L por tanque de 200 L (manual del CEO, igual a lo que ya decía el agente). **La ficha PDF dice 0,35–0,5 L por tanque de 200 L: el CEO debe confirmar cuál vale.** |
+| Dosis | **La de la ficha técnica: 0,35–0,5 L por tanque de 200 L** (decisión de Jorge, 2026-10-12, tarde). Bomba de 20 L = 35–50 ml; 1 L = 2 a 2,8 tanques. Para calcular cantidad se usa la dosis alta (0,5 L) para que no falte producto. |
 | Precios | Los de la BD (Inventario), no la tabla de descuentos del manual. 50 L o más → "precio especial, lo cotiza el equipo". |
 | Envío | Sigue gratis + contraentrega. |
 | Afirmaciones | Lenguaje prudente del manual: virus = no es cura; abejas = depende de condiciones; sin "8 países / 10.000 productores / 10 años"; días de carencia, residuos y certificaciones → "se lo confirmamos con la documentación". |
@@ -56,3 +56,8 @@ Pruebas: 29/29 nodos; E2E foto, ficha sí/no, distribuidor, pensar, saludo, prec
 
 ## SEGURIDAD — CRÍTICO (encontrado 2026-10-12)
 El repo `virtanancucuta/ozoagro` es **público** y `AUDITORIA.md` tenía la **service_role de Supabase VIGENTE** desde el commit `39f6d7c` (2026-08-30): da lectura/escritura total de la BD y administración de usuarios. Se retiró del archivo, pero **sigue en el historial de git** → hay que **ROTARLA** en Supabase (y actualizar la credencial n8n "OZOAGRO Supabase service_role", la credencial Postgres si aplica, y los secretos de las Edge Functions). Considerar volver el repo privado (ojo: GitHub Pages sirve la ficha PDF y la landing de respaldo).
+
+## Ajustes 2026-10-12 (tarde)
+- **Dosis = ficha técnica** (0,35–0,5 L por tanque de 200 L): prompt, ejemplo de precio, rendimiento en `Armar precios` y costo por bomba (hasta 50 ml). Probado: 3 ha × 300 L → 1,6–2,25 L; 1 ha → 0,35–1 L; bomba $6.495 con el litro.
+- **Pruebas ya no envían correo al CEO**: migración `supabase/migrations/20261012_pedido_agente_es_test.sql` (APLICADA, OK de Jorge): `crear_pedido_agente` guarda `pedidos.es_test` que n8n manda en modo prueba (el valor lo fija el flujo, no el modelo); `trg_pedidos_correos` ya omitía es_test. Ensayo en transacción revertida + E2E: pedido de prueba es_test=true, 0 correos, 0 en cola de pg_net. Nota del pedido: "Ingeniero Andres (agente IA)".
+- Datos de prueba borrados otra vez; `pedidos_codigo_seq` reiniciada (próximo OZO-00001).
