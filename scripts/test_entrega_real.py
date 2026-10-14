@@ -15,8 +15,7 @@ def enviar(texto):
         "contacts": [{"profile": {"name": "jorge"}, "wa_id": JORGE}],
         "messages": [{"from": JORGE, "id": f"wamid.AUDITORIA_{ts}_{abs(hash(texto)) % 100000}", "timestamp": str(ts), "type": "text", "text": {"body": texto}}]
     }, "field": "messages"}]}]}
-    req = urllib.request.Request(WEBHOOK, data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'}, method='POST')
-    with urllib.request.urlopen(req) as r: return r.status
+    return t.post_firmado(json.dumps(body).encode())
 
 def asistentes():
     return t.sql(f"select m.contenido from wa_mensajes m join wa_conversaciones c on c.id=m.conversacion_id where c.telefono='{JORGE}' and m.rol='assistant' order by m.created_at, m.id")

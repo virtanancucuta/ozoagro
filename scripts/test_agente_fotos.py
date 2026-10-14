@@ -13,8 +13,7 @@ def enviar_foto(tel, url, caption, nombre):
         "contacts": [{"profile": {"name": nombre}, "wa_id": tel}],
         "messages": [{"from": tel, "id": f"wamid.TEST_{tel}_{ts}", "timestamp": str(ts), "type": "image", "image": img}]
     }, "field": "messages"}]}]}
-    req = urllib.request.Request(t.WEBHOOK, data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'}, method='POST')
-    with urllib.request.urlopen(req) as r: return r.status
+    return t.post_firmado(json.dumps(body).encode())
 
 def turno_foto(tel, url, caption, nombre, timeout=120):
     antes = t.n_assistant(tel); enviar_foto(tel, url, caption, nombre); t0 = time.time()

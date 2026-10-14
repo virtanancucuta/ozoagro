@@ -2,11 +2,19 @@
 """Prueba E2E del agente Andres disparando el webhook en MODO TEST (wamid.TEST_ + numero ficticio):
 no sale nada a Meta; todo queda en wa_conversaciones/wa_mensajes (y pedidos si cierra).
 Uso: python test_agente.py <escenario>   (escenarios definidos abajo)"""
-import json, sys, time, urllib.request, io, os
+import json, sys, time, urllib.request, io, os, hmac, hashlib
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 WEBHOOK = 'https://dvisualproyect-n8n.pgnm3b.easypanel.host/webhook/whatsapp-aimma'
 PAT = os.environ.get('SUPABASE_PAT_OZOAGRO', '')  # exportar antes de correr
 PROJ = 'vlcxeajnucdkwamcivgy'
+APP_SECRET = os.environ.get('OZO_APP_SECRET', '')  # App Secret de OZOAGRO_agente: el webhook descarta lo que no venga firmado
+
+def post_firmado(data):
+    """POST al webhook con la firma X-Hub-Signature-256 que pone Meta (HMAC-SHA256 del cuerpo exacto)."""
+    assert APP_SECRET, 'exportar OZO_APP_SECRET (sin firma el agente descarta el mensaje)'
+    firma = 'sha256=' + hmac.new(APP_SECRET.encode(), data, hashlib.sha256).hexdigest()
+    req = urllib.request.Request(WEBHOOK, data=data, headers={'Content-Type': 'application/json', 'X-Hub-Signature-256': firma}, method='POST')
+    with urllib.request.urlopen(req) as r: return r.status
 
 def sql(q):
     req = urllib.request.Request(f'https://api.supabase.com/v1/projects/{PROJ}/database/query', data=json.dumps({'query': q}).encode(),
@@ -28,8 +36,7 @@ def enviar(tel, texto, nombre='Cliente Prueba'):
         "contacts": [{"profile": {"name": nombre}, "wa_id": tel}],
         "messages": [{"from": tel, "id": f"wamid.TEST_{tel}_{ts}_{abs(hash(texto)) % 100000}", "timestamp": str(ts), "type": "text", "text": {"body": texto}}]
     }, "field": "messages"}]}]}
-    req = urllib.request.Request(WEBHOOK, data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'}, method='POST')
-    with urllib.request.urlopen(req) as r: return r.status
+    return post_firmado(json.dumps(body).encode())
 
 def turno(tel, texto, nombre='Cliente Prueba', timeout=90):
     antes = n_assistant(tel)

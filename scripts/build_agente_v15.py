@@ -90,7 +90,48 @@ for nodo in ['Descargar audio', 'Descargar imagen']:
 for nodo in ['Obtener URL media', 'Descargar audio', 'Transcribir audio', 'Obtener URL imagen', 'Descargar imagen', 'Imagen a base64']:
     N[nodo]['onError'] = 'continueRegularOutput'
 
-w['name'] = 'OZOAGRO WhatsApp - Agente Andres v15'
+# ---------- 5. Firma de Meta (X-Hub-Signature-256): solo se procesa lo que firmo Meta con el App Secret ----------
+# El modulo crypto esta bloqueado en los nodos Code de este n8n: el HMAC lo calcula el nodo Crypto sobre el cuerpo CRUDO
+# (rawBody) con la credencial "OZOAGRO Meta App Secret" (tipo crypto): la clave nunca queda en el flujo ni en el repo.
+# Probado 2026-10-14 en un flujo sonda: firma correcta coincide (UTF-8 y ASCII), firma falsa no.
+SEC_NOMBRE = 'OZOAGRO Meta App Secret'
+sec = None
+if KEY:
+    lista = api('/credentials?limit=250'); lista = lista.get('data', lista) if isinstance(lista, dict) else lista
+    cand = [c for c in lista if c.get('name') == SEC_NOMBRE]
+    assert len(cand) <= 1, 'hay mas de una credencial llamada ' + SEC_NOMBRE
+    if cand:
+        assert cand[0]['type'] == 'crypto', 'la credencial del App Secret debe ser tipo crypto, es ' + cand[0]['type']
+        sec = {'id': cand[0]['id'], 'name': SEC_NOMBRE}
+if not sec:
+    assert DRY, 'falta la credencial "' + SEC_NOMBRE + '" (tipo crypto, campo hmacSecret = App Secret de OZOAGRO_agente)'
+    sec = {'id': 'PENDIENTE', 'name': SEC_NOMBRE}
+wh = N['Webhook POST Mensajes']
+wh['parameters'].setdefault('options', {})['rawBody'] = True
+xw, yw = wh['position']
+firma = {'parameters': {'action': 'hmac', 'binaryData': True, 'binaryPropertyName': 'data', 'type': 'SHA256',
+                        'dataPropertyName': 'firma_calculada', 'encoding': 'hex'},
+         'name': 'Firma Meta', 'type': 'n8n-nodes-base.crypto', 'typeVersion': 2, 'position': [xw + 208, yw + 112],
+         'credentials': {'crypto': dict(sec)}}
+validar_js = r"""// Compara en tiempo constante la firma que manda Meta (X-Hub-Signature-256) con la calculada sobre el cuerpo crudo.
+// Sin firma o con firma distinta: no se procesa nada (Meta igual recibio su 200 en 'Responder 200 a Meta').
+const wh = $('Webhook POST Mensajes').first().json;
+const recibida = String((wh.headers || {})['x-hub-signature-256'] || '');
+const esperada = 'sha256=' + String($input.first().json.firma_calculada || '');
+let dif = recibida.length === esperada.length && esperada.length === 71 ? 0 : 1;
+for (let i = 0; i < Math.min(recibida.length, esperada.length); i++) dif |= recibida.charCodeAt(i) ^ esperada.charCodeAt(i);
+if (dif !== 0) return [];
+return [{ json: wh }];"""
+validar = {'parameters': {'jsCode': validar_js}, 'name': 'Validar firma', 'type': 'n8n-nodes-base.code', 'typeVersion': 2,
+           'position': [xw + 416, yw + 112]}
+w['nodes'] += [firma, validar]
+C = w['connections']
+C['Webhook POST Mensajes'] = {'main': [[{'node': 'Responder 200 a Meta', 'type': 'main', 'index': 0}, {'node': 'Firma Meta', 'type': 'main', 'index': 0}]]}
+C['Firma Meta'] = {'main': [[{'node': 'Validar firma', 'type': 'main', 'index': 0}]]}
+C['Validar firma'] = {'main': [[{'node': 'Extraer mensaje', 'type': 'main', 'index': 0}]]}
+N['Extraer mensaje']['position'] = [xw + 624, yw + 112]
+
+w['name'] = 'OZOAGRO WhatsApp - Agente Andres v16'
 txt = json.dumps(w, ensure_ascii=False)
 assert AIMMA_PHONE_ID not in txt and CRED_AIMMA not in txt, 'quedo algo del numero de AIMMA'
 payload = {'name': w['name'], 'nodes': w['nodes'], 'connections': w['connections'], 'settings': w['settings']}
