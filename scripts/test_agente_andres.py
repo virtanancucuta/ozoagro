@@ -24,7 +24,7 @@ def ultima(tel):
 def enviar(tel, texto, nombre='Cliente Prueba'):
     ts = int(time.time())
     body = {"object": "whatsapp_business_account", "entry": [{"id": "966616536082029", "changes": [{"value": {
-        "messaging_product": "whatsapp", "metadata": {"display_phone_number": "573133623071", "phone_number_id": "1151148548077223"},
+        "messaging_product": "whatsapp", "metadata": {"display_phone_number": "OZOAGRO", "phone_number_id": "1436278792892245"},
         "contacts": [{"profile": {"name": nombre}, "wa_id": tel}],
         "messages": [{"from": tel, "id": f"wamid.TEST_{tel}_{ts}_{abs(hash(texto)) % 100000}", "timestamp": str(ts), "type": "text", "text": {"body": texto}}]
     }, "field": "messages"}]}]}

@@ -9,7 +9,7 @@ def enviar_foto(tel, url, caption, nombre):
     img = {"id": "FAKE_" + str(ts), "mime_type": "image/jpeg", "link": url}
     if caption: img["caption"] = caption
     body = {"object": "whatsapp_business_account", "entry": [{"id": "966616536082029", "changes": [{"value": {
-        "messaging_product": "whatsapp", "metadata": {"display_phone_number": "573133623071", "phone_number_id": "1151148548077223"},
+        "messaging_product": "whatsapp", "metadata": {"display_phone_number": "OZOAGRO", "phone_number_id": "1436278792892245"},
         "contacts": [{"profile": {"name": nombre}, "wa_id": tel}],
         "messages": [{"from": tel, "id": f"wamid.TEST_{tel}_{ts}", "timestamp": str(ts), "type": "image", "image": img}]
     }, "field": "messages"}]}]}
