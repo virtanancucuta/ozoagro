@@ -28,8 +28,9 @@ REDES = ("Nos puede seguir en nuestras redes para que nos conozca más y vea nue
          "TikTok\nhttps://www.tiktok.com/@ozoagrolatam")
 
 # ---------- 1. Prompt ----------
-sm = open(os.path.join(R, 'n8n', 'PROMPT_ANDRES_V14.md'), encoding='utf-8').read().strip() + '\n'
-for marca in ["$('Armar precios').first().json.bloque", "json.combinaciones", "json.bomba", "json.objecion", "json.cierre",
+PROMPT = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--prompt=')), 'PROMPT_ANDRES_V17.md')  # 2026-10-14: v17 compacto
+sm = open(os.path.join(R, 'n8n', PROMPT), encoding='utf-8').read().strip() + '\n'
+for marca in ["$('Armar precios').first().json.bloque", "json.combinaciones", "json.bomba", "json.objecion",
               "json.distribuidor", "SALUDO CORRECTO PARA LA HORA", "[ENVIAR_FICHA]", "[ENVIAR_REDES]", "[CREAR_PEDIDO:"]:
     assert marca in sm, 'falta en el prompt: ' + marca
 N['Agente OZOAGRO']['parameters']['options']['systemMessage'] = '=' + sm
@@ -195,7 +196,7 @@ C['Unir marcas'] = {'main': [[{'node': 'Marcar envios', 'type': 'main', 'index':
 # ---------- 4b. Temperatura 0.6 -> 0.4 (mas consistente con las reglas de oro) ----------
 assert N['OpenAI Chat Model']['parameters']['options'].get('temperature') == 0.6
 N['OpenAI Chat Model']['parameters']['options']['temperature'] = 0.4
-MODELO = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--modelo=')), 'gpt-4.1')
+MODELO = next((x.split('=', 1)[1] for x in sys.argv if x.startswith('--modelo=')), 'gpt-5.4-mini')
 N['OpenAI Chat Model']['parameters']['model'] = {'__rl': True, 'value': MODELO, 'mode': 'list', 'cachedResultName': MODELO}
 
 # ---------- 4c. Seguridad: el link de imagen de prueba solo puede ser de Wikimedia (evita SSRF por el webhook publico) ----------

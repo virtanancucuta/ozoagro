@@ -131,7 +131,7 @@ C['Firma Meta'] = {'main': [[{'node': 'Validar firma', 'type': 'main', 'index': 
 C['Validar firma'] = {'main': [[{'node': 'Extraer mensaje', 'type': 'main', 'index': 0}]]}
 N['Extraer mensaje']['position'] = [xw + 624, yw + 112]
 
-w['name'] = 'OZOAGRO WhatsApp - Agente Andres v16'
+w['name'] = 'OZOAGRO WhatsApp - Agente Andres v17'
 txt = json.dumps(w, ensure_ascii=False)
 assert AIMMA_PHONE_ID not in txt and CRED_AIMMA not in txt, 'quedo algo del numero de AIMMA'
 payload = {'name': w['name'], 'nodes': w['nodes'], 'connections': w['connections'], 'settings': w['settings']}
