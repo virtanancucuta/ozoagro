@@ -12,7 +12,7 @@ let ok = 0, fail = 0; const t = (name, c) => { if (c) { ok++; console.log('OK   
 
 // --- Extraer mensaje: lista blanca de imagenes de prueba (SSRF) ---
 const X = N['Extraer mensaje'].parameters.jsCode; const st = {};
-const img = (link) => run(X, {}, [{ body: { object: 'whatsapp_business_account', entry: [{ changes: [{ value: { contacts: [{ wa_id: '573000000499' }],
+const img = (link) => run(X, {}, [{ body: { object: 'whatsapp_business_account', entry: [{ changes: [{ value: { metadata: { phone_number_id: '1436278792892245' }, contacts: [{ wa_id: '573000000499' }],
   messages: [{ from: '573000000499', id: 'wamid.TEST_' + Math.random(), timestamp: String(Math.floor(Date.now() / 1000)), type: 'image', image: { id: 'X', link, caption: 'mire' } }] } }] }] } }], { static: () => st })[0].json;
 for (const [l, okk] of [['https://upload.wikimedia.org/a.jpg', true], ['https://thumb.wikimedia.org/a.jpg', true], ['http://upload.wikimedia.org/a.jpg', false],
   ['http://169.254.169.254/latest', false], ['https://n8n:5678/x', false], ['https://upload.wikimedia.org.evil.com/a', false]]) {

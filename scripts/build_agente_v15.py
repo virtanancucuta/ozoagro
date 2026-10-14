@@ -68,6 +68,21 @@ N['Extraer mensaje']['parameters']['jsCode'] = N['Extraer mensaje']['parameters'
     "    if (st && st.status === 'failed' && /^\\d{8,15}$/.test(String(st.recipient_id || ''))) {\n")
 assert "/^\\d{8,15}$/.test(String(st.recipient_id" in N['Extraer mensaje']['parameters']['jsCode'], 'filtro de fallo no aplicado'
 
+# ---------- 4. Media: el token de OZOAGRO solo viaja a Meta ----------
+# Los ids de audio/foto van en la ruta de graph.facebook.com y la URL que devuelve se descarga CON el token:
+# id solo numerico y descarga solo a lookaside.fbsbx.com (dominio real de Meta, visto en la ejecucion 42242).
+js = N['Extraer mensaje']['parameters']['jsCode']
+old = "  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n"
+new = ("  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n"
+       "  // v15: ids de media solo numericos (van en la ruta de graph.facebook.com con el token)\n"
+       "  if (es_audio && !/^\\d{5,30}$/.test(String(audio_id))) { es_audio = false; audio_id = ''; texto = '(nota de voz que no se entendió)'; }\n"
+       "  if (es_imagen && !imagen_url_test && !/^\\d{5,30}$/.test(String(imagen_id))) { es_imagen = false; imagen_id = ''; texto = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n")
+assert js.count(old) == 1, 'Extraer mensaje (media) cambio'
+N['Extraer mensaje']['parameters']['jsCode'] = js.replace(old, new)
+for nodo in ['Descargar audio', 'Descargar imagen']:
+    assert N[nodo]['parameters']['url'] == '={{ $json.url }}', nodo + ' cambio'
+    N[nodo]['parameters']['url'] = "={{ /^https:\\/\\/lookaside\\.fbsbx\\.com\\//.test(String($json.url || '')) ? $json.url : 'https://lookaside.fbsbx.com/bloqueado-url-no-meta' }}"
+
 w['name'] = 'OZOAGRO WhatsApp - Agente Andres v15'
 txt = json.dumps(w, ensure_ascii=False)
 assert AIMMA_PHONE_ID not in txt and CRED_AIMMA not in txt, 'quedo algo del numero de AIMMA'
