@@ -46,42 +46,49 @@ for n in w['nodes']:
 assert sorted(cambiados) == sorted(['Obtener URL media', 'Descargar audio', 'Enviar WhatsApp', 'Enviar media', 'Obtener URL imagen', 'Descargar imagen']), cambiados
 
 # ---------- 3. Extraer mensaje: solo lo que llega al numero de OZOAGRO ----------
+def reemplazar(js, old, new, que):
+    assert js.count(old) == 1, 'Extraer mensaje (' + que + ') cambio: el texto a reemplazar no aparece exactamente una vez'
+    return js.replace(old, new)
 js = N['Extraer mensaje']['parameters']['jsCode']
-old = "  const value = ch.value || {};\n"
-new = ("  const value = ch.value || {};\n"
-       "  // v15: solo el numero propio de OZOAGRO. La app de prueba de AIMMA comparte esta URL: sus mensajes se ignoran.\n"
-       "  if (String((value.metadata || {}).phone_number_id || '') !== '" + OZO_PHONE_ID + "') { return []; }\n")
-assert js.count(old) == 1, 'Extraer mensaje cambio'
-js = js.replace(old, new)
+# Meta puede agrupar varios eventos en un POST: se toma el primero que sea del numero de OZOAGRO (no solo entry[0]).
+# La app de prueba de AIMMA comparte esta URL: lo de su numero se ignora.
+js = reemplazar(js, "  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n",
+    "  // v15: solo el numero propio de OZOAGRO, buscado en todos los entry/changes del POST\n"
+    "  const ch = (body.entry || []).flatMap(en => (en && en.changes) || [])\n"
+    "    .find(c => String((((c || {}).value || {}).metadata || {}).phone_number_id || '') === '" + OZO_PHONE_ID + "') || {};\n", 'entry')
+js = reemplazar(js, "  const value = ch.value || {};\n",
+    "  const value = ch.value || {};\n"
+    "  if (String((value.metadata || {}).phone_number_id || '') !== '" + OZO_PHONE_ID + "') { return []; }\n", 'filtro numero')
 # Remitente con formato valido: se interpola en URLs de PostgREST con service_role (ej. PATCH ?telefono=eq.X);
 # un "from" falso como "1&telefono=not.is.null" haria que el PATCH tocara TODAS las conversaciones.
-old = "  if (!remitente) { return []; } // sin remitente no hay a quien responder\n"
-new = ("  if (!remitente) { return []; } // sin remitente no hay a quien responder\n"
-       "  if (!/^(\\d{8,15}|[A-Z]{2}\\.[A-Za-z0-9]{1,64})$/.test(String(remitente))) { return []; } // formato WhatsApp valido o nada\n")
-assert js.count(old) == 1, 'Extraer mensaje (remitente) cambio'
-N['Extraer mensaje']['parameters']['jsCode'] = js.replace(old, new)
-# los estados fallidos usan recipient_id: misma validacion
-old = "      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '',"
-assert js.count(old) == 1, 'Extraer mensaje (fallo) cambio'
-N['Extraer mensaje']['parameters']['jsCode'] = N['Extraer mensaje']['parameters']['jsCode'].replace(
-    "    if (st && st.status === 'failed') {\n",
-    "    if (st && st.status === 'failed' && /^\\d{8,15}$/.test(String(st.recipient_id || ''))) {\n")
-assert "/^\\d{8,15}$/.test(String(st.recipient_id" in N['Extraer mensaje']['parameters']['jsCode'], 'filtro de fallo no aplicado'
+RE_WA = "/^(\\d{8,15}|[A-Z]{2}\\.[A-Za-z0-9]{1,64})$/"
+js = reemplazar(js, "  if (!remitente) { return []; } // sin remitente no hay a quien responder\n",
+    "  if (!remitente) { return []; } // sin remitente no hay a quien responder\n"
+    "  if (!" + RE_WA + ".test(String(remitente))) { return []; } // formato WhatsApp valido o nada\n", 'remitente')
+# estados fallidos: misma validacion que el remitente (incluye usuarios CO.xxxx)
+js = reemplazar(js, "    if (st && st.status === 'failed') {\n",
+    "    if (st && st.status === 'failed' && " + RE_WA + ".test(String(st.recipient_id || ''))) {\n", 'fallo')
+# modo prueba: prefijo del id + numero del rango de pruebas (5730000001xx-4xx). Asi un id falso 'wamid.TEST_' con un
+# numero real no puede esconder un pedido (es_test=true omite el correo al CEO). La defensa de fondo es la firma de Meta.
+js = reemplazar(js, "  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n",
+    "  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && /^573000000[1-4]\\d\\d$/.test(String(remitente));\n", 'es_test')
 
 # ---------- 4. Media: el token de OZOAGRO solo viaja a Meta ----------
 # Los ids de audio/foto van en la ruta de graph.facebook.com y la URL que devuelve se descarga CON el token:
 # id solo numerico y descarga solo a lookaside.fbsbx.com (dominio real de Meta, visto en la ejecucion 42242).
-js = N['Extraer mensaje']['parameters']['jsCode']
-old = "  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n"
-new = ("  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n"
-       "  // v15: ids de media solo numericos (van en la ruta de graph.facebook.com con el token)\n"
-       "  if (es_audio && !/^\\d{5,30}$/.test(String(audio_id))) { es_audio = false; audio_id = ''; texto = '(nota de voz que no se entendió)'; }\n"
-       "  if (es_imagen && !imagen_url_test && !/^\\d{5,30}$/.test(String(imagen_id))) { es_imagen = false; imagen_id = ''; texto = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n")
-assert js.count(old) == 1, 'Extraer mensaje (media) cambio'
-N['Extraer mensaje']['parameters']['jsCode'] = js.replace(old, new)
+js = reemplazar(js, "  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n",
+    "  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n"
+    "  // v15: ids de media solo numericos (van en la ruta de graph.facebook.com con el token)\n"
+    "  if (es_audio && !/^\\d{5,30}$/.test(String(audio_id))) { es_audio = false; audio_id = ''; texto = '(nota de voz que no se entendió)'; }\n"
+    "  if (es_imagen && !imagen_url_test && !/^\\d{5,30}$/.test(String(imagen_id))) { es_imagen = false; imagen_id = ''; texto = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n", 'media')
+N['Extraer mensaje']['parameters']['jsCode'] = js
 for nodo in ['Descargar audio', 'Descargar imagen']:
     assert N[nodo]['parameters']['url'] == '={{ $json.url }}', nodo + ' cambio'
     N[nodo]['parameters']['url'] = "={{ /^https:\\/\\/lookaside\\.fbsbx\\.com\\//.test(String($json.url || '')) ? $json.url : 'https://lookaside.fbsbx.com/bloqueado-url-no-meta' }}"
+# si Meta falla o la URL se bloquea, el flujo SIGUE: 'Unir texto' ya convierte transcripcion/vision vacias en
+# "(nota de voz que no se entendio...)" / "(foto ... que no se pudo analizar...)" y el agente le pide al cliente repetir.
+for nodo in ['Obtener URL media', 'Descargar audio', 'Transcribir audio', 'Obtener URL imagen', 'Descargar imagen', 'Imagen a base64']:
+    N[nodo]['onError'] = 'continueRegularOutput'
 
 w['name'] = 'OZOAGRO WhatsApp - Agente Andres v15'
 txt = json.dumps(w, ensure_ascii=False)
@@ -90,6 +97,15 @@ payload = {'name': w['name'], 'nodes': w['nodes'], 'connections': w['connections
 json.dump(payload, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('nodos:', len(w['nodes']), '| credencial:', cred, '| ->', OUT)
 if DRY: print('DRY'); sys.exit(0)
+assert KEY, 'falta N8N_API_KEY en el entorno'
+# El flujo vivo debe ser el ultimo publicado desde el repo (n8n/OZOAGRO_WHATSAPP.json) o ya igual a este build:
+# si alguien lo edito en la interfaz de n8n, NO se pisa (exportar primero esos cambios al repo).
+firma = lambda d: {n['name']: json.dumps(n['parameters'], sort_keys=True) for n in d['nodes']}
+vivo = api('/workflows/' + WF)
+repo = json.load(open(os.path.join(os.path.dirname(S), 'n8n', 'OZOAGRO_WHATSAPP.json'), encoding='utf-8'))
+if firma(vivo) not in (firma(repo), firma(payload)):
+    distintos = sorted(k for k in set(firma(vivo)) | set(firma(repo)) if firma(vivo).get(k) != firma(repo).get(k))
+    sys.exit('ABORTADO: el flujo vivo no coincide con n8n/OZOAGRO_WHATSAPP.json (cambiado fuera del repo). Nodos: ' + ', '.join(distintos))
 req = urllib.request.Request(N8N + '/api/v1/workflows/' + WF, data=json.dumps(payload).encode('utf-8'), method='PUT',
                              headers={'X-N8N-API-KEY': KEY, 'Content-Type': 'application/json'})
 with urllib.request.urlopen(req) as r: res = json.load(r)

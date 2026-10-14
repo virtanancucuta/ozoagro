@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  const ch = (((body.entry || [])[0] || {}).changes || [])[0] || {};\n  const value = ch.value || {};\n  // v15: solo el numero propio de OZOAGRO. La app de prueba de AIMMA comparte esta URL: sus mensajes se ignoran.\n  if (String((value.metadata || {}).phone_number_id || '') !== '1436278792892245') { return []; }\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed' && /^\\d{8,15}$/.test(String(st.recipient_id || ''))) {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  if (!/^(\\d{8,15}|[A-Z]{2}\\.[A-Za-z0-9]{1,64})$/.test(String(remitente))) { return []; } // formato WhatsApp valido o nada\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && String(remitente) !== '573172625415';\n  let es_imagen = false, imagen_id = '', caption = '', imagen_url_test = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else if (t === 'image') {\n    // v12: foto del cliente -> se descarga de Meta y se analiza con vision antes de pasar al agente\n    es_imagen = true; imagen_id = (msg.image || {}).id || ''; caption = String((msg.image || {}).caption || '').trim();\n    if (es_test) { // solo pruebas: URL publica en vez de Meta, y SOLO de Wikimedia por https (el webhook es publico: nada de URLs arbitrarias)\n      const lk = String((msg.image || {}).link || '');\n      if (/^https:\\/\\/(upload|thumb|commons)\\.wikimedia\\.org\\/[^\\s]*$/.test(lk)) imagen_url_test = lk; // regex: el sandbox de n8n no trae URL()\n      if (!imagen_url_test) { es_imagen = false; imagen_id = ''; caption = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n    }\n    texto = caption;\n  }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n  // v15: ids de media solo numericos (van en la ruta de graph.facebook.com con el token)\n  if (es_audio && !/^\\d{5,30}$/.test(String(audio_id))) { es_audio = false; audio_id = ''; texto = '(nota de voz que no se entendió)'; }\n  if (es_imagen && !imagen_url_test && !/^\\d{5,30}$/.test(String(imagen_id))) { es_imagen = false; imagen_id = ''; texto = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, es_imagen, imagen_id, caption, imagen_url_test, texto, es_test } }];\n} catch (e) { return []; }"
+        "jsCode": "// Deduplicacion: usar staticData para evitar procesar mismo mensaje dos veces\nconst body = $input.first().json.body || {};\ntry {\n  if (body.object !== 'whatsapp_business_account') { return []; }\n  // v15: solo el numero propio de OZOAGRO, buscado en todos los entry/changes del POST\n  const ch = (body.entry || []).flatMap(en => (en && en.changes) || [])\n    .find(c => String((((c || {}).value || {}).metadata || {}).phone_number_id || '') === '1436278792892245') || {};\n  const value = ch.value || {};\n  if (String((value.metadata || {}).phone_number_id || '') !== '1436278792892245') { return []; }\n  const msg = (value.messages || [])[0];\n  if (!msg) {\n    // Acuses de entrega: registrar los FALLIDOS para verlos en Chats IA (los demas se ignoran)\n    const st = (value.statuses || [])[0];\n    if (st && st.status === 'failed' && /^(\\d{8,15}|[A-Z]{2}\\.[A-Za-z0-9]{1,64})$/.test(String(st.recipient_id || ''))) {\n      const err = ((st.errors || [])[0] || {});\n      return [{ json: { es_fallo_entrega: true, from: st.recipient_id || '', fallo_detalle: 'ENTREGA FALLIDA (' + (err.code || '?') + ' ' + (err.title || '') + '): el mensaje del bot NO le llego al cliente.' } }];\n    }\n    return [];\n  }\n  \n  // Ignorar mensajes viejos (reintentos de Meta tras caida del webhook): >15 min\n  const ts = Number(msg.timestamp || 0);\n  if (ts && (Date.now() / 1000 - ts) > 900) { return []; }\n\n  // Deduplicacion por message_id\n  const msgId = msg.id;\n  const processed = $getWorkflowStaticData('global');\n  if (!processed.msgs) processed.msgs = {};\n  if (processed.msgs[msgId]) { return []; } // Ya procesado\n  processed.msgs[msgId] = Date.now();\n  // Limpiar mensajes viejos (>5 min)\n  const now = Date.now();\n  for (const id of Object.keys(processed.msgs)) {\n    if (now - processed.msgs[id] > 300000) delete processed.msgs[id];\n  }\n  \n  const contact = (value.contacts || [])[0] || {};\n  // Meta puede mandar usuarios por \"username\": el remitente llega en from_user_id / contacts[0].user_id (formato CO.xxxx), no en from\n  const remitente = msg.from || msg.from_user_id || contact.wa_id || contact.user_id || '';\n  if (!remitente) { return []; } // sin remitente no hay a quien responder\n  if (!/^(\\d{8,15}|[A-Z]{2}\\.[A-Za-z0-9]{1,64})$/.test(String(remitente))) { return []; } // formato WhatsApp valido o nada\n  const t = msg.type;\n  let texto = '', es_audio = false, audio_id = '';\n  // Modo test: ids 'wamid.TEST_' desde numeros ficticios NO se envian a Meta (se registra todo en BD igual)\n  const es_test = String(msg.id || '').startsWith('wamid.TEST_') && /^573000000[1-4]\\d\\d$/.test(String(remitente));\n  let es_imagen = false, imagen_id = '', caption = '', imagen_url_test = '';\n  if (t === 'text') { texto = (msg.text || {}).body || ''; }\n  else if (t === 'audio') { es_audio = true; audio_id = (msg.audio || {}).id || ''; }\n  else if (t === 'image') {\n    // v12: foto del cliente -> se descarga de Meta y se analiza con vision antes de pasar al agente\n    es_imagen = true; imagen_id = (msg.image || {}).id || ''; caption = String((msg.image || {}).caption || '').trim();\n    if (es_test) { // solo pruebas: URL publica en vez de Meta, y SOLO de Wikimedia por https (el webhook es publico: nada de URLs arbitrarias)\n      const lk = String((msg.image || {}).link || '');\n      if (/^https:\\/\\/(upload|thumb|commons)\\.wikimedia\\.org\\/[^\\s]*$/.test(lk)) imagen_url_test = lk; // regex: el sandbox de n8n no trae URL()\n      if (!imagen_url_test) { es_imagen = false; imagen_id = ''; caption = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n    }\n    texto = caption;\n  }\n  else { texto = '[Mensaje tipo ' + t + '. Pidele que escriba, envie audio o una foto.]'; }\n  // v15: ids de media solo numericos (van en la ruta de graph.facebook.com con el token)\n  if (es_audio && !/^\\d{5,30}$/.test(String(audio_id))) { es_audio = false; audio_id = ''; texto = '(nota de voz que no se entendió)'; }\n  if (es_imagen && !imagen_url_test && !/^\\d{5,30}$/.test(String(imagen_id))) { es_imagen = false; imagen_id = ''; texto = '(foto enviada por el cliente que no se pudo analizar)' + (caption ? ' ' + caption : ''); }\n  return [{ json: { from: remitente, nombre: (contact.profile || {}).name || (contact.profile || {}).username || '', tipo: t, message_id: msg.id, es_audio, audio_id, es_imagen, imagen_id, caption, imagen_url_test, texto, es_test } }];\n} catch (e) { return []; }"
       },
       "id": "extract",
       "name": "Extraer mensaje",
@@ -183,7 +183,8 @@
           "id": "bl2XoBepZm1XY4gm",
           "name": "OZOAGRO Meta WhatsApp Token"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -211,7 +212,8 @@
           "id": "bl2XoBepZm1XY4gm",
           "name": "OZOAGRO Meta WhatsApp Token"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -234,7 +236,8 @@
           "id": "Gy1kSNlEmpsaTTwE",
           "name": "AIMMA OpenAI"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1062,7 +1065,8 @@
           "id": "bl2XoBepZm1XY4gm",
           "name": "OZOAGRO Meta WhatsApp Token"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1090,7 +1094,8 @@
           "id": "bl2XoBepZm1XY4gm",
           "name": "OZOAGRO Meta WhatsApp Token"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1132,7 +1137,8 @@
         40
       ],
       "id": "e978d454-f685-4e5b-94f6-1c97a1e79164",
-      "name": "Imagen a base64"
+      "name": "Imagen a base64",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1195,7 +1201,7 @@
       },
       "onError": "continueRegularOutput",
       "alwaysOutputData": true,
-      "id": "df7e3a54-62d9-43c1-8d35-81c96a50f483"
+      "id": "322e3658-06b5-4fc5-8db9-49f7fa6812db"
     },
     {
       "parameters": {
@@ -1208,7 +1214,7 @@
         2704,
         368
       ],
-      "id": "c8e74c37-3577-4ebf-8229-0c52bf42e3e2"
+      "id": "d2791b3e-4471-4b35-b319-ee4751fa866a"
     },
     {
       "parameters": {
@@ -1241,7 +1247,7 @@
         2912,
         272
       ],
-      "id": "5eb49236-cc31-4e39-a0dc-237b5b11fdba"
+      "id": "cf2aeccd-1746-4a13-8778-d164dcc5212f"
     },
     {
       "parameters": {
@@ -1283,7 +1289,7 @@
         }
       },
       "onError": "continueRegularOutput",
-      "id": "cae40594-80ac-400c-9b93-7d5d6fedc1fe"
+      "id": "4b2aec55-a222-4880-a843-93b0d014b4e3"
     },
     {
       "parameters": {
@@ -1296,7 +1302,7 @@
         3328,
         368
       ],
-      "id": "2361dd06-d772-4694-981e-ecfdc217fe67"
+      "id": "a0f733c7-4a1a-41da-8f68-ca38446a315d"
     },
     {
       "parameters": {
@@ -1309,7 +1315,7 @@
         3536,
         560
       ],
-      "id": "3b6a2ffe-35f7-4a9a-a6e6-e3e5eaf9738c"
+      "id": "7af9cb09-6d04-4944-a32e-e51f2f131ebb"
     },
     {
       "parameters": {
@@ -1349,7 +1355,7 @@
         }
       },
       "onError": "continueRegularOutput",
-      "id": "0a2169d4-8305-49b3-8b54-830bb95e99ed"
+      "id": "5611ef0f-9657-46ef-9583-93db37657a8b"
     },
     {
       "parameters": {
@@ -1373,7 +1379,7 @@
       },
       "onError": "continueRegularOutput",
       "alwaysOutputData": true,
-      "id": "dafd416f-dbb6-4dbc-8fb8-7a1f17d8c69d"
+      "id": "8bb7b705-bb43-4eaf-8b18-fded33769b89"
     }
   ],
   "connections": {

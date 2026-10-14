@@ -8,6 +8,8 @@ def rw(m):
     attr, q, url = m.group(1), m.group(2), m.group(3)
     if re.match(r'^(https?:|//|#|mailto:|tel:|data:|javascript:)', url) or url.startswith('landing/'):
         return m.group(0)
+    if url.startswith('/'):  # ruta absoluta del sitio (ej. /privacidad): en GitHub Pages vive bajo landing/
+        return f'{attr}={q}landing{url}{q}'
     if attr == 'content' and not IMG.search(url):
         return m.group(0)
     return f'{attr}={q}landing/{url}{q}'
