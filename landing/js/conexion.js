@@ -13,7 +13,7 @@
   const LITROS = { '1 Unidad': 1, 'Galón (4 L)': 4, '10 Unidades': 10, '20 Unidades': 20 };
 
   /* ---------- Distribuidor por slug: ozoagro.co/{slug} ---------- */
-  const WA_OZOAGRO = '573145933481';
+  const WA_OZOAGRO = '573151365525'; // 2026-10-14: WhatsApp del agente Andres (API oficial OZOAGRO)
   const RESERVADOS = ['panel', 'images', 'videos', 'js', 'css', 'api', 'admin', 'ozoagro', 'login', 'index', 'landing', 'manifest', 'robots', 'sitemap'];
   const mSlug = location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,28}[a-z0-9])\/?$/i);
   const SLUG = (mSlug && !RESERVADOS.includes(mSlug[1].toLowerCase())) ? mSlug[1].toLowerCase() : null;
