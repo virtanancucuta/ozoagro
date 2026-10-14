@@ -49,6 +49,7 @@ ESC = [
  ('vereda', 'Vive en zona rural', 'Rosa', ['¿Ustedes envían a una vereda de Tumaco, Nariño?']),
  ('foto_roya', 'Manda foto del cultivo', 'Jairo', ['(foto enviada por el cliente. Lo que se ve en la foto: hoja de café con manchas circulares anaranjadas y polvorientas en el envés. Posible causa: roya del café (hongo Hemileia vastatrix), confianza alta) El cliente escribió junto a la foto: "¿Qué tiene mi café? Tengo 3 hectáreas en Pitalito"']),
  ('humano', 'Quiere hablar con una persona', 'Beatriz', ['¿Esto es un robot? Quiero hablar con una persona']),
+ ('video_cafe', 'Pide video de un cultivo sin video', 'Hernando', ['¿Tienen videos de resultados en café? Quiero ver antes de comprar', 'Bueno, muéstreme el de papaya']),
 ]
 
 def llamar(modelo, mensajes):

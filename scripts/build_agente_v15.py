@@ -131,6 +131,14 @@ C['Firma Meta'] = {'main': [[{'node': 'Validar firma', 'type': 'main', 'index': 
 C['Validar firma'] = {'main': [[{'node': 'Extraer mensaje', 'type': 'main', 'index': 0}]]}
 N['Extraer mensaje']['position'] = [xw + 624, yw + 112]
 
+# ---------- 6. Videos: si el agente pone mas de un tag de video en un mensaje (no eligio el cliente), no se envia ninguno ----------
+js = N['Parsear respuesta']['parameters']['jsCode']
+old = "// Datos del lead"
+assert js.count(old) == 1, 'Parsear respuesta cambio'
+js = js.replace(old, "// v17: mas de un video en el mismo mensaje = el cliente no eligio -> no se envia ninguno\n"
+                     r"if ((raw.match(/\[ENVIAR_VIDEO_[A-Z]+\]/g) || []).length > 1 && String(media || '').startsWith('video_')) media = null;" "\n\n" + old, 1)
+N['Parsear respuesta']['parameters']['jsCode'] = js
+
 w['name'] = 'OZOAGRO WhatsApp - Agente Andres v17'
 txt = json.dumps(w, ensure_ascii=False)
 assert AIMMA_PHONE_ID not in txt and CRED_AIMMA not in txt, 'quedo algo del numero de AIMMA'
