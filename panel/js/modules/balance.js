@@ -1,7 +1,6 @@
 // OZOAGRO Panel - Modulo Balance
 async function renderBalance(container) {
-  const today = new Date().toISOString().split('T')[0];
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+  const { start: startOfMonth, end: today } = getDateRange('month');   // hora de Colombia
 
   container.innerHTML = `
     <div class="space-y-6">
@@ -205,7 +204,7 @@ window.loadBalanceData = async function() {
     gastosContainer.innerHTML = gastos.map(g => `
       <div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
         <div>
-          <div class="font-medium text-sm">${g.descripcion}</div>
+          <div class="font-medium text-sm">${escapeHtml(g.descripcion)}</div>
           <div class="text-xs text-gray-500">${formatDate(g.fecha)}</div>
         </div>
         <div class="font-medium text-red-600">${formatMoney(g.valor)}</div>

@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
   const dist: any = p.distribuidor || null;
   const waNumero = dist?.whatsapp || cfg?.whatsapp_agente;
   const wa = waNumero ? `https://wa.me/${String(waNumero).replace(/\D/g, "")}` : "https://ozoagro.co";
-  const pie = `OZOAGRO Colombia · <a href="https://ozoagro.co" style="color:#15803D">ozoagro.co</a> · Bioinsecticida y biofungicida ecológico a base de ozono.<br>¿Dudas? Escríbenos por WhatsApp: <a href="${wa}" style="color:#15803D">${esc(cfg?.whatsapp_agente || "")}</a>`;
+  const pie = `OZOAGRO Colombia · <a href="https://ozoagro.co" style="color:#15803D">ozoagro.co</a> · Protección natural para tus cultivos.<br>¿Dudas? Escríbenos por WhatsApp: <a href="${wa}" style="color:#15803D">${esc(String(waNumero || ""))}</a>`;   // el número visible y el enlace son el mismo
 
   const envios: { to: string; subject: string; html: string; tipo: string }[] = [];
 
@@ -106,10 +106,10 @@ Deno.serve(async (req: Request) => {
         html: layout(`${esc(nombre)}, tu OZOAGRO ya salió`,
           `<p style="font-size:15px;line-height:1.6">Despachamos tu pedido <strong>${esc(p.codigo_publico)}</strong> por <strong>${esc(p.transportadora || "transportadora")}</strong>.</p>
            <p style="font-size:18px;margin:16px 0;padding:14px 18px;background:#F0FDF4;border:1px dashed #15803D;border-radius:12px"><strong>Guía:</strong> ${esc(p.guia)}</p>
-           <p style="font-size:15px;line-height:1.6">Llega en 2 a 5 días hábiles a: ${esc(p.direccion_envio || "")}${p.ciudad_envio ? ", " + esc(p.ciudad_envio) : ""}.</p>
+           <p style="font-size:15px;line-height:1.6">Llega en 4 a 8 días hábiles a: ${esc(p.direccion_envio || "")}${p.ciudad_envio ? ", " + esc(p.ciudad_envio) : ""}.</p>
            ${tablaItems(items, p.subtotal)}
            ${pago}
-           <p style="font-size:14px;line-height:1.6;color:#3f6b4f">Dosis: 5 ml por litro de agua. Aplica cada 7 días en lluvias y cada 15 en época seca. Puedes cosechar el mismo día de la aplicación.</p>`, pie),
+           <p style="font-size:14px;line-height:1.6;color:#3f6b4f">Dosis de la ficha técnica: 0,35 a 0,5 litros de OZOAGRO por cada tanque de 200 litros de agua (35 a 50 ml en una bomba de 20 litros). La frecuencia depende de tu cultivo y del clima: escríbenos y te asesoramos.</p>`, pie),
       });
     }
   }

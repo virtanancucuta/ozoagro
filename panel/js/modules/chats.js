@@ -49,13 +49,20 @@ function renderChatsDistribuidor(container) {
           <li><strong>Perfil de empresa:</strong> nombre "OZOAGRO - ${escapeHtml(p.nombre || '')}", categoria Agricultura, direccion o ciudad, y tu enlace <span class="font-mono">https://ozoagro.co/${escapeHtml(p.slug || '')}</span>.</li>
           <li><strong>Mensaje de bienvenida</strong> (Herramientas para la empresa &gt; Mensaje de bienvenida): "Hola, gracias por escribir a OZOAGRO ${escapeHtml(p.nombre || '')}. Cuentame que cultivo tienes y cuantas hectareas, y te recomiendo la presentacion. Envio gratis y pago contra entrega."</li>
           <li><strong>Mensaje de ausencia:</strong> "En este momento no puedo responder. Dejame tu cultivo y tu ciudad y te escribo apenas pueda. Tambien puedes pedir en https://ozoagro.co/${escapeHtml(p.slug || '')}".</li>
-          <li><strong>Respuestas rapidas</strong> (escribe / y el atajo): <span class="font-mono">/precios</span> con "1 litro $129.900 · Galon 4 L $409.900 · 10 unidades $1.100.000 · 20 unidades $1.998.000. Envio gratis, pagas al recibir."; <span class="font-mono">/dosis</span> con "5 ml por litro de agua, 1 litro de OZOAGRO por hectarea, cada 12 a 15 dias."; <span class="font-mono">/pedido</span> con "Para tomar tu pedido necesito: nombre, departamento, ciudad, direccion y cuantos litros."</li>
+          <li><strong>Respuestas rapidas</strong> (escribe / y el atajo): <span class="font-mono">/precios</span> con "<span id="guia-precios">cargando precios...</span> Envio gratis, pagas al recibir."; <span class="font-mono">/dosis</span> con "0,35 a 0,5 litros de OZOAGRO por cada tanque de 200 litros de agua (35 a 50 ml en una bomba de 20 litros). La frecuencia depende del cultivo y del clima."; <span class="font-mono">/pedido</span> con "Para tomar tu pedido necesito: nombre, departamento, ciudad, direccion y cuantos litros."</li>
           <li><strong>Catalogo:</strong> crea los 4 productos con las fotos de la landing (1 litro, Galon 4 L, 10 unidades, 20 unidades), precio y descripcion. Los clientes pueden pedir desde el catalogo.</li>
           <li><strong>Enlace corto:</strong> en Herramientas para la empresa &gt; Enlace corto, copia tu wa.me y usalo en redes. Tu landing ya lo usa.</li>
           <li><strong>Etiquetas:</strong> marca las conversaciones como "Nuevo cliente", "Pedido pendiente" y "Pagado" para no perder ninguna venta.</li>
         </ol>
       </div>
     </div>`;
+  // Precios vigentes de la BD (antes estaban escritos a mano y no cambiaban con el precio)
+  const ponerPrecios = (data) => {
+    const el = document.getElementById('guia-precios');
+    if (el) el.textContent = (data && data.length) ? data.map(x => x.nombre + ' ' + formatMoney(x.precio_venta)).join(' · ') + '.' : 'consulta los precios vigentes con OZOAGRO.';
+  };
+  supabaseClient.from('productos').select('nombre, litros, precio_venta').eq('activo', true).order('litros')
+    .then(({ data }) => ponerPrecios(data), () => ponerPrecios(null));
 }
 
 async function renderChats(container) {
@@ -354,7 +361,7 @@ window.exportChatsExcel = function() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Chats IA');
     ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length, 16) }));
-    XLSX.writeFile(wb, `chats_ia_${chatsTab}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `chats_ia_${chatsTab}_${hoyISO()}.xlsx`);
     showToast('Excel descargado');
   };
   if (typeof XLSX === 'undefined') {

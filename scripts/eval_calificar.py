@@ -44,6 +44,12 @@ def checks(esc, t):
     if esc == 'vereda': c['envío gratis Colombia'] = 'gratis' in L[0]
     if esc == 'foto_roya': c['roya + técnico'] = 'roya' in L[0] and bool(re.search(r't[eé]cnico|laboratorio|campo', L[0]))
     if esc == 'humano': c['ofrece asesor humano'] = bool(re.search(r'asesor|persona', L[0]))
+    # captura de datos del cliente (Chats IA): etiquetas DATO en el mensaje donde el cliente los dice
+    if esc == 'arroz_zulia': c['DATO cultivo+ciudad'] = '[DATO_CULTIVO:' in T[1] and '[DATO_CIUDAD:' in T[1]
+    if esc == 'precio_hectareas': c['DATO cultivo+ciudad'] = '[DATO_CULTIVO:' in T[0] and '[DATO_CIUDAD:' in T[0]
+    if esc == 'caro': c['DATO cultivo+ciudad'] = '[DATO_CULTIVO:' in T[0] and '[DATO_CIUDAD:' in T[0]
+    # el nombre llega por [DATO_NOMBRE] o dentro del JSON del pedido (crear_pedido_agente lo copia al chat desde 20-oct)
+    if esc == 'pedido': c['nombre capturado (DATO o pedido)'] = any('[DATO_NOMBRE:' in x or '"nombre"' in x for x in T)
     # generales en todas las respuestas
     c['sin frases prohibidas'] = not any(PROHIBIDO.search(x) for x in L)
     c['máx 5 líneas'] = all(lineas(x) <= 5 or i == 0 and 'cómo está' in L[i] for i, x in enumerate(T))

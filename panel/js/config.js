@@ -43,14 +43,29 @@ function fitKpiText(root) {
   window.addEventListener('resize', run);
 })();
 
+// Fechas en hora de Colombia (toISOString() trabaja en UTC: después de las 7 p. m. daba el día siguiente)
+const TZ_CO = 'America/Bogota';
+function fechaISO(d) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ_CO, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d || new Date());
+}
+function hoyISO() { return fechaISO(new Date()); }
+// Inicio y fin de un día de Colombia como instante, para filtrar columnas timestamptz
+function inicioDiaCO(iso) { return iso + 'T00:00:00-05:00'; }
+function finDiaCO(iso) { return iso + 'T23:59:59.999-05:00'; }
+
 function formatDate(date) {
   if (!date) return '-';
-  return new Date(date).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  // Una columna DATE ('2026-10-20') se muestra tal cual; new Date() la tomaría como medianoche UTC (día anterior)
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, d] = date.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return new Date(date).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: TZ_CO });
 }
 
 function formatDateTime(date) {
   if (!date) return '-';
-  return new Date(date).toLocaleString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(date).toLocaleString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: TZ_CO });
 }
 
 function showToast(message, type = 'success') {
@@ -73,24 +88,23 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Rango de fechas (AAAA-MM-DD) calculado sobre el día de hoy en Colombia
 function getDateRange(preset) {
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+  const hoy = hoyISO();
+  const [y, m, d] = hoy.split('-').map(Number);
+  const iso = (yy, mm, dd) => new Date(Date.UTC(yy, mm, dd)).toISOString().split('T')[0];   // aritmética de calendario pura, sin zona
+  const startOfMonth = iso(y, m - 1, 1);
 
   switch (preset) {
     case 'today':
-      return { start: today.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: hoy, end: hoy };
     case '7days':
-      const week = new Date(today);
-      week.setDate(week.getDate() - 7);
-      return { start: week.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: iso(y, m - 1, d - 7), end: hoy };
     case 'month':
-      return { start: startOfMonth.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: startOfMonth, end: hoy };
     case 'lastmonth':
-      return { start: startOfLastMonth.toISOString().split('T')[0], end: endOfLastMonth.toISOString().split('T')[0] };
+      return { start: iso(y, m - 2, 1), end: iso(y, m - 1, 0) };
     default:
-      return { start: startOfMonth.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: startOfMonth, end: hoy };
   }
 }

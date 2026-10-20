@@ -6,6 +6,7 @@ let distLista = [];
 let distSel = '';
 let distBusqueda = '';
 let distOrden = 'reciente'; // reciente, mas_dias, menos_dias
+let distVentasRango = null;  // fechas elegidas en "Ventas por distribuidor" (antes se perdían al Aplicar)
 
 function distSlugify(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
@@ -49,7 +50,7 @@ async function distCargarLista() {
 }
 
 function distSelector() {
-  return `<select id="dist-selector" class="px-3 py-2 border rounded-lg" onchange="distSel=this.value; distRenderTab()">
+  return `<select id="dist-selector" class="px-3 py-2 border rounded-lg" onchange="distSel=this.value; distGuardarRango(); distRenderTab()">
     ${distLista.map(d => `<option value="${d.id}" ${d.id === distSel ? 'selected' : ''}>${escapeHtml(d.nombre)} (${escapeHtml(d.slug)})${d.activo ? '' : ' - inactivo'}</option>`).join('')}
   </select>`;
 }
@@ -152,7 +153,7 @@ function distRenderCrear(el) {
               <td class="p-3 text-right ${dias !== null && dias > 30 ? 'text-red-600 font-medium' : dias !== null && dias > 15 ? 'text-orange-600' : ''}">${dias !== null ? dias + ' d' : '-'}</td>
               <td class="p-3">${d.activo ? '<span class="text-green-700 bg-green-50 px-2 py-0.5 rounded text-xs">Activo</span>' : '<span class="text-red-700 bg-red-50 px-2 py-0.5 rounded text-xs">Inactivo</span>'}</td>
               <td class="p-3 whitespace-nowrap"><div class="flex gap-1 justify-center">
-                <button onclick="distResetClave('${d.id}','${escapeHtml(d.nombre)}')" class="px-2 py-1 border rounded text-xs hover:bg-gray-50">Clave</button>
+                <button onclick="distResetClave('${d.id}')" class="px-2 py-1 border rounded text-xs hover:bg-gray-50">Clave</button>
                 <button onclick="distActivo('${d.id}', ${d.activo ? 'false' : 'true'})" class="px-2 py-1 border rounded text-xs hover:bg-gray-50">${d.activo ? 'Desactivar' : 'Activar'}</button>
               </div></td>
             </tr>`;}).join('') : '<tr><td colspan="8" class="p-6 text-center text-gray-500">' + (distBusqueda ? 'Sin resultados para "' + escapeHtml(distBusqueda) + '"' : 'Aun no hay distribuidores') + '</td></tr>'}
@@ -206,7 +207,8 @@ async function distCrear(e) {
 
 window.distRecargar = async function() { await distCargarLista(); await distRenderTab(); };
 window.distCopiar = function(t) { navigator.clipboard.writeText(t).then(() => showToast('Enlace copiado', 'success')).catch(() => prompt('Copia el enlace:', t)); };
-window.distResetClave = async function(id, nombre) {
+window.distResetClave = async function(id) {
+  const nombre = (distLista.find(x => x.id === id) || {}).nombre || 'el distribuidor';   // por id: un apóstrofo en el nombre rompía el botón
   const clave = prompt('Nueva clave para ' + nombre + ' (minimo 8 caracteres):'); if (!clave) return;
   try { await distInvocar({ accion: 'resetear_clave', id, clave }); showToast('Clave actualizada', 'success'); } catch (err) { showToast(err.message, 'error'); }
 };
@@ -216,13 +218,22 @@ window.distActivo = async function(id, activo) {
 };
 
 /* ---------------- VENTAS POR DISTRIBUIDOR ---------------- */
+function distGuardarRango() {
+  const ini = document.getElementById('dv-ini'), fin = document.getElementById('dv-fin');
+  if (ini && fin) distVentasRango = { start: ini.value || null, end: fin.value || null };
+}
+window.distAplicarVentas = function() {
+  distGuardarRango();
+  if (distVentasRango && distVentasRango.start && distVentasRango.end && distVentasRango.start > distVentasRango.end) { showToast('La fecha inicial no puede ser mayor que la final', 'error'); return; }
+  distRenderTab();
+};
 async function distRenderVentas(el) {
-  const range = (typeof getDateRange === 'function') ? getDateRange('month') : { start: null, end: null };
+  const range = distVentasRango || getDateRange('month');
   el.innerHTML = `
     <div class="space-y-4">
       <div class="flex flex-wrap gap-2 items-center">${distSelector()}
         <input type="date" id="dv-ini" class="px-3 py-2 border rounded-lg" value="${range.start || ''}"><span class="text-gray-500">a</span><input type="date" id="dv-fin" class="px-3 py-2 border rounded-lg" value="${range.end || ''}">
-        <button onclick="distRenderTab()" class="bg-primary text-white px-3 py-2 rounded-lg text-sm">Aplicar</button></div>
+        <button onclick="distAplicarVentas()" class="bg-primary text-white px-3 py-2 rounded-lg text-sm">Aplicar</button></div>
       <div id="dv-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
       <div class="bg-white rounded-xl shadow overflow-hidden"><div class="p-4 border-b font-bold">Pedidos del distribuidor</div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3">Codigo</th><th class="text-left p-3">Fecha</th><th class="text-left p-3">Cliente</th><th class="text-left p-3">Canal</th><th class="text-left p-3">Estado</th><th class="text-right p-3">Venta</th></tr></thead><tbody id="dv-tabla"><tr><td colspan="6" class="p-4 text-center text-gray-400">Cargando...</td></tr></tbody></table></div></div>
     </div>`;
@@ -232,7 +243,8 @@ async function distRenderVentas(el) {
   document.getElementById('dv-kpis').innerHTML = [['Pedidos', r.num_pedidos || 0], ['Litros', r.litros_vendidos || 0], ['Venta', formatMoney(r.venta_total)], ['Rentabilidad', formatMoney(r.rentabilidad)]]
     .map(([t, v]) => `<div class="bg-white rounded-xl p-4 shadow"><div class="text-sm text-gray-500">${t}</div><div class="text-2xl font-bold text-primary">${v}</div></div>`).join('');
   let q = supabaseClient.fromTodos('pedidos').select('codigo_publico, created_at, estado, canal, subtotal, cliente:clientes(nombre, telefono)').eq('distribuidor_id', distSel).order('created_at', { ascending: false }).limit(300);
-  if (ini) q = q.gte('created_at', ini); if (fin) q = q.lte('created_at', fin + 'T23:59:59');
+  q = q.eq('es_test', false);
+  if (ini) q = q.gte('created_at', inicioDiaCO(ini)); if (fin) q = q.lte('created_at', finDiaCO(fin));
   const { data: peds } = await q;
   document.getElementById('dv-tabla').innerHTML = (peds && peds.length) ? peds.map(p => `<tr class="border-t"><td class="p-3 font-mono text-xs">${escapeHtml(p.codigo_publico)}</td><td class="p-3">${formatDate(p.created_at)}</td><td class="p-3">${escapeHtml(p.cliente?.nombre || '-')}<div class="text-xs text-gray-500">${escapeHtml(p.cliente?.telefono || '')}</div></td><td class="p-3">${escapeHtml(p.canal)}</td><td class="p-3">${escapeHtml(p.estado)}</td><td class="p-3 text-right font-medium">${formatMoney(p.subtotal)}</td></tr>`).join('')
     : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Sin pedidos en el rango</td></tr>';

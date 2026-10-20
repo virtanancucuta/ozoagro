@@ -1,8 +1,6 @@
 // OZOAGRO Panel - Modulo Gastos
 async function renderGastos(container) {
-  const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-  const monthEnd = today.toISOString().split('T')[0];
+  const { start: monthStart, end: monthEnd } = getDateRange('month');   // hora de Colombia
 
   container.innerHTML = `
     <div class="space-y-6">
@@ -112,17 +110,14 @@ window.toggleGastosRango = function() {
 
 window.loadGastosData = async function() {
   const filtro = document.getElementById('gastos-mes').value;
-  const today = new Date();
-
   let query = supabaseClient.from('gastos').select('*').order('fecha', { ascending: false });
 
   if (filtro === 'current') {
-    const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-    query = query.gte('fecha', start);
+    const r = getDateRange('month');
+    query = query.gte('fecha', r.start).lte('fecha', r.end);   // "Este mes" ya no suma gastos con fecha futura
   } else if (filtro === 'last') {
-    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0];
-    const end = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
-    query = query.gte('fecha', start).lte('fecha', end);
+    const r = getDateRange('lastmonth');
+    query = query.gte('fecha', r.start).lte('fecha', r.end);
   } else if (filtro === 'custom') {
     const desde = document.getElementById('gastos-desde').value;
     const hasta = document.getElementById('gastos-hasta').value;
@@ -146,9 +141,9 @@ window.loadGastosData = async function() {
   tbody.innerHTML = gastos.map(g => `
     <tr class="hover:bg-gray-50">
       <td class="px-4 py-3 text-sm">${formatDate(g.fecha)}</td>
-      <td class="px-4 py-3">${g.descripcion}</td>
-      <td class="px-4 py-3 text-sm">${g.categoria || '-'}</td>
-      <td class="px-4 py-3 text-sm">${g.metodo || '-'}</td>
+      <td class="px-4 py-3">${escapeHtml(g.descripcion)}</td>
+      <td class="px-4 py-3 text-sm">${escapeHtml(g.categoria || '-')}</td>
+      <td class="px-4 py-3 text-sm">${escapeHtml(g.metodo || '-')}</td>
       <td class="px-4 py-3 text-right font-medium text-red-600">${formatMoney(g.valor)}</td>
       <td class="px-4 py-3 text-center">
         <button onclick="editarGasto('${g.id}')" class="text-blue-600 hover:underline text-sm mr-2">Editar</button>
@@ -161,7 +156,7 @@ window.loadGastosData = async function() {
 window.showAgregarGasto = function() {
   document.getElementById('gasto-id').value = '';
   document.getElementById('form-agregar-gasto').reset();
-  document.getElementById('gasto-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('gasto-fecha').value = hoyISO();
   document.getElementById('modal-agregar-gasto').classList.remove('hidden');
 };
 

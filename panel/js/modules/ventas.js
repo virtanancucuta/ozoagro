@@ -135,7 +135,7 @@ async function renderVentas(container) {
       <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center">
           <h2 class="font-bold">Detalle por Pedido</h2>
-          <button onclick="exportVentasCSV()" class="text-sm text-primary hover:underline">Exportar CSV</button>
+          <button onclick="exportVentasExcel()" class="text-sm text-primary hover:underline">Exportar Excel</button>
         </div>
         <table class="w-full">
           <thead class="bg-gray-50">
@@ -158,6 +158,27 @@ async function renderVentas(container) {
   await loadVentasData();
 }
 
+// Filas de "Detalle por Pedido" tal como se ven, para Exportar Excel
+let ventasExport = [];
+window.exportVentasExcel = function() {
+  if (!ventasExport.length) { showToast('No hay ventas para exportar en este periodo', 'error'); return; }
+  const generar = () => {
+    const ws = XLSX.utils.json_to_sheet(ventasExport);
+    ws['!cols'] = Object.keys(ventasExport[0]).map(k => ({ wch: Math.max(k.length, 14) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+    XLSX.writeFile(wb, `ventas_ozoagro_${hoyISO()}.xlsx`);
+    showToast('Excel descargado');
+  };
+  if (typeof XLSX === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    script.onload = generar;
+    script.onerror = () => showToast('No se pudo cargar la libreria de Excel', 'error');
+    document.head.appendChild(script);
+  } else generar();
+};
+
 window.onPresetChange = function() {
   const preset = document.getElementById('ventas-preset').value;
   const customDiv = document.getElementById('fechas-custom');
@@ -165,11 +186,9 @@ window.onPresetChange = function() {
     customDiv.classList.remove('hidden');
     customDiv.classList.add('flex');
     // Set default dates to this month
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const today = now.toISOString().split('T')[0];
-    document.getElementById('ventas-fecha-ini').value = firstDay;
-    document.getElementById('ventas-fecha-fin').value = today;
+    const r = getDateRange('month');   // hora de Colombia
+    document.getElementById('ventas-fecha-ini').value = r.start;
+    document.getElementById('ventas-fecha-fin').value = r.end;
   } else {
     customDiv.classList.add('hidden');
     customDiv.classList.remove('flex');
@@ -181,6 +200,7 @@ window.loadVentasData = async function() {
   const preset = document.getElementById('ventas-preset').value;
   const canal = document.getElementById('ventas-canal').value;
   const esDistFilter = canal === 'mayorista';   // CEDI: lo que OZOAGRO vende a sus distribuidores (precio mayorista − costo OZOAGRO)
+  ventasExport = [];   // nunca exportar filas de un filtro anterior
 
   let range;
   if (preset === 'custom') {
@@ -227,6 +247,7 @@ window.loadVentasData = async function() {
   const tbody = document.getElementById('ventas-tbody');
   if (esDistFilter) {
     const { data: filas } = await supabaseClient.rpc('ventas_mayorista_detalle', { p_fecha_ini: range.start, p_fecha_fin: range.end });
+    ventasExport = (filas || []).map(f => ({ 'Codigo': f.codigo_publico, 'Fecha': formatDate(f.fecha), 'Cliente / distribuidor': f.distribuidor || '', 'Canal': 'mayorista', 'Litros': Number(f.litros) || 0, 'Venta': Number(f.valor) || 0, 'Rentabilidad': Number(f.rentabilidad) || 0 }));
     if (!filas || filas.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin ventas mayoristas en este periodo</td></tr>'; return; }
     tbody.innerHTML = filas.map(f => `
       <tr class="hover:bg-gray-50">
@@ -244,7 +265,7 @@ window.loadVentasData = async function() {
     .select('*, cliente:clientes(nombre), items:pedido_items(litros, cantidad)')
     .in('estado', ['despachado', 'cerrado'])
     .eq('es_test', false)
-    .or(`and(fecha_despachado.gte.${range.start},fecha_despachado.lte.${range.end}T23:59:59),and(fecha_despachado.is.null,created_at.gte.${range.start},created_at.lte.${range.end}T23:59:59)`)
+    .or(`and(fecha_despachado.gte.${inicioDiaCO(range.start)},fecha_despachado.lte.${finDiaCO(range.end)}),and(fecha_despachado.is.null,created_at.gte.${inicioDiaCO(range.start)},created_at.lte.${finDiaCO(range.end)})`)
     .order('fecha_despachado', { ascending: false, nullsFirst: false });
 
   if (canal) {
@@ -252,6 +273,10 @@ window.loadVentasData = async function() {
   }
 
   const { data: pedidos } = await query;
+  ventasExport = (pedidos || []).map(p => ({
+    'Codigo': p.codigo_publico, 'Fecha': formatDate(p.fecha_despachado || p.created_at), 'Cliente / distribuidor': p.cliente?.nombre || '',
+    'Canal': p.canal, 'Litros': p.items?.reduce((s, i) => s + (i.litros * i.cantidad), 0) || 0, 'Venta': Number(p.subtotal) || 0, 'Rentabilidad': Number(p.rentabilidad) || 0
+  }));
 
   if (!pedidos || pedidos.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Sin ventas en este periodo</td></tr>';
@@ -262,9 +287,9 @@ window.loadVentasData = async function() {
     const litros = p.items?.reduce((sum, i) => sum + (i.litros * i.cantidad), 0) || 0;
     return `
       <tr class="hover:bg-gray-50">
-        <td class="px-4 py-3 font-mono text-sm">${p.codigo_publico}</td>
+        <td class="px-4 py-3 font-mono text-sm">${escapeHtml(p.codigo_publico)}</td>
         <td class="px-4 py-3 text-sm">${formatDate(p.fecha_despachado || p.created_at)}</td>
-        <td class="px-4 py-3">${p.cliente?.nombre || '-'}</td>
+        <td class="px-4 py-3">${escapeHtml(p.cliente?.nombre || '-')}</td>
         <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full ${p.canal === 'web' ? 'bg-blue-100 text-blue-700' : p.canal === 'agente' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">${p.canal}</span></td>
         <td class="px-4 py-3 text-right">${litros}</td>
         <td class="px-4 py-3 text-right font-medium">${formatMoney(p.subtotal)}</td>
@@ -318,14 +343,14 @@ async function loadKpisPorCanal(range) {
     .eq('canal', 'agente')
     .in('estado', ['despachado', 'cerrado'])
     .eq('es_test', false)
-    .gte('created_at', range.start)
-    .lte('created_at', range.end + 'T23:59:59');
+    .gte('created_at', inicioDiaCO(range.start))
+    .lte('created_at', finDiaCO(range.end));
 
   const { data: conversaciones } = await supabaseClient
     .from('wa_conversaciones')
     .select('id')
-    .gte('created_at', range.start)
-    .lte('created_at', range.end + 'T23:59:59');
+    .gte('created_at', inicioDiaCO(range.start))
+    .lte('created_at', finDiaCO(range.end));
 
   const numPedidos = pedidosAgente?.length || 0;
   const numConvs = conversaciones?.length || 0;

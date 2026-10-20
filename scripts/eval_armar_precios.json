@@ -1,7 +1,7 @@
 {
  "fuente": "bd",
  "precios": {
-  "1": 129900,
+  "1": 129000,
   "4": 409900,
   "10": 1100000,
   "20": 1998000
@@ -12,10 +12,10 @@
   "10": 513500,
   "20": 1000000
  },
- "bloque": "- 1 litro (envase de 1 L): $129.900. Alcanza para 2 a 2,8 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- Galón de 4 litros (UN solo envase de 4 L): $409.900, es decir $102.475 el litro. Ahorra $109.700 frente a 4 litros sueltos. Es el más vendido. Alcanza para 8 a 11,4 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- 10 unidades (10 envases de 1 L = 10 litros): $1.100.000, es decir $110.000 el litro. Ahorra $199.000 frente a 10 litros sueltos. Alcanza para 20 a 28,5 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- 20 unidades (20 envases de 1 L = 20 litros): $1.998.000, es decir $99.900 el litro, el mejor precio por litro. Ahorra $600.000 frente a 20 litros sueltos. Alcanza para 40 a 57,1 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- Cuando des un precio, di siempre las tres cosas: el total, cuánto sale el litro y cuánto ahorra. Ejemplo: \"El galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $109.700 frente a comprar los litros sueltos\".",
- "combinaciones": "OTRAS CANTIDADES: se arman combinando presentaciones y el total es la SUMA exacta (2 litros = 2 envases de 1 L = $259.800; 3 litros = 3 envases de 1 L = $389.700, mejor ofrézcale el galón por $409.900 que trae 4; 5 litros = galón + 1 litro = $539.800; 8 litros = 2 galones = $819.800; 12 litros = 3 galones = $1.229.700). Nunca inventes otro precio, promoción ni descuento.",
- "bomba": "- Rendimiento en plata por bomba de 20 L (hasta 50 ml de producto): con el litro hasta $6.495; con el galón hasta $5.124; con 10 unidades hasta $5.500; con 20 unidades hasta $4.995.",
+ "bloque": "- 1 litro (envase de 1 L): $129.000. Alcanza para 2 a 2,8 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- Galón de 4 litros (UN solo envase de 4 L): $409.900, es decir $102.475 el litro. Ahorra $106.100 frente a 4 litros sueltos. Es el más vendido. Alcanza para 8 a 11,4 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- 10 unidades (10 envases de 1 L = 10 litros): $1.100.000, es decir $110.000 el litro. Ahorra $190.000 frente a 10 litros sueltos. Alcanza para 20 a 28,5 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- 20 unidades (20 envases de 1 L = 20 litros): $1.998.000, es decir $99.900 el litro, el mejor precio por litro. Ahorra $582.000 frente a 20 litros sueltos. Alcanza para 40 a 57,1 tanques de 200 litros de agua (dosis de la ficha: 0,35 a 0,5 L por tanque).\n- Cuando des un precio, di siempre las tres cosas: el total, cuánto sale el litro y cuánto ahorra. Ejemplo: \"El galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $106.100 frente a comprar los litros sueltos\".",
+ "combinaciones": "OTRAS CANTIDADES: se arman combinando presentaciones y el total es la SUMA exacta (2 litros = 2 envases de 1 L = $258.000; 3 litros = 3 envases de 1 L = $387.000, mejor ofrézcale el galón por $409.900 que trae 4; 5 litros = galón + 1 litro = $538.900; 8 litros = 2 galones = $819.800; 12 litros = 3 galones = $1.229.700). Nunca inventes otro precio, promoción ni descuento.",
+ "bomba": "- Rendimiento en plata por bomba de 20 L (hasta 50 ml de producto): con el litro hasta $6.450; con el galón hasta $5.124; con 10 unidades hasta $5.500; con 20 unidades hasta $4.995.",
  "objecion": "hasta $4.995 por bomba con 20 unidades, $5.124 con el galón",
- "cierre": "\"¿Le despacho el litro a $129.900 o aprovecha el galón de 4 litros a $409.900, que le sale a $102.475 el litro?\"",
- "distribuidor": "PRECIO MAYORISTA vigente: el litro le queda al distribuidor en $65.000 y lo vende al publico en $129.900 (gana $64.900 por litro); el galón le queda al distribuidor en $205.400 y lo vende al publico en $409.900 (gana $204.500 por el galón); 10 unidades le queda al distribuidor en $513.500 y lo vende al publico en $1.100.000 (gana $586.500 por 10 unidades); 20 unidades le queda al distribuidor en $1.000.000 y lo vende al publico en $1.998.000 (gana $998.000 por 20 unidades)."
+ "cierre": "\"¿Le despacho el litro a $129.000 o aprovecha el galón de 4 litros a $409.900, que le sale a $102.475 el litro?\"",
+ "distribuidor": "PRECIO MAYORISTA vigente: el litro le queda al distribuidor en $65.000 y lo vende al publico en $129.000 (gana $64.000 por litro); el galón le queda al distribuidor en $205.400 y lo vende al publico en $409.900 (gana $204.500 por el galón); 10 unidades le queda al distribuidor en $513.500 y lo vende al publico en $1.100.000 (gana $586.500 por 10 unidades); 20 unidades le queda al distribuidor en $1.000.000 y lo vende al publico en $1.998.000 (gana $998.000 por 20 unidades)."
 }

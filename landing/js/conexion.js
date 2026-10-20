@@ -14,7 +14,7 @@
 
   /* ---------- Distribuidor por slug: ozoagro.co/{slug} ---------- */
   const WA_OZOAGRO = '573151365525'; // 2026-10-14: WhatsApp del agente Andres (API oficial OZOAGRO)
-  const RESERVADOS = ['panel', 'images', 'videos', 'js', 'css', 'api', 'admin', 'ozoagro', 'login', 'index', 'landing', 'manifest', 'robots', 'sitemap'];
+  const RESERVADOS = ['panel', 'images', 'videos', 'js', 'css', 'api', 'admin', 'ozoagro', 'login', 'index', 'landing', 'manifest', 'robots', 'sitemap', 'privacidad'];
   const mSlug = location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,28}[a-z0-9])\/?$/i);
   const SLUG = (mSlug && !RESERVADOS.includes(mSlug[1].toLowerCase())) ? mSlug[1].toLowerCase() : null;
   let DIST = null;   // {slug, nombre, ciudad, departamento, whatsapp} si el slug existe y está activo
@@ -22,7 +22,7 @@
     DIST = d;
     const wa = String(d.whatsapp || '').replace(/\D/g, '');
     if (wa) {
-      document.querySelectorAll('a[href*="wa.me/"]').forEach(a => {
+      document.querySelectorAll('a[href*="wa.me/"]:not([data-wa-fijo])').forEach(a => {   // 'Quiero ser distribuidor' siempre va a OZOAGRO
         const h = a.getAttribute('href');
         if (h.includes('wa.me/' + WA_OZOAGRO) || /wa\.me\/?(\?|$)/.test(h)) a.setAttribute('href', h.replace(/wa\.me\/\d*/, 'wa.me/' + wa));
       });
@@ -46,7 +46,7 @@
   const ASSET_BASE = cssLink ? cssLink.getAttribute('href').replace(/styles\.css$/, '') : '';
   const asset = (u) => (!u || /^(https?:)?\/\//.test(u) || u.startsWith('data:')) ? u : ASSET_BASE + u;
   // Meta Pixel (24936831939337917): eventos estándar de conversión
-  const PRECIOS = { 1: 129900, 4: 409900, 10: 1100000, 20: 1998000 };
+  const PRECIOS = { 1: 129000, 4: 409900, 10: 1100000, 20: 1998000 };   // respaldo; los vigentes se leen de productos
   function pixel(evento, datos) { try { if (typeof window.fbq === 'function') window.fbq('track', evento, datos || {}); } catch (e) {} }
   function datosProducto(nombre) { const l = LITROS[nombre] || 1; return { content_name: 'OZOAGRO ' + nombre, content_ids: ['ozoagro-' + l + 'l'], content_type: 'product', value: PRECIOS[l] || 0, currency: 'COP', distribuidor: (DIST && DIST.slug) || 'ozoagro' }; }
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -99,7 +99,7 @@
 
   /* ---------- Pixel: ViewContent al elegir presentación, InitiateCheckout al abrir el formulario ---------- */
   document.querySelectorAll('.presentation-card').forEach(card => card.addEventListener('click', () => pixel('ViewContent', datosProducto(card.dataset.product))));
-  ['mainOrderBtn', 'stickyOrderBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', () => {
+  ['mainOrderBtn', 'mainOrderBtnFinal', 'stickyOrderBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', () => {
     const sel = document.querySelector('.presentation-card.selected'); pixel('InitiateCheckout', Object.assign(datosProducto(sel ? sel.dataset.product : 'Galón (4 L)'), { num_items: 1 }));
   }); });
 
@@ -149,6 +149,12 @@
     const msg = document.getElementById('formMessage');
     const litros = LITROS[order.product] || 1;
     const btnHtml = btn ? btn.innerHTML : '';
+    // Celular colombiano: 10 dígitos que empiezan por 3 (o con el 57 adelante). Si falla, el carrito abandonado sigue armado.
+    if (!/^(57)?3\d{9}$/.test(soloDigitos(order.telefono))) {
+      if (msg) { msg.style.color = '#b42318'; msg.textContent = 'Revisa tu celular: debe tener 10 dígitos y empezar por 3 (ej. 300 123 4567).'; }
+      const tel = form.querySelector('#telefono'); if (tel) tel.focus();
+      return;
+    }
     if (carritoTimer) clearTimeout(carritoTimer);
     try {
       if (btn) { btn.disabled = true; btn.innerHTML = '<span>ENVIANDO...</span><small>UN MOMENTO</small>'; }
@@ -171,7 +177,7 @@
         p_distribuidor_slug: slugActivo()
       });
       if (error) throw error;
-      if (data && data.error) throw new Error(data.error);
+      if (data && data.error) throw Object.assign(new Error(data.error), { paraCliente: true });   // mensaje de validación de la BD
       const total = Number(data.total || producto.precio_venta || 0).toLocaleString('es-CO');
       form.innerHTML =
         '<div class="ozo-exito" role="status">' +
@@ -186,7 +192,7 @@
       console.log('Pedido creado:', data);
     } catch (err) {
       console.error('Error creando pedido:', err);
-      if (msg) { msg.style.color = '#b42318'; msg.textContent = 'No pudimos registrar tu pedido. Intenta de nuevo o escríbenos por WhatsApp.'; }
+      if (msg) { msg.style.color = '#b42318'; msg.textContent = err && err.paraCliente ? err.message : 'No pudimos registrar tu pedido. Intenta de nuevo o escríbenos por WhatsApp.'; }
       if (btn) { btn.disabled = false; btn.innerHTML = btnHtml; }
     }
   };

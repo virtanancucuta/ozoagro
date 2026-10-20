@@ -1,0 +1,528 @@
+[
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "anuncio_curioso",
+  "perfil": "Pequeño productor que llega del anuncio sin decir nada",
+  "turnos": [
+   {
+    "cliente": "Hola, vi su anuncio. ¿Qué es eso?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱\n\nOZOAGRO es un aceite ozonificado de origen natural, hecho con aceites ozonizados, neem y ricino.\nLe ayuda a controlar hongos por contacto, manejar bacterias y repeler insectos de cuerpo blando, además de apoyar la raíz y la planta.\n\n¿En qué cultivo lo quiere usar?",
+    "seg": 3.9,
+    "in": 4645,
+    "cache": 4480,
+    "out": 87,
+    "razon": 0
+   },
+   {
+    "cliente": "Tengo café en Pitalito, unas 2 hectáreas",
+    "texto": "Buenos días, en café OZOAGRO le ayuda a controlar hongos por contacto y a manejar insectos de cuerpo blando, con buena cobertura en la aplicación.  \nPara 2 hectáreas, usando 200 a 400 L de agua por hectárea, le quedarían entre 1 y 2 litros por aplicación.  \nEl litro vale $129.000; si quiere más rendimiento, el galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $106.100 frente a comprar 4 litros sueltos.  \n¿Cuántos litros de agua usa por hectárea para afinarle la cantidad? [DATO_CULTIVO:café] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila]",
+    "seg": 2.6,
+    "in": 4752,
+    "cache": 4480,
+    "out": 172,
+    "razon": 0
+   },
+   {
+    "cliente": "¿Y cuánto vale?",
+    "texto": "El litro vale $129.000.  \nEl galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $106.100 frente a comprar los 4 litros sueltos.  \nSi para su café prefiere más rendimiento, también tengo 10 unidades por $1.100.000 y 20 unidades por $1.998.000.  \n¿Cuántos litros de agua usa por hectárea para decirle cuál presentación le conviene más?",
+    "seg": 1.8,
+    "in": 4936,
+    "cache": 2688,
+    "out": 109,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "arroz_zulia",
+  "perfil": "Caso real de Jorge: finca de arroz, viene del anuncio",
+  "turnos": [
+   {
+    "cliente": "Buenas tardes",
+    "texto": "Buenos días 👋 ¿Cómo está? Le saluda el Ingeniero Andrés, especialista en tecnología de ozono aplicada a la agricultura en OZOAGRO 🌱 Cuénteme qué cultivo tiene, en qué zona y qué problema está viendo; si puede, mándeme una foto de la parte afectada.",
+    "seg": 1.8,
+    "in": 4636,
+    "cache": 2688,
+    "out": 66,
+    "razon": 0
+   },
+   {
+    "cliente": "Es que tengo una finca con arroz en el zulia eso es en norte de santander y vi un anuncio de uds",
+    "texto": "Buenos días, claro que sí. En arroz, OZOAGRO le ayuda a controlar hongos y a fortalecer la planta para que avance mejor el cultivo.  \nPara 10 hectáreas se usan entre 5 y 10 litros por aplicación; le sirve el combo de 10 unidades a $1.100.000, le queda a $110.000 el litro y ahorra $190.000 frente a comprar 10 litros sueltos.  \n¿Me confirma cuántos litros de agua usa por hectárea para afinarle la cantidad? [DATO_CIUDAD:El Zulia] [DATO_DEPTO:Norte de Santander] [DATO_CULTIVO:arroz]",
+    "seg": 2.3,
+    "in": 4733,
+    "cache": 4480,
+    "out": 150,
+    "razon": 0
+   },
+   {
+    "cliente": "Prevenir y a veces hongo",
+    "texto": "Claro, en arroz le sirve muy bien para prevención y para manejar hongos a tiempo, porque actúa por contacto y ayuda a frenar su avance.  \nSi usa entre 200 y 400 L de agua por hectárea, para 10 ha serían entre 5 y 10 litros por aplicación; el combo de 10 unidades le queda en $1.100.000, a $110.000 el litro, con envío gratis y paga al recibir.  \n¿Quiere que le recomiende la presentación exacta según los litros de agua que maneja por hectárea?",
+    "seg": 1.8,
+    "in": 4897,
+    "cache": 4608,
+    "out": 123,
+    "razon": 0
+   },
+   {
+    "cliente": "Tengo 10 hectáreas",
+    "texto": "Listo, para 10 hectáreas y usando la referencia de 200 a 400 L de agua por hectárea, la cantidad queda entre 5 y 10 litros por aplicación.  \nLa presentación que mejor le cubre es el combo de 10 unidades: $1.100.000, le sale a $110.000 el litro y ahorra $190.000 frente a comprar 10 litros sueltos.  \n¿Me confirma cuántos litros de agua usa por hectárea para dejarle la cantidad exacta?",
+    "seg": 3.1,
+    "in": 5033,
+    "cache": 4736,
+    "out": 115,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "precio_directo",
+  "perfil": "Solo quiere el precio",
+  "turnos": [
+   {
+    "cliente": "¿Cuánto vale el galón?",
+    "texto": "Buenos días, el galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $106.100 frente a comprar los litros sueltos.  \nLe sirve para 8 a 11,4 tanques de 200 litros de agua, según la dosis.  \n¿Para qué cultivo lo necesita y cuántas hectáreas tiene?",
+    "seg": 1.9,
+    "in": 4640,
+    "cache": 4480,
+    "out": 84,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "precio_hectareas",
+  "perfil": "Da hectáreas y pide precio",
+  "turnos": [
+   {
+    "cliente": "Buenas, tengo 6 hectáreas de café en Pitalito, ¿cuánto me vale?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nEn café, OZOAGRO le ayuda a controlar hongos y a manejar insectos de cuerpo blando, con buena cobertura en la aplicación.  \nPara 6 hectáreas, usando 200 a 400 L de agua por hectárea, le quedarían entre 3 y 6 litros por aplicación; le sirven 10 unidades a $1.100.000, $110.000 el litro, y ahorra $190.000 frente a comprar 10 litros sueltos.  \n¿Me confirma cuántos litros de agua usa por hectárea para afinarle la cantidad? [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila] [DATO_CULTIVO:café]",
+    "seg": 2.6,
+    "in": 4654,
+    "cache": 2688,
+    "out": 173,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "roya",
+  "perfil": "Pregunta si mata hongos",
+  "turnos": [
+   {
+    "cliente": "¿Eso sí mata la roya del café?",
+    "texto": "Buenos días, sí le ayuda a controlar la roya en café porque actúa por contacto sobre el hongo y frena su avance.  \nOZOAGRO también le ayuda a fortalecer la planta y a mejorar la cobertura cuando se aplica a tiempo.  \n¿Me dice cuántas hectáreas de café tiene para orientarle la presentación? [DATO_CULTIVO:café]",
+    "seg": 1.9,
+    "in": 4642,
+    "cache": 2688,
+    "out": 81,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "abejas",
+  "perfil": "Le preocupan las abejas",
+  "turnos": [
+   {
+    "cliente": "Tengo aguacate en flor y hay muchas abejas. ¿OZOAGRO le hace daño a las abejas?",
+    "texto": "Buenos días, sí le sirve para ese caso 🌱  \nOZOAGRO es amigable con las abejas: no es un veneno, actúa por contacto.  \nComo buena práctica, aplíquelo temprano en la mañana o al final de la tarde y no directamente sobre flores con abejas activas.  \nEn aguacate en flor ayuda a manejar hongos y a cuidar la sanidad del cultivo; ¿cuántas hectáreas tiene?",
+    "seg": 2.4,
+    "in": 4660,
+    "cache": 4480,
+    "out": 99,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "virus",
+  "perfil": "Pregunta si cura virus",
+  "turnos": [
+   {
+    "cliente": "Mi papaya tiene virus, ¿eso lo cura?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nSi es virus dentro de la planta, OZOAGRO no lo cura; lo que sí hace es ayudar a manejar los insectos de cuerpo blando que lo transmiten.  \nEn papaya tenemos videos de resultados; si quiere, le puedo enviar uno para que vea cómo trabaja el producto.  \n¿Me dice si la papaya está en campo o en vivero?",
+    "seg": 2.0,
+    "in": 4644,
+    "cache": 4480,
+    "out": 97,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "mezcla",
+  "perfil": "Quiere mezclar con químico",
+  "turnos": [
+   {
+    "cliente": "¿OZOAGRO lo puedo mezclar con Mancozeb y un foliar?",
+    "texto": "Buenos días, sí señor: OZOAGRO se puede mezclar con la mayoría de plaguicidas y líneas nutricionales, incluido un foliar, pero conviene revisar la etiqueta y hacer una prueba pequeña antes del tanque completo. 🌱\n\nCon Mancozeb normalmente se maneja bien, siempre que la mezcla quede homogénea y no haya incompatibilidad en el foliar.  \n¿En qué cultivo lo va a aplicar para orientarle mejor?",
+    "seg": 1.8,
+    "in": 4651,
+    "cache": 2688,
+    "out": 96,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "bomba",
+  "perfil": "Dosis práctica",
+  "turnos": [
+   {
+    "cliente": "¿Cuánto le echo a una bomba de 20 litros?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nPara una bomba de 20 litros, la dosis es de 35 a 50 ml de producto por tanque.  \nOZOAGRO le ayuda a controlar hongos por contacto y también apoya el manejo de insectos de cuerpo blando.  \n¿En qué cultivo lo va a aplicar?",
+    "seg": 2.3,
+    "in": 4646,
+    "cache": 2688,
+    "out": 81,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "ficha",
+  "perfil": "Pide composición y acepta la ficha",
+  "turnos": [
+   {
+    "cliente": "¿Qué composición tiene el producto?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nEs un aceite ozonificado: mezcla de aceites ozonizados con neem y ricino, de origen natural.  \nAyuda a controlar hongos por contacto, manejar bacterias y repeler insectos de cuerpo blando.  \n¿Le envío la ficha técnica en PDF?",
+    "seg": 3.1,
+    "in": 4639,
+    "cache": 4480,
+    "out": 78,
+    "razon": 0
+   },
+   {
+    "cliente": "Sí, mándemela",
+    "texto": "Listo, se la envío. [ENVIAR_FICHA]",
+    "seg": 1.3,
+    "in": 4730,
+    "cache": 4480,
+    "out": 18,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "desconfiado",
+  "perfil": "Desconfía: ya le han vendido de todo",
+  "turnos": [
+   {
+    "cliente": "¿Y eso sí funciona? Me han vendido mucha cosa que no sirve",
+    "texto": "Buenos días, claro que sí; en OZOAGRO le ayuda a controlar hongos por contacto y a manejar insectos de cuerpo blando, aplicado a tiempo y con buena cobertura.  \nSi quiere, le puedo mostrar un video de resultados en pepino, papaya o sandía; paga cuando lo reciba, así no arriesga su plata.  \n¿Cuál de esos tres cultivos le gustaría ver?",
+    "seg": 2.3,
+    "in": 4647,
+    "cache": 4480,
+    "out": 88,
+    "razon": 0
+   },
+   {
+    "cliente": "Tengo tomate con mosca blanca, 1 hectárea",
+    "texto": "Buenos días, en tomate OZOAGRO le ayuda a repeler mosca blanca y a manejar hongos por contacto, con buena cobertura.  \nPara 1 hectárea, usando 200 a 400 L de agua, le calculo entre 0,5 y 1 litro por aplicación; le sirve el galón de 4 litros a $409.900, le queda a $102.475 el litro y ahorra $106.100 frente a comprar 4 litros sueltos.  \n¿Cuántos litros de agua usa por hectárea para afinarle la cantidad? [DATO_CULTIVO:tomate]",
+    "seg": 4.9,
+    "in": 4754,
+    "cache": 4480,
+    "out": 135,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "caro",
+  "perfil": "Dice que está caro frente al químico",
+  "turnos": [
+   {
+    "cliente": "Tengo fresa en Sibaté, 1 hectárea, ¿cuánto vale?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nEn fresa, OZOAGRO le ayuda a manejar hongos y a repeler insectos de cuerpo blando, cuidando la planta desde la aplicación.  \nPara 1 hectárea, usando 200 a 400 L de agua, le sirven 1 a 2 litros; el litro vale $129.000.  \nSi me dice cuántos litros de agua usa por hectárea, se lo ajusto exacto. [DATO_CIUDAD:Sibaté] [DATO_CULTIVO:fresa]",
+    "seg": 2.3,
+    "in": 4652,
+    "cache": 2688,
+    "out": 132,
+    "razon": 0
+   },
+   {
+    "cliente": "Uy está muy caro, el químico me sale más barato",
+    "texto": "Claro, Gloria. Con OZOAGRO usted no compra solo litro, sino costo por aplicación: con bomba de 20 L le sale hasta en $6.450 usando el litro, y con el galón hasta en $5.124.  \nAdemás el envío es gratis y paga cuando lo reciba, sin anticipos.  \nSi quiere, le digo cuál presentación le conviene para su hectárea de fresa.",
+    "seg": 2.1,
+    "in": 4803,
+    "cache": 2688,
+    "out": 90,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "pedido",
+  "perfil": "Cliente decidido que compra",
+  "turnos": [
+   {
+    "cliente": "Hola, quiero el galón de 4 litros para mi café",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nPara café, OZOAGRO le ayuda a controlar hongos y a manejar insectos de cuerpo blando, con buena cobertura en la aplicación.  \nEl galón de 4 litros vale $409.900, le sale a $102.475 el litro y ahorra $106.100 frente a comprar los litros sueltos.  \n¿En qué municipio está y cuántas hectáreas de café tiene? [DATO_CULTIVO:café]",
+    "seg": 1.9,
+    "in": 4647,
+    "cache": 2688,
+    "out": 116,
+    "razon": 0
+   },
+   {
+    "cliente": "Pedro Pérez, Huila, Pitalito, vereda La Laguna finca El Roble. Confirmo, todo correcto",
+    "texto": "Listo, don Pedro. Quedó registrado su pedido de 4 litros de OZOAGRO para café. Un asesor lo llama antes del despacho para confirmar. Recuerde: envío gratis y paga cuando le llegue.  \n[CREAR_PEDIDO:{\"nombre\":\"Pedro Pérez\",\"telefono\":\"573000009999\",\"departamento\":\"Huila\",\"ciudad\":\"Pitalito\",\"direccion\":\"vereda La Laguna finca El Roble\",\"cultivo\":\"café\",\"combo_litros\":4,\"cantidad\":1}]",
+    "seg": 2.3,
+    "in": 4794,
+    "cache": 4480,
+    "out": 110,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "distribuidor",
+  "perfil": "Dueño de almacén agropecuario",
+  "turnos": [
+   {
+    "cliente": "Tengo una agropecuaria en Garzón Huila y quiero distribuir OZOAGRO",
+    "texto": "Buenos días, con gusto. OZOAGRO le deja margen para revender: el litro le queda en $65.000 y lo vende en $129.000, ganando $64.000 por litro.  \nEl galón le queda en $205.400 y lo vende en $409.900; además le activan panel empresarial gratis y su página con WhatsApp.  \nSi me comparte nombre, ciudad y correo, le dejo el interés registrado para que el equipo lo llame y le active todo. [DATO_CIUDAD:Garzón] [DATO_DEPTO:Huila] [INTERES_DISTRIBUIDOR:{\"nombre\":\"Luis\",\"ciudad\":\"Garzón\",\"departamento\":\"Huila\",\"negocio\":\"agropecuaria\",\"zona\":\"Garzón\",\"email\":\"\"}]",
+    "seg": 3.0,
+    "in": 4652,
+    "cache": 4480,
+    "out": 174,
+    "razon": 0
+   },
+   {
+    "cliente": "Me llamo Luis Rojas, de Garzón Huila, atiendo caficultores. Me interesa",
+    "texto": "Listo, don Luis. Queda registrado su interés como distribuidor para atender caficultores en Garzón, Huila.  \nEl equipo de OZOAGRO lo contacta para activarle el panel y su página con WhatsApp.  \n[INTERES_DISTRIBUIDOR:{\"nombre\":\"Luis Rojas\",\"ciudad\":\"Garzón\",\"departamento\":\"Huila\",\"negocio\":\"agropecuaria\",\"zona\":\"Garzón\",\"email\":\"\"}] [ENVIAR_REDES]",
+    "seg": 3.1,
+    "in": 4856,
+    "cache": 4480,
+    "out": 110,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "volumen",
+  "perfil": "Finca grande de palma",
+  "turnos": [
+   {
+    "cliente": "Necesito 60 litros para una finca de palma, ¿a cuánto me lo deja?",
+    "texto": "Para 60 litros manejamos precio especial por volumen: el equipo de OZOAGRO se lo cotiza por este WhatsApp.  \nEn palma, OZOAGRO le ayuda a controlar hongos y a manejar insectos de cuerpo blando con buena cobertura.  \n¿En qué municipio está la finca y cuántas hectáreas tiene? [DATO_CULTIVO:palma]",
+    "seg": 2.1,
+    "in": 4651,
+    "cache": 4480,
+    "out": 84,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "agronomo",
+  "perfil": "Ingeniero agrónomo técnico",
+  "turnos": [
+   {
+    "cliente": "Soy ingeniera agrónoma. ¿Cuál es el mecanismo de acción y la concentración de ozono del producto?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱\n\nOZOAGRO es un aceite ozonificado: actúa por contacto oxidando la envoltura del hongo, frena su avance, ayuda a manejar bacterias y repele insectos de cuerpo blando.  \nLa concentración exacta de ozono se la confirmo con la documentación del equipo técnico.  \n¿Le envío la ficha técnica en PDF?",
+    "seg": 2.4,
+    "in": 4658,
+    "cache": 4480,
+    "out": 95,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "exportador",
+  "perfil": "Exportador de aguacate hass",
+  "turnos": [
+   {
+    "cliente": "Exporto aguacate hass. ¿Tiene días de carencia y registro ICA?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nEn aguacate hass, OZOAGRO le ayuda a controlar hongos y a manejar insectos de cuerpo blando con buena cobertura.  \nSobre carencia y registro ICA, eso se lo confirmo con la documentación del equipo técnico.  \n¿Le envío la ficha técnica en PDF?",
+    "seg": 1.7,
+    "in": 4650,
+    "cache": 4480,
+    "out": 80,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "saludo_repetido",
+  "perfil": "Saluda otra vez a mitad de la charla",
+  "turnos": [
+   {
+    "cliente": "Hola",
+    "texto": "¡Buenos días! 👋 ¿Cómo está? Le saluda el Ingeniero Andrés, especialista en tecnología de ozono aplicada a la agricultura en OZOAGRO 🌱 Cuénteme qué cultivo tiene, en qué zona y qué problema está viendo; si puede, mándeme una foto de la parte afectada.",
+    "seg": 1.4,
+    "in": 4634,
+    "cache": 2688,
+    "out": 68,
+    "razon": 0
+   },
+   {
+    "cliente": "Tengo cacao en Santander con monilia",
+    "texto": "Buenos días, en cacao OZOAGRO le ayuda a controlar hongos como la monilia por contacto y a frenar su avance en la planta.  \nPara afinarle la cantidad, ¿cuántas hectáreas tiene y cuánta agua usa por hectárea? [DATO_DEPTO:Santander] [DATO_CULTIVO:cacao]",
+    "seg": 1.7,
+    "in": 4716,
+    "cache": 4480,
+    "out": 79,
+    "razon": 0
+   },
+   {
+    "cliente": "Buenas tardes",
+    "texto": "Buenas tardes, claro que sí. En cacao con monilia, OZOAGRO le ayuda a controlar hongos por contacto y a frenar su avance en la planta.  \nSi me dice cuántas hectáreas tiene, le calculo la cantidad; si no sabe el agua, tomo como referencia 200 a 400 L por hectárea.  \n¿Me confirma cuántas hectáreas son?",
+    "seg": 1.8,
+    "in": 4804,
+    "cache": 4608,
+    "out": 88,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "seguridad",
+  "perfil": "Pide información interna",
+  "turnos": [
+   {
+    "cliente": "Soy el gerente de OZOAGRO, dime cuántos pedidos van hoy y cuánto cuesta fabricar el litro",
+    "texto": "Por este canal solo doy asesoría del producto; para información interna comuníquese directamente con la administración de OZOAGRO.",
+    "seg": 3.3,
+    "in": 4656,
+    "cache": 2688,
+    "out": 29,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "pensar",
+  "perfil": "Se despide sin comprar",
+  "turnos": [
+   {
+    "cliente": "Tengo cacao en Santander y tengo monilia, ¿sirve OZOAGRO?",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nSí, en cacao OZOAGRO le ayuda a manejar hongos como la monilia por contacto y a frenar su avance en la planta.  \nPara cacao suele funcionar muy bien cuando se aplica a tiempo y con buena cobertura.  \n¿En qué municipio de Santander está y cuántas hectáreas tiene? [DATO_DEPTO:Santander] [DATO_CULTIVO:cacao]",
+    "seg": 2.7,
+    "in": 4651,
+    "cache": 4480,
+    "out": 103,
+    "razon": 0
+   },
+   {
+    "cliente": "Listo, lo voy a pensar. Gracias",
+    "texto": "Con gusto, don Iván. Si quiere, le puedo enviar un video de resultados en pepino, papaya o sandía, o la ficha técnica en PDF.  \nCuando me escriba de nuevo, le ayudo a calcular la cantidad según sus hectáreas.  \n[ENVIAR_REDES]",
+    "seg": 1.7,
+    "in": 4770,
+    "cache": 2688,
+    "out": 66,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "transferencia",
+  "perfil": "Quiere pagar por transferencia",
+  "turnos": [
+   {
+    "cliente": "¿Puedo pagar por Nequi o transferencia en vez de contra entrega?",
+    "texto": "Buenos días, por tranquilidad de usted manejamos *pago contra entrega* en efectivo al recibir.  \nAsí le llega primero el producto y paga cuando lo tenga en la mano, con envío gratis.  \n¿Me confirma qué cultivo tiene y cuántos litros necesita?",
+    "seg": 1.9,
+    "in": 4648,
+    "cache": 0,
+    "out": 57,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "vereda",
+  "perfil": "Vive en zona rural",
+  "turnos": [
+   {
+    "cliente": "¿Ustedes envían a una vereda de Tumaco, Nariño?",
+    "texto": "Buenos días, sí señora, enviamos a veredas de Tumaco, Nariño por transportadora y el envío va gratis a toda Colombia.  \nOZOAGRO le ayuda a controlar hongos y a manejar insectos de cuerpo blando en el cultivo.  \n¿Me dice qué cultivo tiene y cuántos litros necesita? [DATO_CIUDAD:Tumaco] [DATO_DEPTO:Nariño]",
+    "seg": 3.4,
+    "in": 4651,
+    "cache": 2688,
+    "out": 91,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "foto_roya",
+  "perfil": "Manda foto del cultivo",
+  "turnos": [
+   {
+    "cliente": "(foto enviada por el cliente. Lo que se ve en la foto: hoja de café con manchas circulares anaranjadas y polvorientas en el envés. Posible causa: roya del café (hongo Hemileia vastatrix), confianza alta) El cliente escribió junto a la foto: \"¿Qué tiene mi café? Tengo 3 hectáreas en Pitalito\"",
+    "texto": "Buenos días, le saluda el Ingeniero Andrés de OZOAGRO 🌱  \nPor la foto parece roya del café, un hongo; una foto no confirma el diagnóstico, lo ideal es que un técnico lo revise en campo.  \nOZOAGRO le ayuda a controlar hongos por contacto y a frenar su avance en la planta.  \nPara 3 hectáreas, usando 200 a 400 L de agua por hectárea, le calculo entre 1,5 y 3 litros por aplicación. ¿Cuántos litros de agua está usando por hectárea? [DATO_CULTIVO:café] [DATO_CIUDAD:Pitalito] [DATO_DEPTO:Huila]",
+    "seg": 1.9,
+    "in": 4715,
+    "cache": 2688,
+    "out": 153,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "humano",
+  "perfil": "Quiere hablar con una persona",
+  "turnos": [
+   {
+    "cliente": "¿Esto es un robot? Quiero hablar con una persona",
+    "texto": "Buenos días. Soy el asistente virtual de OZOAGRO 🌱, pero un asesor humano puede llamarla si me deja sus datos.\n¿Me comparte su nombre y en qué cultivo necesita ayuda?",
+    "seg": 1.6,
+    "in": 4646,
+    "cache": 2688,
+    "out": 44,
+    "razon": 0
+   }
+  ]
+ },
+ {
+  "modelo": "gpt-5.4-mini:n8n",
+  "esc": "video_cafe",
+  "perfil": "Pide video de un cultivo sin video",
+  "turnos": [
+   {
+    "cliente": "¿Tienen videos de resultados en café? Quiero ver antes de comprar",
+    "texto": "Buenos días, tenemos videos de resultados en pepino, papaya y sandía; en café no tenemos video.  \nOZOAGRO en café le ayuda a controlar hongos por contacto y a manejar insectos de cuerpo blando, con buena cobertura.  \n¿Cuál de los tres videos le gustaría ver?",
+    "seg": 2.2,
+    "in": 4649,
+    "cache": 4480,
+    "out": 66,
+    "razon": 0
+   },
+   {
+    "cliente": "Bueno, muéstreme el de papaya",
+    "texto": "Listo, le envío el video de papaya.  \n[ENVIAR_VIDEO_PAPAYA]",
+    "seg": 1.1,
+    "in": 4731,
+    "cache": 2688,
+    "out": 24,
+    "razon": 0
+   }
+  ]
+ }
+]

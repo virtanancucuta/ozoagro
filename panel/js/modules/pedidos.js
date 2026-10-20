@@ -295,10 +295,10 @@ function renderPedidosTable() {
       <td class="px-4 py-3 font-mono text-sm">${p.codigo_publico || '-'}</td>
       <td class="px-4 py-3 text-sm">${formatDate(p.created_at)}</td>
       <td class="px-4 py-3">
-        <div class="font-medium">${p.cliente?.nombre || 'Sin cliente'}</div>
-        <div class="text-xs text-gray-500">${p.cliente?.telefono || ''}</div>
+        <div class="font-medium">${escapeHtml(p.cliente?.nombre || 'Sin cliente')}</div>
+        <div class="text-xs text-gray-500">${escapeHtml(p.cliente?.telefono || '')}</div>
       </td>
-      <td class="px-4 py-3 text-sm">${p.ciudad_envio || '-'}</td>
+      <td class="px-4 py-3 text-sm">${escapeHtml(p.ciudad_envio || '-')}</td>
       <td class="px-4 py-3">
         ${esDistFilter
           ? `<span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">${escapeHtml(distribuidoresCache[p.distribuidor_id] || 'Dist.')}</span><div class="text-xs text-gray-500 mt-1">${CEDI_TXT[p.estado_cedi] || ''}${p.guia_cedi ? ' · guía ' + escapeHtml(p.guia_cedi) : ''}</div>`
@@ -464,17 +464,21 @@ async function buscarCliente(e) {
     return;
   }
 
+  // Comas, paréntesis y comillas rompen el filtro .or() de PostgREST: se quitan del texto buscado
+  const q = query.replace(/[,()"'\%*]/g, ' ').trim();
+  if (q.length < 3) { document.getElementById('cliente-result').innerHTML = ''; return; }
   const { data } = await supabaseClient
     .from('clientes')
     .select('*')
-    .or(`telefono.ilike.%${query}%,cedula.ilike.%${query}%,nombre.ilike.%${query}%`)
+    .or(`telefono.ilike.%${q}%,cedula.ilike.%${q}%,nombre.ilike.%${q}%`)
     .limit(5);
 
   if (data && data.length > 0) {
-    document.getElementById('cliente-result').innerHTML = data.map(c =>
-      `<div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectCliente('${c.id}','${c.nombre}')">
-        <div class="font-medium">${c.nombre}</div>
-        <div class="text-xs text-gray-500">${c.telefono || ''} | ${c.cedula || ''}</div>
+    clientesBuscados = data;
+    document.getElementById('cliente-result').innerHTML = data.map((c, i) =>
+      `<div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectCliente(${i})">
+        <div class="font-medium">${escapeHtml(c.nombre)}</div>
+        <div class="text-xs text-gray-500">${escapeHtml(c.telefono || '')} | ${escapeHtml(c.cedula || '')}</div>
       </div>`
     ).join('');
   } else {
@@ -482,9 +486,12 @@ async function buscarCliente(e) {
   }
 }
 
-window.selectCliente = function(id, nombre) {
-  document.getElementById('cliente-id-selected').value = id;
-  document.getElementById('buscar-cliente').value = nombre;
+let clientesBuscados = [];
+// Por índice: un apóstrofo en el nombre rompía el onclick
+window.selectCliente = function(i) {
+  const c = clientesBuscados[i]; if (!c) return;
+  document.getElementById('cliente-id-selected').value = c.id;
+  document.getElementById('buscar-cliente').value = c.nombre;
   document.getElementById('cliente-result').innerHTML = '<div class="text-green-600 text-sm">Cliente seleccionado</div>';
   document.getElementById('nuevo-cliente-form').classList.add('hidden');
 };
@@ -496,75 +503,45 @@ async function handleCrearPedido(e) {
   const selDist = document.getElementById('pedido-distribuidor');
   const distribuidorId = (selDist && selDist.value) ? selDist.value : null;
 
-  let clienteId = document.getElementById('cliente-id-selected').value;
+  const clienteId = document.getElementById('cliente-id-selected').value || null;
+  const nombreNuevo = document.getElementById('nc-nombre').value.trim();
+  const cliente = (!clienteId && nombreNuevo) ? {
+    nombre: nombreNuevo,
+    cedula: document.getElementById('nc-cedula').value,
+    telefono: document.getElementById('nc-telefono').value,
+    email: document.getElementById('nc-email').value,
+    ciudad: document.getElementById('nc-ciudad').value,
+    tipo: document.getElementById('nc-tipo').value
+  } : null;
+  if (!clienteId && !cliente) { showToast('Selecciona o crea un cliente', 'error'); return; }
 
-  // Create new client if needed
-  if (!clienteId && document.getElementById('nc-nombre').value) {
-    const clienteData = {
-      nombre: document.getElementById('nc-nombre').value,
-      cedula: document.getElementById('nc-cedula').value || null,
-      telefono: document.getElementById('nc-telefono').value,
-      email: document.getElementById('nc-email').value || null,
-      ciudad: document.getElementById('nc-ciudad').value || null,
-      tipo: document.getElementById('nc-tipo').value,
-      origen: 'tradicional'
-    };
-    if (distribuidorId) clienteData.distribuidor_id = distribuidorId;
-    const { data: newCliente, error } = await supabaseClient.from('clientes').insert(clienteData).select().single();
-
-    if (error) {
-      showToast('Error creando cliente: ' + error.message, 'error');
-      return;
-    }
-    clienteId = newCliente.id;
-  }
-
-  if (!clienteId) {
-    showToast('Selecciona o crea un cliente', 'error');
-    return;
-  }
-
-  // Create pedido
-  const pedidoData = {
-    cliente_id: clienteId,
-    canal: 'tradicional',
-    estado: 'por_confirmar',
-    ciudad_envio: document.getElementById('pedido-ciudad').value || null,
-    direccion_envio: document.getElementById('pedido-direccion').value || null
-  };
-  if (distribuidorId) pedidoData.distribuidor_id = distribuidorId;
-  const { data: pedido, error: pedidoError } = await supabaseClient.from('pedidos').insert(pedidoData).select().single();
-
-  if (pedidoError) {
-    showToast('Error creando pedido: ' + pedidoError.message, 'error');
-    return;
-  }
-
-  // Create items
   const items = [];
   document.querySelectorAll('#items-container > div').forEach(div => {
     const select = div.querySelector('.item-producto');
     if (!select.value) return;
-    const opt = select.options[select.selectedIndex];
     items.push({
-      pedido_id: pedido.id,
       producto_id: select.value,
-      cantidad: parseInt(div.querySelector('.item-cantidad').value) || 1,
-      precio_unitario: parseFloat(div.querySelector('.item-precio').value) || 0,
-      costo_unitario_snapshot: parseFloat(opt.dataset.costo) || 0,
-      litros: parseInt(opt.dataset.litros) || 1
+      cantidad: parseInt(div.querySelector('.item-cantidad').value) || 0,
+      precio_unitario: parseFloat(div.querySelector('.item-precio').value) || 0
     });
   });
+  if (!items.length) { showToast('Agrega al menos un producto', 'error'); return; }
 
-  if (items.length > 0) {
-    const { error: itemsError } = await supabaseClient.from('pedido_items').insert(items);
-    if (itemsError) {
-      showToast('Error creando items: ' + itemsError.message, 'error');
-      return;
-    }
-  }
+  // Pedido + cliente nuevo + productos en una sola transacción (crear_pedido_panel valida todo en la BD)
+  const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+  if (btn) btn.disabled = true;
+  const { data: r, error } = await supabaseClient.rpc('crear_pedido_panel', {
+    p_items: items,
+    p_cliente_id: clienteId,
+    p_cliente: cliente,
+    p_ciudad: document.getElementById('pedido-ciudad').value || null,
+    p_direccion: document.getElementById('pedido-direccion').value || null,
+    p_distribuidor_id: distribuidorId
+  });
+  if (btn) btn.disabled = false;
+  if (error || !r || r.error) { showToast('No se pudo crear el pedido: ' + (r?.error || error?.message || 'error desconocido'), 'error'); return; }
 
-  showToast('Pedido creado: ' + pedido.codigo_publico);
+  showToast('Pedido creado: ' + r.codigo);
   closeModal('modal-crear-pedido');
   await loadPedidos();
 }
@@ -717,7 +694,7 @@ window.exportCanceladosExcel = async function() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Cancelados');
     ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length, 16) }));
-    XLSX.writeFile(wb, `pedidos_cancelados_remarketing_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `pedidos_cancelados_remarketing_${hoyISO()}.xlsx`);
     showToast('Excel descargado (' + rows.length + ' pedidos)');
   };
   if (typeof XLSX === 'undefined') {
